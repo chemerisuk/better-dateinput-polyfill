@@ -1,0 +1,9 @@
+{
+    "newcap": false,
+    "quotmark": "double",
+    "indent": 4,
+    "eqeqeq": true,
+    "globals": { 
+        "DOM": true
+    }
+}

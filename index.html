@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>better-dateinput-polyfill</title>
+    <link href="src/better-dateinput-polyfill.css" rel="stylesheet"/>
+
+    <script src="components/better-dom/src/better-dom.js" data-htc="components/better-dom/src/better-dom.htc"></script>
+    <script src="src/better-dateinput-polyfill.js"></script>
+</head>
+<body>
+    <form action="">
+        <p>
+            <label>
+            Your name
+            <input type="text" required name="name">
+            </label>
+        </p>
+        <p>
+            <label>
+            Your email
+            <input type="email" required name="email">
+            </label>
+        </p>
+        <p>
+            <label>
+            Your gender
+            <select name="gender">
+                <option>male</option>
+                <option>female</option>
+            </select>
+            </label>
+        </p>
+        <p>
+            <label>
+            Your birthdate
+            <input type="date" name="birthdate" required>
+            </label>
+        </p>
+        <p>
+            <input type="checkbox" name="accept" required/>
+            <label>I accept site rules</label>
+        </p>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
