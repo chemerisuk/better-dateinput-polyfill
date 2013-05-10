@@ -32,41 +32,56 @@ DOM.extend("input[type=date]", {
                 input: function() {
                     if (input.get("value")) input._syncDate();
                 },
-                focus: function() {
+                click: function() {
                     input._syncDate();
 
                     calendar.show();
-                }/*,
-                blur: function() {
-                    calendar.hide();
-                }*/
+                },
+                keydown: function(e) {
+                    var key = e.get("keyCode"),
+                        delta = 0,
+                        currentDate = this.getDate();
+
+                    if (key === 27 || key === 9 || key === 13) {
+                        calendar.hide(); // enter, esc or tab key exits
+                    } else if (key === 8 || key === 46) {
+                        this.set(""); // backspace or delete clears the value
+                    } else {
+                        if (key === 74 || key === 40) { delta = 7; }
+                        else if (key === 75 || key === 38) { delta = -7; }                            
+                        else if (key === 76 || key === 39) { delta = 1; }
+                        else if (key === 72 || key === 37) { delta = -1; }
+
+                        if (delta) {
+                            if (e.get("altKey")) {
+                                currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 1 : -1));
+                            } else {
+                                currentDate.setDate(currentDate.getDate() + delta);
+                            }
+
+                            this.setDate(currentDate);
+                        }
+                    }
+
+                    e.preventDefault();
+                }
             });
 
         calendar.on({
-            // mousedown: function(e) {
-            //     e.preventDefault();
-            //     e.stopPropagation();
-            // },
             click: function(e) {
                 var target = e.target,
-                    selectedDate = input.getData("selectedDate"),
-                    currentYear = selectedDate.getFullYear(),
-                    currentMonth = selectedDate.getMonth(),
-                    currentDate = selectedDate.getDate(),
+                    calendarDate = input.getData("calendarDate"),
+                    currentYear = calendarDate.getFullYear(),
+                    currentMonth = calendarDate.getMonth(),
+                    currentDate = calendarDate.getDate(),
                     targetDate;
 
                 if (target.get("data-index")) {
-                    targetDate = new Date(currentYear, currentMonth,
+                    input.setDate(new Date(currentYear, currentMonth,
                         parseInt(target.getData("index"), 10) + 3 -
-                            new Date(currentYear, currentMonth, 1).getDay());
+                            new Date(currentYear, currentMonth, 1).getDay()));
 
-                    if (targetDate.getFullYear() !== currentYear ||
-                        targetDate.getMonth() !== currentMonth ||
-                        targetDate.getDate() !== currentDate) {
-                        // update input value and trigger blur manually to hide calendar control
-                        
-                        input.set("value", JSON.parse(JSON.stringify(targetDate)).split("T")[0]);
-                    }
+                    calendar.hide();
                 } else if (target.hasClass("better-dateinput-calendar-prev")) {
                     input.setDate(new Date(currentYear, currentMonth - 1, 1));
                 } else if (target.hasClass("better-dateinput-calendar-next")) {
@@ -74,6 +89,13 @@ DOM.extend("input[type=date]", {
                 }
 
                 e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+
+        DOM.on("click", function() {
+            if (!input.isFocused()) {
+                calendar.hide();    
             }
         });
 
@@ -81,10 +103,10 @@ DOM.extend("input[type=date]", {
             containerCaption = calendar.find(".better-dateinput-calendar-header"),
             containerDays = calendar.findAll("[data-index]");
 
-        this.setDate = function(date) {
-            var iterDate = new Date(date.getFullYear(), date.getMonth(), 0);
+        this.setDate = function(value) {
+            var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
             // update caption
-            containerCaption.set("<span data-i18n='calendar.month." + date.getMonth() + "'> " + (isNaN(date.getFullYear()) ? "" : date.getFullYear()));
+            containerCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
             
             if (!isNaN(iterDate.getTime())) {
                 // move to begin of the start week
@@ -93,10 +115,10 @@ DOM.extend("input[type=date]", {
                 containerDays.each(function(day, index) {
                     iterDate.setDate(iterDate.getDate() + 1);
                     
-                    var mDiff = date.getMonth() - iterDate.getMonth(),
-                        dDiff = date.getDate() - iterDate.getDate();
+                    var mDiff = value.getMonth() - iterDate.getMonth(),
+                        dDiff = value.getDate() - iterDate.getDate();
 
-                    if (date.getFullYear() !== iterDate.getFullYear()) {
+                    if (value.getFullYear() !== iterDate.getFullYear()) {
                         mDiff *= -1;
                     }
 
@@ -108,8 +130,10 @@ DOM.extend("input[type=date]", {
                     day.set(iterDate.getDate().toString());
                 });
                 // update current date
-                input.setData("selectedDate", date);
+                input.setData("calendarDate", value);
             }
+
+            input.set("value", JSON.parse(JSON.stringify(value)).split("T")[0]);
         };
 
         // show calendar for autofocused elements
@@ -118,11 +142,11 @@ DOM.extend("input[type=date]", {
         }
     },
     getDate: function() {
-        return this.getData("selectedDate");
+        return this.getData("calendarDate");
     },
     _syncDate: function() {
-        var value = this.get("value").split("-");
+        var value = (this.get("value") || "").split("-");
         // switch calendar to appropriate date
-        this.setDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10), parseInt(value[2],10) ) : new Date());
+        this.setDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10) - 1, parseInt(value[2],10)) : new Date());
     }
 });
