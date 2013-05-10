@@ -7,19 +7,19 @@
 DOM.extend("input[type=date]", {
     template: {
         after: (function() {
-            var content = "<p class='formvalidation-calendar-header'></p><a class='formvalidation-calendar-prev'></a><a class='formvalidation-calendar-next'></a><div class='formvalidation-calendar-days'>";
+            var content = "<p class='better-dateinput-calendar-header'></p><a class='better-dateinput-calendar-prev'></a><a class='better-dateinput-calendar-next'></a><div class='better-dateinput-calendar-days'>";
 
             for (var i = 0; i < 7; ++i) {
-                content += "<ol class='formvalidation-calendar-row'>";
+                content += "<ol class='better-dateinput-calendar-row'>";
 
                 for (var j = 0; j < 7; ++j) {
-                    content += (i ? "<li data-index='" + (j + 7 * (i - 1)) : "<li data-i18n='calendar.weekday." + j) + "'>"; 
+                    content += (i ? "<li data-index='" + (j + 7 * (i - 1)) : "</li><li data-i18n='calendar.weekday." + j) + "'></li>"; 
                 }
 
                 content += "</ol>";
             }
 
-            return "<div class='formvalidation-calendar' hidden>" + content + "</div>";
+            return "<div class='better-dateinput-calendar' hidden>" + content + "</div>";
         })()
     },
     constructor: function() {
@@ -36,17 +36,17 @@ DOM.extend("input[type=date]", {
                     input._syncDate();
 
                     calendar.show();
-                },
+                }/*,
                 blur: function() {
                     calendar.hide();
-                }
+                }*/
             });
 
         calendar.on({
-            mousedown: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            },
+            // mousedown: function(e) {
+            //     e.preventDefault();
+            //     e.stopPropagation();
+            // },
             click: function(e) {
                 var target = e.target,
                     selectedDate = input.getData("selectedDate"),
@@ -64,11 +64,12 @@ DOM.extend("input[type=date]", {
                         targetDate.getMonth() !== currentMonth ||
                         targetDate.getDate() !== currentDate) {
                         // update input value and trigger blur manually to hide calendar control
-                        input.set("value", targetDate.toISOString().split("T")[0]).fire("blur");
+                        
+                        input.set("value", JSON.parse(JSON.stringify(targetDate)).split("T")[0]);
                     }
-                } else if (target.hasClass("formvalidation-calendar-prev")) {
+                } else if (target.hasClass("better-dateinput-calendar-prev")) {
                     input.setDate(new Date(currentYear, currentMonth - 1, 1));
-                } else if (target.hasClass("formvalidation-calendar-next")) {
+                } else if (target.hasClass("better-dateinput-calendar-next")) {
                     input.setDate(new Date(currentYear, currentMonth + 1, 1));
                 }
 
@@ -76,25 +77,22 @@ DOM.extend("input[type=date]", {
             }
         });
 
-        var container = calendar.find(".formvalidation-calendar-days"),
-            containerCaption = calendar.find(".formvalidation-calendar-header"),
+        var container = calendar.find(".better-dateinput-calendar-days"),
+            containerCaption = calendar.find(".better-dateinput-calendar-header"),
             containerDays = calendar.findAll("[data-index]");
 
         this.setDate = function(date) {
             var iterDate = new Date(date.getFullYear(), date.getMonth(), 0);
             // update caption
             containerCaption.set("<span data-i18n='calendar.month." + date.getMonth() + "'> " + (isNaN(date.getFullYear()) ? "" : date.getFullYear()));
-            // check if date is valid
+            
             if (!isNaN(iterDate.getTime())) {
                 // move to begin of the start week
                 iterDate.setDate(iterDate.getDate() - iterDate.getDay());
-                // setup appropriate counter-reset property
-                container.setStyle("counter-reset", "prev_counter " + iterDate.getDate() + " current_counter 0 next_counter 0");
-                // update class names
-                containerDays.each(function(day) {
-                    // increment date
+                
+                containerDays.each(function(day, index) {
                     iterDate.setDate(iterDate.getDate() + 1);
-                    // calc differences
+                    
                     var mDiff = date.getMonth() - iterDate.getMonth(),
                         dDiff = date.getDate() - iterDate.getDate();
 
@@ -106,21 +104,25 @@ DOM.extend("input[type=date]", {
                         (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
                         (dDiff ? "calendar-day" : "current-calendar-day")
                     );
+
+                    day.set(iterDate.getDate().toString());
                 });
                 // update current date
                 input.setData("selectedDate", date);
             }
         };
 
-        this._syncDate();
+        // show calendar for autofocused elements
+        if (this.isFocused()) {
+            this.fire("focus");
+        }
     },
-    
     getDate: function() {
         return this.getData("selectedDate");
     },
     _syncDate: function() {
-        var value = this.get("value");
-        // switch calendar to appropriate month
-        this.setDate(value ? new Date(value) : new Date());
+        var value = this.get("value").split("-");
+        // switch calendar to appropriate date
+        this.setDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10), parseInt(value[2],10) ) : new Date());
     }
 });

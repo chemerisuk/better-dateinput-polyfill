@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2013 Maksim Chemerisuk
  */
-.formvalidation-calendar {
+.better-dateinput-calendar {
     position: absolute;
     z-index: 9999;
     cursor: default;
@@ -19,15 +19,15 @@
     box-shadow: 0 0 1em #CCC;
 }
 
-.formvalidation-calendar-header {
+.better-dateinput-calendar-header {
     font-size: 1.25em;
     line-height: 2em;
     margin: 0 2em;
     text-align: center;
 }
 
-.formvalidation-calendar-prev,
-.formvalidation-calendar-next {
+.better-dateinput-calendar-prev,
+.better-dateinput-calendar-next {
     position: absolute;
     top: 0.5em;
     background: #498CE2;
@@ -40,34 +40,34 @@
     border-radius: 1em;
 }
 
-.formvalidation-calendar-prev {
+.better-dateinput-calendar-prev {
     left: 0.5em;
 }
 
-.formvalidation-calendar-prev:before {
+.better-dateinput-calendar-prev:before {
     content: "<"
 }
 
-.formvalidation-calendar-next {
+.better-dateinput-calendar-next {
     right: 0.5em;
 }
 
-.formvalidation-calendar-next:before {
+.better-dateinput-calendar-next:before {
     content: ">"
 }
 
-.formvalidation-calendar-days {
+.better-dateinput-calendar-days {
     display: table;
     table-layout: fixed;
     border-spacing: 0;
 }
 
-.formvalidation-calendar-row {
+.better-dateinput-calendar-row {
     display: table-row;
     list-style: none;
 }
 
-.formvalidation-calendar-row > li {
+.better-dateinput-calendar-row > li {
     width: 3em;
     height: 2em;
     border: 1px solid #DDD;
@@ -77,38 +77,22 @@
     display: table-cell;
 }
 
-.formvalidation-calendar-row:first-child > li {
+.better-dateinput-calendar-row:first-child > li {
     font-weight: bold;
     background: #DDD;
 }
 
-.formvalidation-calendar-days .calendar-day:before,
-.formvalidation-calendar-days .current-calendar-day:before {
-    content: counter(current_counter);
-    counter-increment: current_counter;
-}
-
-.formvalidation-calendar-days [data-index]:hover {
+.better-dateinput-calendar-days [data-index]:hover {
     background: #EEE;
 }
 
-.formvalidation-calendar-days .current-calendar-day {
-    background: #498CE2;
+.better-dateinput-calendar-days .current-calendar-day {
+    background: #498CE2 !important;
     color: #FFF;
 }
 
-.formvalidation-calendar-days .prev-calendar-day:before {
-    content: counter(prev_counter);
-    counter-increment: prev_counter;
-}
-
-.formvalidation-calendar-days .next-calendar-day:before {
-    content: counter(next_counter);
-    counter-increment: next_counter;
-}
-
-.formvalidation-calendar-days .prev-calendar-day,
-.formvalidation-calendar-days .next-calendar-day {
+.better-dateinput-calendar-days .prev-calendar-day,
+.better-dateinput-calendar-days .next-calendar-day {
     color: #AAA;
 }
 
