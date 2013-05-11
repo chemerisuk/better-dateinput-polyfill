@@ -11,26 +11,35 @@
     <script src="src/better-dateinput-polyfill.js"></script>
 </head>
 <body>
+    <script type="text/template" id="template">
+        <form action="">
+            <p>
+                <label>
+                Your name
+                <input type="text" required name="name">
+                </label>
+            </p>
+            <p>
+                <label>
+                Your birthdate
+                <input type="date" name="birthdate" required>
+                </label>
+            </p>
+            <p>
+                <input type="checkbox" name="accept" required/>
+                <label>I accept site rules</label>
+            </p>
+            <button type="submit">Submit</button>
+        </form>
+    </script>
+    <button onclick='DOM.find("body").append(DOM.find("#template").get())'>
+        Append new form
+    </button>
     <form action="">
         <p>
             <label>
             Your name
             <input type="text" required name="name">
-            </label>
-        </p>
-        <p>
-            <label>
-            Your email
-            <input type="email" required name="email">
-            </label>
-        </p>
-        <p>
-            <label>
-            Your gender
-            <select name="gender">
-                <option>male</option>
-                <option>female</option>
-            </select>
             </label>
         </p>
         <p>

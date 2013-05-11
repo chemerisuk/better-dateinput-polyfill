@@ -5,7 +5,7 @@
  * Copyright (c) 2013 Maksim Chemerisuk
  */
 DOM.extend("input[type=date]", {
-    after: "div[hidden].%CLASS%>p.%CLASS%-header+a.%CLASS%-prev+a.%CLASS%-next+table.%CLASS%-days>(tr>th[data-i18n=calendar.weekday.$]*7)+(tr>td*7)*6".replace(/%CLASS%/g, "better-dateinput-calendar")
+    after: "div[hidden].%CLASS%>p.%CLASS%-header+a.%CLASS%-prev+a.%CLASS%-next+table.%CLASS%-days>(thead>tr>th[data-i18n=calendar.weekday.$]*7)+tbody>(tr>td*7)*6".replace(/%CLASS%/g, "better-dateinput-calendar")
 }, {
     constructor: (function() {
         var makeCalendarDateSetter = function(calendar) {
