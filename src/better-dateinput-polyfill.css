@@ -57,17 +57,12 @@
 }
 
 .better-dateinput-calendar-days {
-    display: table;
     table-layout: fixed;
     border-spacing: 0;
 }
 
-.better-dateinput-calendar-row {
-    display: table-row;
-    list-style: none;
-}
-
-.better-dateinput-calendar-row > li {
+.better-dateinput-calendar-days td, 
+.better-dateinput-calendar-days th {
     width: 3em;
     height: 2em;
     border: 1px solid #DDD;
@@ -77,12 +72,12 @@
     display: table-cell;
 }
 
-.better-dateinput-calendar-row:first-child > li {
+.better-dateinput-calendar-days th {
     font-weight: bold;
     background: #DDD;
 }
 
-.better-dateinput-calendar-days [data-index]:hover {
+.better-dateinput-calendar-days td:hover {
     background: #EEE;
 }
 

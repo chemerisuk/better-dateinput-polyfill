@@ -5,27 +5,12 @@
  * Copyright (c) 2013 Maksim Chemerisuk
  */
 DOM.extend("input[type=date]", {
-    template: {
-        after: (function() {
-            var content = "<p class='better-dateinput-calendar-header'></p><a class='better-dateinput-calendar-prev'></a><a class='better-dateinput-calendar-next'></a><div class='better-dateinput-calendar-days'>";
-
-            for (var i = 0; i < 7; ++i) {
-                content += "<ol class='better-dateinput-calendar-row'>";
-
-                for (var j = 0; j < 7; ++j) {
-                    content += (i ? "<li data-index='" + (j + 7 * (i - 1)) : "</li><li data-i18n='calendar.weekday." + j) + "'></li>"; 
-                }
-
-                content += "</ol>";
-            }
-
-            return "<div class='better-dateinput-calendar' hidden>" + content + "</div>";
-        })()
-    },
+    after: "div[hidden].%CLASS%>p.%CLASS%-header+a.%CLASS%-prev+a.%CLASS%-next+table.%CLASS%-days>(tr>th[data-i18n=calendar.weekday.$]*7)+(tr>td*7)*6".replace(/%CLASS%/g, "better-dateinput-calendar")
+}, {
     constructor: (function() {
         var makeCalendarDateSetter = function(calendar) {
             var calendarCaption = calendar.find(".better-dateinput-calendar-header"),
-                calendarDays = calendar.findAll("[data-index]");
+                calendarDays = calendar.findAll("td");
 
             return function(value) {
                 var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
@@ -156,10 +141,10 @@ DOM.extend("input[type=date]", {
             currentMonth = calendarDate.getMonth(),
             currentDate = calendarDate.getDate();
 
-        if (el.get("data-index")) {
+        if (el.get("tagName") === "TD") {
             this.setCalendarDate(new Date(currentYear, currentMonth,
-                parseInt(el.getData("index"), 10) + 2 -
-                    new Date(currentYear, currentMonth, 1).getDay()));
+                el.parent().get("rowIndex") * 7 + el.get("cellIndex") - 5 - new Date(currentYear, currentMonth, 1).getDay()
+            ));
 
             this._syncDateWithInput(calendar);
         } else if (el.hasClass("better-dateinput-calendar-prev")) {
