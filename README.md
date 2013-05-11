@@ -13,8 +13,17 @@ This will clone the latest version of the better-dateinput-polyfill into the `co
 Then append the following script on your page:
 
 ```html
-<script src="components/better-dom/src/better-dom.js" data-htc="components/better-dom/src/better-dom.htc"></script>
-<script src="components/better-dateinput-polyfill/src/better-dateinput-polyfill.js"></script>
+<html>
+<head>
+    ...
+    <link href="components/better-dateinput-polyfill/src/better-dateinput-polyfill.css" rel="stylesheet"/>
+</head>
+<body>
+    ...
+    <script src="components/better-dom/src/better-dom.js" data-htc="components/better-dom/src/better-dom.htc"></script>
+    <script src="components/better-dateinput-polyfill/src/better-dateinput-polyfill.js"></script>
+</body>
+</html>
 ```
 
 Demo
