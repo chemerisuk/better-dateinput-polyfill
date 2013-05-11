@@ -7,84 +7,52 @@
 DOM.extend("input[type=date]", {
     after: "div[hidden].%CLASS%>p.%CLASS%-header+a.%CLASS%-prev+a.%CLASS%-next+table.%CLASS%-days>(thead>tr>th[data-i18n=calendar.weekday.$]*7)+tbody>(tr>td*7)*6".replace(/%CLASS%/g, "better-dateinput-calendar")
 }, {
-    constructor: (function() {
-        var makeCalendarDateSetter = function(calendar) {
+    constructor: function() {
+        var input = this,
+            calendar = input.next();
+
+        input
+            .set("type", "text") // remove legacy dateinput if it exists
+            .on({
+                click: function() {
+                    this._syncDateWithCalendar(calendar);
+                },
+                keydown: function(e) {
+                    this._handleDateInputKeys(e.get("keyCode"), e.get("altKey"), calendar);
+                    
+                    e.preventDefault(); // prevent default typing of characters, submit on enter etc.
+                }
+            });
+
+        calendar.on("click", function(e) {
+            input._handleCalendarClick(e.target, calendar);
+            
+            e.stopPropagation(); // stop bubbling to allow navigation via prev/next month buttons
+            e.preventDefault(); // prevent focusing on the input if it's inside of the label
+        });
+
+        DOM.on("click", function() {
+            if (!input.isFocused()) {
+                calendar.hide();    
+            }
+        });
+
+        this.setCalendarDate = (function() {
             var calendarCaption = calendar.find(".better-dateinput-calendar-header"),
                 calendarDays = calendar.findAll("td");
 
             return function(value) {
-                var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
-                // update caption
-                calendarCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
-                
-                if (!isNaN(iterDate.getTime())) {
-                    // move to begin of the start week
-                    iterDate.setDate(iterDate.getDate() - iterDate.getDay());
-                    
-                    calendarDays.each(function(day, index) {
-                        iterDate.setDate(iterDate.getDate() + 1);
-                        
-                        var mDiff = value.getMonth() - iterDate.getMonth(),
-                            dDiff = value.getDate() - iterDate.getDate();
-
-                        if (value.getFullYear() !== iterDate.getFullYear()) {
-                            mDiff *= -1;
-                        }
-
-                        day.set("className", mDiff ?
-                            (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                            (dDiff ? "calendar-day" : "current-calendar-day")
-                        );
-
-                        day.set(iterDate.getDate().toString());
-                    });
-
-                    // update current date
-                    this.setData("calendarDate", value);
-                }
+                this._refreshCalendar(value, calendarCaption, calendarDays);
 
                 return this;
             };
-        };
+        })();
 
-        return function() {
-            var input = this,
-                calendar = input.next();
-
-            input
-                .set("type", "text") // remove legacy dateinput if it exists
-                .on({
-                    click: function() {
-                        this._syncDateWithCalendar(calendar);
-                    },
-                    keydown: function(e) {
-                        this._handleDateInputKeys(e.get("keyCode"), e.get("altKey"), calendar);
-                        
-                        e.preventDefault(); // prevent default typing of characters, submit on enter etc.
-                    }
-                });
-
-            calendar.on("click", function(e) {
-                input._handleCalendarClick(e.target, calendar);
-                
-                e.stopPropagation(); // stop bubbling to allow navigation via prev/next month buttons
-                e.preventDefault(); // prevent focusing on the input if it's inside of the label
-            });
-
-            DOM.on("click", function() {
-                if (!input.isFocused()) {
-                    calendar.hide();    
-                }
-            });
-
-            this.setCalendarDate = makeCalendarDateSetter(calendar);
-
-            // show calendar for autofocused elements
-            if (this.isFocused()) {
-                this.fire("focus");
-            }
-        };
-    })(),
+        // show calendar for autofocused elements
+        if (this.isFocused()) {
+            this.fire("focus");
+        }
+    },
     getCalendarDate: function() {
         return this.getData("calendarDate");
     },
@@ -109,7 +77,7 @@ DOM.extend("input[type=date]", {
             currentDate = this.getCalendarDate();
 
         if (key === 13) { // show/hide calendar on enter key
-            if (calendar.get("hidden")) {
+            if (calendar.isHidden()) {
                 this._syncDateWithCalendar(calendar);
             } else {
                 this._syncDateWithInput(calendar);
@@ -151,6 +119,37 @@ DOM.extend("input[type=date]", {
             this.setCalendarDate(new Date(currentYear, currentMonth - 1, 1)).fire("focus");
         } else if (el.hasClass("better-dateinput-calendar-next")) {
             this.setCalendarDate(new Date(currentYear, currentMonth + 1, 1)).fire("focus");
+        }
+    },
+    _refreshCalendar: function(value, calendarCaption, calendarDays) {
+        var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
+        // update caption
+        calendarCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
+        
+        if (!isNaN(iterDate.getTime())) {
+            // move to begin of the start week
+            iterDate.setDate(iterDate.getDate() - iterDate.getDay());
+            
+            calendarDays.each(function(day, index) {
+                iterDate.setDate(iterDate.getDate() + 1);
+                
+                var mDiff = value.getMonth() - iterDate.getMonth(),
+                    dDiff = value.getDate() - iterDate.getDate();
+
+                if (value.getFullYear() !== iterDate.getFullYear()) {
+                    mDiff *= -1;
+                }
+
+                day.set("className", mDiff ?
+                    (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
+                    (dDiff ? "calendar-day" : "current-calendar-day")
+                );
+
+                day.set(iterDate.getDate().toString());
+            });
+
+            // update current date
+            this.setData("calendarDate", value);
         }
     }
 });

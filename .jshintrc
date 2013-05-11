@@ -6,5 +6,11 @@
     "undef": true,
     "globals": { 
         "DOM": true
+
+        "describe": true,
+        "beforeEach": true,
+        "it": true,
+        "jasmine": true,
+        "expect": true
     }
 }
