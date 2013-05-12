@@ -15,7 +15,7 @@ DOM.extend("input[type=date]", {
             .set("type", "text") // remove legacy dateinput if it exists
             .on({
                 click: function() {
-                    this._syncDateWithCalendar(calendar);
+                    this._syncInputWithCalendar(calendar);
                 },
                 keydown: function(e) {
                     this._handleDateInputKeys(e.get("keyCode"), e.get("altKey"), calendar);
@@ -56,14 +56,14 @@ DOM.extend("input[type=date]", {
     getCalendarDate: function() {
         return this.getData("calendarDate");
     },
-    _syncDateWithCalendar: function(calendar) {
+    _syncInputWithCalendar: function(calendar) {
         var value = (this.get("value") || "").split("-");
         // switch calendar to the input value date
         this.setCalendarDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10) - 1, parseInt(value[2],10)) : new Date());
 
         calendar.show();
     },
-    _syncDateWithInput: function(calendar) {
+    _syncCalendarWithInput: function(calendar) {
         var date = this.getCalendarDate(),
             zeroPadMonth = ("00" + (date.getMonth() + 1)).slice(-2),
             zeroPadDate = ("00" + date.getDate()).slice(-2);
@@ -78,9 +78,9 @@ DOM.extend("input[type=date]", {
 
         if (key === 13) { // show/hide calendar on enter key
             if (calendar.isHidden()) {
-                this._syncDateWithCalendar(calendar);
+                this._syncInputWithCalendar(calendar);
             } else {
-                this._syncDateWithInput(calendar);
+                this._syncCalendarWithInput(calendar);
             }
         } else if (key === 27 || key === 9) {
             calendar.hide(); // esc or tab key hides calendar
@@ -114,7 +114,7 @@ DOM.extend("input[type=date]", {
                 el.parent().get("rowIndex") * 7 + el.get("cellIndex") - 5 - new Date(currentYear, currentMonth, 1).getDay()
             ));
 
-            this._syncDateWithInput(calendar);
+            this._syncCalendarWithInput(calendar);
         } else if (el.hasClass("better-dateinput-calendar-prev")) {
             this.setCalendarDate(new Date(currentYear, currentMonth - 1, 1)).fire("focus");
         } else if (el.hasClass("better-dateinput-calendar-next")) {
