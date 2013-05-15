@@ -6,7 +6,7 @@ Installing
 ----------
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
 
-`bower install better-dateinput-polyfill --save-dev`
+    bower install better-dateinput-polyfill
 
 This will clone the latest version of the better-dateinput-polyfill into the `components` directory at the root of your project.
 
