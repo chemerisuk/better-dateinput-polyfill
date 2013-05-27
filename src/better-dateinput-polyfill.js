@@ -5,37 +5,22 @@
  * Copyright (c) 2013 Maksim Chemerisuk
  */
 DOM.extend("input[type=date]", {
-    after: "div[hidden].%CLASS%>p.%CLASS%-header+a.%CLASS%-prev+a.%CLASS%-next+table.%CLASS%-days>(thead>tr>th[data-i18n=calendar.weekday.$]*7)+tbody>(tr>td*7)*6".replace(/%CLASS%/g, "better-dateinput-calendar")
+    after: "div[hidden].%CLS%>p.%CLS%-header+a.%CLS%-prev+a.%CLS%-next+table.%CLS%-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7".replace(/%CLS%/g, "better-dateinput-calendar")
 }, {
     constructor: function() {
-        var input = this,
-            calendar = input.next();
+        var calendar = this.next();
+ 
+        this.set("type", "text") // remove legacy dateinput if it exists
+            // sync value on click
+            .on("click", this._syncInputWithCalendar, [calendar])
+            // prevent default typing of characters, submit on enter etc.
+            .on("!keydown(keyCode,altKey)", this._handleDateInputKeys, [calendar]);
 
-        input
-            .set("type", "text") // remove legacy dateinput if it exists
-            .on({
-                click: function() {
-                    this._syncDateWithCalendar(calendar);
-                },
-                keydown: function(e) {
-                    this._handleDateInputKeys(e.get("keyCode"), e.get("altKey"), calendar);
-                    
-                    e.preventDefault(); // prevent default typing of characters, submit on enter etc.
-                }
-            });
+        // stop bubbling to allow navigation via prev/next month buttons
+        // prevent focusing on the input if it's inside of the label
+        calendar.on("?!click(target)", this._handleCalendarClick, [calendar], this);
 
-        calendar.on("click", function(e) {
-            input._handleCalendarClick(e.target, calendar);
-            
-            e.stopPropagation(); // stop bubbling to allow navigation via prev/next month buttons
-            e.preventDefault(); // prevent focusing on the input if it's inside of the label
-        });
-
-        DOM.on("click", function() {
-            if (!input.isFocused()) {
-                calendar.hide();    
-            }
-        });
+        DOM.on("click", this._handleDocumentClick, [calendar], this);
 
         this.setCalendarDate = (function() {
             var calendarCaption = calendar.find(".better-dateinput-calendar-header"),
@@ -49,21 +34,19 @@ DOM.extend("input[type=date]", {
         })();
 
         // show calendar for autofocused elements
-        if (this.isFocused()) {
-            this.fire("focus");
-        }
+        if (this.isFocused()) this.fire("focus");
     },
     getCalendarDate: function() {
         return this.getData("calendarDate");
     },
-    _syncDateWithCalendar: function(calendar) {
+    _syncInputWithCalendar: function(calendar) {
         var value = (this.get("value") || "").split("-");
         // switch calendar to the input value date
         this.setCalendarDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10) - 1, parseInt(value[2],10)) : new Date());
 
         calendar.show();
     },
-    _syncDateWithInput: function(calendar) {
+    _syncCalendarWithInput: function(calendar) {
         var date = this.getCalendarDate(),
             zeroPadMonth = ("00" + (date.getMonth() + 1)).slice(-2),
             zeroPadDate = ("00" + date.getDate()).slice(-2);
@@ -78,9 +61,9 @@ DOM.extend("input[type=date]", {
 
         if (key === 13) { // show/hide calendar on enter key
             if (calendar.isHidden()) {
-                this._syncDateWithCalendar(calendar);
+                this._syncInputWithCalendar(calendar);
             } else {
-                this._syncDateWithInput(calendar);
+                this._syncCalendarWithInput(calendar);
             }
         } else if (key === 27 || key === 9) {
             calendar.hide(); // esc or tab key hides calendar
@@ -109,12 +92,12 @@ DOM.extend("input[type=date]", {
             currentMonth = calendarDate.getMonth(),
             currentDate = calendarDate.getDate();
 
-        if (el.get("tagName") === "TD") {
+        if (el.get("tagName") === "td") {
             this.setCalendarDate(new Date(currentYear, currentMonth,
                 el.parent().get("rowIndex") * 7 + el.get("cellIndex") - 5 - new Date(currentYear, currentMonth, 1).getDay()
             ));
 
-            this._syncDateWithInput(calendar);
+            this._syncCalendarWithInput(calendar);
         } else if (el.hasClass("better-dateinput-calendar-prev")) {
             this.setCalendarDate(new Date(currentYear, currentMonth - 1, 1)).fire("focus");
         } else if (el.hasClass("better-dateinput-calendar-next")) {
@@ -151,5 +134,8 @@ DOM.extend("input[type=date]", {
             // update current date
             this.setData("calendarDate", value);
         }
-    }
+    },
+    _handleDocumentClick: function(calendar) {
+        if (!this.isFocused()) calendar.hide();
+    },
 });
