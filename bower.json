@@ -1,7 +1,7 @@
 {
     "name": "better-dateinput-polyfill",
     "description": "input[type=date] polyfill for better-dom",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "main": [
         "src/better-dateinput-polyfill.js", 
         "src/better-dateinput-polyfill.css"
@@ -10,7 +10,7 @@
         "better-dom"
     ],
     "dependencies": {
-        "better-dom": "0.9.3"
+        "better-dom": "0.9.6"
     },
     "devDependencies": {
         "jasmine": "1.3.1"
