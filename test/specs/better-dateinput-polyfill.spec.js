@@ -8,7 +8,7 @@ describe("better-dateinput-polyfill", function() {
         spyOn(dateinput, "_refreshCalendar");
     });
 
-    it("should toggle calendar visibility on enter key", function() {
+    it("should toggle calendar visibility on space key", function() {
         spyOn(dateinput, "getCalendarDate").andReturn(new Date());
         spyOn(dateinput, "get").andReturn("");
 
@@ -18,14 +18,14 @@ describe("better-dateinput-polyfill", function() {
 
         visibilitySpy.andReturn(true);
 
-        dateinput._handleDateInputKeys(13, false, calendar);
+        dateinput._handleCalendarKeyDown(32, false, calendar);
 
         expect(visibilitySpy).toHaveBeenCalled();
         expect(showSpy).toHaveBeenCalled();
 
         visibilitySpy.andReturn(false);
 
-        dateinput._handleDateInputKeys(13, false, calendar);
+        dateinput._handleCalendarKeyDown(32, false, calendar);
 
         expect(visibilitySpy).toHaveBeenCalled();
         expect(hideSpy).toHaveBeenCalled();
@@ -34,11 +34,11 @@ describe("better-dateinput-polyfill", function() {
     it("should hide calendar on escape or tab key", function() {
         var spy = spyOn(calendar, "hide");
 
-        dateinput._handleDateInputKeys(9, false, calendar);
+        dateinput._handleCalendarKeyDown(9, false, calendar);
 
         expect(spy).toHaveBeenCalled();
 
-        dateinput._handleDateInputKeys(27, false, calendar);
+        dateinput._handleCalendarKeyDown(27, false, calendar);
 
         expect(spy.callCount).toBe(2);
     });
@@ -50,11 +50,11 @@ describe("better-dateinput-polyfill", function() {
             expect(value).toBe("");
         });
 
-        dateinput._handleDateInputKeys(8, false, calendar);
+        dateinput._handleCalendarKeyDown(8, false, calendar);
 
         expect(spy).toHaveBeenCalled();
 
-        dateinput._handleDateInputKeys(46, false, calendar);
+        dateinput._handleCalendarKeyDown(46, false, calendar);
 
         expect(spy.callCount).toBe(2);
     });
@@ -66,7 +66,7 @@ describe("better-dateinput-polyfill", function() {
             expectKey = function(key, altKey, expected) {
                 getSpy.andReturn(new Date(now.getTime()));
 
-                dateinput._handleDateInputKeys(key, altKey, calendar);
+                dateinput._handleCalendarKeyDown(key, altKey, calendar);
 
                 expect(setSpy).toHaveBeenCalledWith(expected);
             }
