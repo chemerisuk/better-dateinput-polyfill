@@ -4,34 +4,33 @@
  *
  * Copyright (c) 2013 Maksim Chemerisuk
  */
-DOM.extend("input[type=date]", {
-    calendar: "div[hidden].%CLS%>p.%CLS%-header+a.%CLS%-prev+a.%CLS%-next+table.%CLS%-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7".replace(/%CLS%/g, "better-dateinput-calendar")
-}, {
-    constructor: function(tpl) {
-        var calendar = tpl.calendar;
- 
+DOM.extend("input[type=date]", [
+    "div[hidden].%CLS%>p.%CLS%-header+a.%CLS%-prev+a.%CLS%-next+table.%CLS%-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7".replace(/%CLS%/g, "better-dateinput-calendar")
+], {
+    constructor: function(calendar) {
         this
             // remove legacy dateinput if it exists and block user input
             .set({type: "text", readonly: true}) 
             // sync value on click
             .on("click", this._syncInputWithCalendar, [calendar])
             // handle arrow keys, esc etc.
-            .on("keydown", ["keyCode", "altKey"], this._handleCalendarKeyDown, [calendar]);
+            .on("keydown", {args: ["keyCode", "altKey"]}, this._handleCalendarKeyDown, [calendar]);
 
         // prevent focusing after click if the input is inside of a label
         calendar.on("click td", {args: ["target"], cancel: true}, this._handleCalendarDayClick, [calendar], this);
 
         // stop bubbling to allow navigation via prev/next month buttons
-        _.forOwn({prev: false, next: true}, function(param, key) {
-            calendar.find(".better-dateinput-calendar-" + key)
-                .on("click", {cancel: true, stop: true}, this._handleCalendarNavClick, [param], this);
-        }, this);
-        
+        calendar.findAll("a").invoke("on",
+            "click", {cancel: true, stop: true, args: ["target"]}, this._handleCalendarNavClick, this);
+                
+        // hide calendar when a user clicks somewhere outside
         DOM.on("click", this._handleDocumentClick, [calendar], this);
 
         // cache access to some elements
-        this._refreshCalendar = _.bind(this._refreshCalendar, this, 
-            calendar.find(".better-dateinput-calendar-header"), calendar.findAll("td"));
+        this.bind("_refreshCalendar", 
+            calendar.find(".better-dateinput-calendar-header"), 
+            calendar.findAll("td")
+        );
 
         this.after(calendar);
 
@@ -46,19 +45,20 @@ DOM.extend("input[type=date]", {
 
         return this;
     },
-    _handleCalendarDayClick: function(el, calendar) {
+    _handleCalendarDayClick: function(target, calendar) {
         var calendarDate = this.getCalendarDate(),
             currentYear = calendarDate.getFullYear(),
             currentMonth = calendarDate.getMonth(),
             targetDate = new Date(currentYear, currentMonth,
-                el.parent().get("rowIndex") * 7 + el.get("cellIndex") - 5 - new Date(currentYear, currentMonth, 1).getDay()
+                target.parent().get("rowIndex") * 7 + target.get("cellIndex") - 5 - new Date(currentYear, currentMonth, 1).getDay()
             );
 
         this.setCalendarDate(targetDate)._syncCalendarWithInput(calendar);
     },
-    _handleCalendarNavClick: function(next) {
-        var calendarDate = this.getCalendarDate(),
-            targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (next ? 1 : -1), 1);
+    _handleCalendarNavClick: function(target) {
+        var isNext = target.hasClass("better-dateinput-calendar-next"),
+            calendarDate = this.getCalendarDate(),
+            targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
 
         this.setCalendarDate(targetDate).fire("focus");
     },
