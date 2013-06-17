@@ -2,6 +2,8 @@ better-dom [![Build Status](https://api.travis-ci.org/chemerisuk/better-dom.png?
 ==========
 Making DOM to be nice.
 
+API description: http://chemerisuk.github.io/better-dom/.
+
 ## Installation
 The simplest way is to use [bower](http://bower.io/):
 
@@ -110,22 +112,44 @@ The extension makes `input[type=date]` controls with the same UX for all browser
 
 Check out the [extension repository](https://github.com/chemerisuk/better-dateinput-polyfill).
 
-## Emmet expressions support
+## Getter and setter
+One of the unclear moments about standard DOM APIs is notion of properties and attributes for a element. Every time a developer wants to get some value he or she needs to decide which entity to grab. Usually reading a property is faster, but a lot of people don't know that or just always use attribute to keep the algorithm the same everywhere.
+
+To fix that the library introduces smart getter and setter.
+
+```js
+var link = DOM.find("#link");
+
+// returns value of the id property (i.e. "link" string)
+link.get("id");
+// returns value of "data-attr" attribute
+link.get("data-attr");
+// returns innerHTML of the element
+link.get();
+
+// sets property href (and that action updates attribute value too)
+link.set("href", "/some/path");
+// sets attribute "data-attr" to "123"
+link.set("data-attr", "123");
+// sets innerHTML to "some text"
+link.set("some text");
+```
+
+## Emmet expressions
 HTML strings are boring and complex, they take a lot of space. Let's fix that with [emmet](http://emmet.io/):
 
-* `nav>ul>li` -> `<nav><ul><li></li></ul></nav>`
-* `form#search.wide` -> `<form id="search" class="wide"></form>`
-* `[a='value1' b="value2"]` -> `<div a="value1" b="value2"></div>`
-* `ul>li.item$*3` -> `<ul><li class="item1"></li><li class="item2"></li><li class="item3"></li></ul>`
+* `nav>ul>li` instead of `<nav><ul><li></li></ul></nav>`
+* `form#search.wide` instead of `<form id="search" class="wide"></form>`
+* `[a='value1' b="value2"]` instead of `<div a="value1" b="value2"></div>`
+* `ul>li.item$*3` instead of `<ul><li class="item1"></li><li class="item2"></li><li class="item3"></li></ul>`
 
 Because of code size emmet expressions support is only for HTML strings and has some limitations for now, but major features are in place.
 
-
 ## Event handling best practices
-Events handling is a big part of writing code for DOM. And there are some features included to the library APIs that force developers to prevent known issues in their code.
+Events handling is a big part of writing a code for DOM. And there are some features included to the library APIs that help developers to avoid potential issues and keep their code easier to maintain.
 
 #### Get rid of the event object
-Event handlers don't own an event object now and this thing improves testability of your code:
+Event callback looses event object argument and it improves testability of your code.
 
 ```js
 // NOTICE: handler don't have e as the first argument
@@ -135,22 +159,45 @@ DOM.find("#link").on("keydown", {args: ["keyCode", "altKey"]}, function(keyCode,
 ```
 
 #### Call preventDefault() or stopPropagation() before logic
-It's a common situation to work with unsafe code that can throw an exception. If preventDefault() or stopPropagation() are called at the end of logic than program may start to work unexpected.
+It's a common situation that a handler throws an exception for a some reason. If preventDefault() or stopPropagation() are called at the end of logic than program may start to behave incorrectly.
 
 ```js
 // NOTICE: preventDefault is always called before the handler
 DOM.find("#link").on("click", {cancel: true}, handler);
-// NOTICE: stopPropagation os always called before the handler
+// NOTICE: stopPropagation is always called before the handler
 DOM.find("#link").on("click", {stop: true}, handler);
 ```
 
 #### Callback systems are brittle
-The library doesn't use callback arrays, so any event listener can't break another one (read the nice [article](http://dean.edwards.name/weblog/2009/03/callbacks-vs-events/) for additional details).
+The library doesn't use callback arrays, so any event listener can't break another one (read the [nice article](http://dean.edwards.name/weblog/2009/03/callbacks-vs-events/) for additional details).
 
 ```js
 DOM.ready(function() { throw Error("exception in a bad code"); });
 // NOTICE: you'll always see the message in console
 DOM.ready(function() { console.log("Nothing can break your code") });
+```
+## Easy localization
+Multilanguage support is often required for a DOM extension. `DOM.importStrings` allows to add a localized string which may be displayed in a html element using `data-i18n` attribute with an appropriate key.
+
+```js
+DOM.importStrings("hello.0", "Hello!");
+// NOTICE: optional parameter to specify language of the string
+DOM.importStrings("hello.0", "Привет!", "ru");
+// element <span data-i18n="hello.0"><span> will display "Hello!"
+```
+You can use parametrized strings via special `{param}` substrings and appropriate `data-*` attributes.
+
+```js
+DOM.importStrings("hello.1", "Hello {user}!");
+// element <a data-i18n="hello.1" data-user="Maksim"><a> will display "Hello Maksim!"
+```
+To change a string language manually use setter with `lang` parameter.
+
+```js
+span.set("lang", "ru");
+// now the span displays "Привет!"
+DOM.find("html").set("lang", "ru");
+// the line changes language globally
 ```
 
 ## Performance

@@ -17,7 +17,6 @@ module.exports = function(grunt) {
 
         jshint: {
             all: ["src/*.js", "test/spec/*.js", "Gruntfile.js"],
-            build: ["build/<%= pkg.name %>.js"],
             options: {
                 jshintrc: ".jshintrc"
             }
@@ -34,7 +33,7 @@ module.exports = function(grunt) {
 
         karma: {
             watch: {
-                configFile: "test/lib/karma.conf.js",
+                configFile: "test/lib/karma.conf",
                 background: true,
                 reporters: ["coverage", "progress"],
                 preprocessors: {
@@ -42,13 +41,16 @@ module.exports = function(grunt) {
                 }
             },
             unit: {
-                configFile: "test/lib/karma.conf.js",
+                configFile: "test/lib/karma.conf",
                 browsers: ["Chrome", "Opera", "Safari", "Firefox", "PhantomJS"],
                 singleRun: true
             },
             travis: {
-                configFile: "test/lib/karma.conf.js",
+                configFile: "test/lib/karma.conf",
                 singleRun: true
+            },
+            speed: {
+                configFile: "test/lib/karma.speed.conf"
             }
         },
 
@@ -98,11 +100,11 @@ module.exports = function(grunt) {
                     stderr: true
                 }
             },
-            openCoverage: {
-                command: "open coverage/PhantomJS\\ 1.9\\ \\(Mac\\)/index.html"
-            },
-            openJsdoc: {
-                command: "open jsdoc/index.html"
+            showCoverage: {
+                command: "ls -lrt -d -1 $PWD/coverage",
+                options: {
+                    stdout: true
+                }
             },
             rollbackPublished: {
                 command: "git checkout HEAD -- <%= pkg.name %>.js <%= pkg.name %>.htc"
@@ -175,11 +177,12 @@ module.exports = function(grunt) {
                 create: true,
                 include: [
                     "Node.supports", "Node.find", "Node.data", "Node.contains", "Node.events",
-                    "SelectorMatcher", "EventHelper", "Element.classes", "Element.clone",
+                    "SelectorMatcher", "EventHandler", "Element.classes", "Element.clone",
                     "Element.manipulation", "Element.matches", "Element.offset", "Element.props",
                     "Element.styles", "Element.toquerystring", "Element.traversing", "Element.bind",
-                    "Element.visibility", "Collection", "MockElement", "DOM.watch", "DOM.create",
-                    "DOM.extend","DOM.parsetemplate", "DOM.ready", "DOM.importstyles", "DOM.mock"
+                    "Element.visibility", "Collection", "NullElement", "DOM.watch", "DOM.create",
+                    "DOM.extend", "DOM.parsetemplate", "DOM.importstyles", "DOM.ready", "DOM.mock",
+                    "DOM.importstrings"
                 ],
                 onBuildWrite: function(id, path, contents) {
                     if ((/define\(.*?\{/).test(contents)) {
@@ -205,6 +208,16 @@ module.exports = function(grunt) {
                     }
                 }
             }
+        },
+        plato: {
+            all: {
+                options: {
+                    jshint: grunt.file.readJSON(".jshintrc")
+                },
+                files: {
+                    reports: ["src/*.js"]
+                }
+            }
         }
     });
 
@@ -218,12 +231,13 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-connect");
     grunt.loadNpmTasks("grunt-contrib-requirejs");
+    grunt.loadNpmTasks("grunt-plato");
 
 
     grunt.registerTask("dev", [
         "requirejs",
         "connect", // start web server
-        "shell:openCoverage", // open coverage page
+        "shell:showCoverage", // open coverage page
         "karma:watch", // start karma server
         "watch" // watch for a file changes
     ]);
