@@ -7,36 +7,40 @@
 DOM.extend("input[type=date]", [
     "div[hidden].%CLS%>p.%CLS%-header+a.%CLS%-prev+a.%CLS%-next+table.%CLS%-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7".replace(/%CLS%/g, "better-dateinput-calendar")
 ], {
-    constructor: function(calendar) {
-        this
-            // remove legacy dateinput if it exists and block user input
-            .set({type: "text", readonly: true}) 
-            // sync value on click
-            .on("click", this._syncInputWithCalendar, [calendar])
-            // handle arrow keys, esc etc.
-            .on("keydown", {args: ["keyCode", "altKey"]}, this._handleCalendarKeyDown, [calendar]);
+    constructor: (function(){
+        var notTabKey = function(keyCode) { return keyCode !== 9; };
 
-        // prevent focusing after click if the input is inside of a label
-        calendar.on("click td", {args: ["target"], cancel: true}, this._handleCalendarDayClick, [calendar], this);
+        return function(calendar) {
+            this
+                // remove legacy dateinput if it exists
+                .set("type", "text") 
+                // sync value on click
+                .on("click", this._syncInputWithCalendar, [calendar])
+                // handle arrow keys, esc etc.
+                // MUST stop propagation because of IE8
+                .on("keydown", {args: ["keyCode", "altKey"], cancel: notTabKey, stop: true}, this._handleCalendarKeyDown, [calendar]);
 
-        // stop bubbling to allow navigation via prev/next month buttons
-        calendar.findAll("a").invoke("on",
-            "click", {cancel: true, stop: true, args: ["target"]}, this._handleCalendarNavClick, this);
-                
-        // hide calendar when a user clicks somewhere outside
-        DOM.on("click", this._handleDocumentClick, [calendar], this);
+            // prevent focusing after click if the input is inside of a label
+            calendar.on("click td", {args: ["target"], cancel: true}, this._handleCalendarDayClick, [calendar], this);
 
-        // cache access to some elements
-        this.bind("_refreshCalendar", 
-            calendar.find(".better-dateinput-calendar-header"), 
-            calendar.findAll("td")
-        );
+            // stop bubbling to allow navigation via prev/next month buttons
+            calendar.findAll("a").on("click", {cancel: true, stop: true, args: ["target"]}, this._handleCalendarNavClick, this);
+                    
+            // hide calendar when a user clicks somewhere outside
+            DOM.on("click", this._handleDocumentClick, [calendar], this);
 
-        this.after(calendar);
+            // cache access to some elements
+            this.bind("_refreshCalendar", 
+                calendar.find(".better-dateinput-calendar-header"), 
+                calendar.findAll("td")
+            );                                                                               
 
-        // show calendar for autofocused elements
-        if (this.isFocused()) this.fire("focus");
-    },
+            this.after(calendar);
+
+            // show calendar for autofocused elements
+            if (this.isFocused()) this.fire("focus");
+        }
+    })(),
     getCalendarDate: function() {
         return this.getData("calendarDate");
     },
@@ -53,7 +57,8 @@ DOM.extend("input[type=date]", [
                 target.parent().get("rowIndex") * 7 + target.get("cellIndex") - 5 - new Date(currentYear, currentMonth, 1).getDay()
             );
 
-        this.setCalendarDate(targetDate)._syncCalendarWithInput(calendar);
+        this.setCalendarDate(targetDate);
+        this._syncCalendarWithInput(calendar);
     },
     _handleCalendarNavClick: function(target) {
         var isNext = target.hasClass("better-dateinput-calendar-next"),
@@ -66,12 +71,8 @@ DOM.extend("input[type=date]", [
         var delta = 0,
             currentDate = this.getCalendarDate();
 
-        if (key === 32) { // show/hide calendar on space key
-            if (calendar.isHidden()) {
-                this._syncInputWithCalendar(calendar);
-            } else {
-                this._syncCalendarWithInput(calendar);
-            }
+        if (key === 13) { 
+            calendar.toggle(); // show/hide calendar on enter key
         } else if (key === 27 || key === 9) {
             calendar.hide(); // esc or tab key hides calendar
         } else if (key === 8 || key === 46) {
@@ -89,25 +90,25 @@ DOM.extend("input[type=date]", [
                     currentDate.setDate(currentDate.getDate() + delta);
                 }
 
-                this.setCalendarDate(currentDate);
+                this.setCalendarDate(currentDate)._syncCalendarWithInput(calendar, true);
             }
         }
     },
-    _syncInputWithCalendar: function(calendar) {
+    _syncInputWithCalendar: function(calendar, skipCalendar) {
         var value = (this.get("value") || "").split("-");
         // switch calendar to the input value date
         this.setCalendarDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10) - 1, parseInt(value[2],10)) : new Date());
 
-        calendar.show();
+        if (!skipCalendar) calendar.show();
     },
-    _syncCalendarWithInput: function(calendar) {
+    _syncCalendarWithInput: function(calendar, skipCalendar) {
         var date = this.getCalendarDate(),
             zeroPadMonth = ("00" + (date.getMonth() + 1)).slice(-2),
             zeroPadDate = ("00" + date.getDate()).slice(-2);
 
         this.set(date.getFullYear() + "-" + zeroPadMonth + "-" + zeroPadDate);
 
-        calendar.hide();
+        if (!skipCalendar) calendar.hide();
     },
     _refreshCalendar: function(calendarCaption, calendarDays, value) {
         var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
@@ -144,3 +145,55 @@ DOM.extend("input[type=date]", [
         if (!this.isFocused()) calendar.hide();
     },
 });
+
+// I18N
+
+DOM.importStrings({
+    // days of week
+    "calendar.weekday.1": "Mon",
+    "calendar.weekday.2": "Tue",
+    "calendar.weekday.3": "Wed",
+    "calendar.weekday.4": "Thu",
+    "calendar.weekday.5": "Fri",
+    "calendar.weekday.6": "Sat",
+    "calendar.weekday.7": "Sun",
+    // monthes
+    "calendar.month.0": "January",
+    "calendar.month.1": "February",
+    "calendar.month.2": "March",
+    "calendar.month.3": "April",
+    "calendar.month.4": "May",
+    "calendar.month.5": "June",
+    "calendar.month.6": "July",
+    "calendar.month.7": "August",
+    "calendar.month.8": "September",
+    "calendar.month.9": "October",
+    "calendar.month.10": "November",
+    "calendar.month.11": "December", 
+});
+
+// ru language
+
+DOM.importStrings({
+    // days of week
+    "calendar.weekday.1": "Пн",
+    "calendar.weekday.2": "Вт",
+    "calendar.weekday.3": "Ср",
+    "calendar.weekday.4": "Чт",
+    "calendar.weekday.5": "Пт",
+    "calendar.weekday.6": "Сб",
+    "calendar.weekday.7": "Вс",
+    // monthes
+    "calendar.month.0": "Январь",
+    "calendar.month.1": "Февраль",
+    "calendar.month.2": "Март",
+    "calendar.month.3": "Апрель",
+    "calendar.month.4": "Май",
+    "calendar.month.5": "Июнь",
+    "calendar.month.6": "Июль",
+    "calendar.month.7": "Август",
+    "calendar.month.8": "Сентябрь",
+    "calendar.month.9": "Октябрь",
+    "calendar.month.10": "Ноябрь",
+    "calendar.month.11": "Декабрь", 
+}, "ru");
