@@ -18,13 +18,16 @@ describe("better-dateinput-polyfill", function() {
         expect(toggleSpy).toHaveBeenCalled();
     });
 
-    it("should hide calendar on escape or tab key", function() {
+    it("should hide calendar on escape key", function() {
         var spy = spyOn(calendar, "hide");
 
-        dateinput._handleCalendarKeyDown(9, false, calendar);
-        expect(spy).toHaveBeenCalled();
         dateinput._handleCalendarKeyDown(27, false, calendar);
-        expect(spy.callCount).toBe(2);
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it("should not prevent default action on tab key", function() {
+        var result = dateinput._handleCalendarKeyDown(9, false, calendar);
+        expect(result).not.toBe(false);
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
