@@ -178,11 +178,11 @@ module.exports = function(grunt) {
                 include: [
                     "Node.supports", "Node.find", "Node.data", "Node.contains", "Node.events",
                     "SelectorMatcher", "EventHandler", "Element.classes", "Element.clone",
-                    "Element.manipulation", "Element.matches", "Element.offset", "Element.props",
-                    "Element.styles", "Element.toquerystring", "Element.traversing", "Element.bind",
-                    "Element.visibility", "Collection", "NullElement", "DOM.watch", "DOM.create",
-                    "DOM.extend", "DOM.parsetemplate", "DOM.importstyles", "DOM.ready", "DOM.mock",
-                    "DOM.importstrings"
+                    "Element.manipulation", "Element.matches", "Element.offset", "Element.get",
+                    "Element.set", "Element.styles", "Element.traversing",
+                    "Element.bind", "Element.visibility", "Collection", "NullElement", "DOM.watch",
+                    "DOM.create", "DOM.extend", "DOM.parsetemplate", "DOM.importstyles", "DOM.ready",
+                    "DOM.mock", "DOM.importstrings"
                 ],
                 onBuildWrite: function(id, path, contents) {
                     if ((/define\(.*?\{/).test(contents)) {
@@ -275,6 +275,11 @@ module.exports = function(grunt) {
         "jsdoc"
     ]);
 
+    grunt.registerTask("speed", [
+        "requirejs:compile",
+        "karma:speed"
+    ]);
+
     grunt.registerTask("publish", "Publish a new version routine", function(version) {
         grunt.config.set("pkg.version", version);
 
@@ -302,7 +307,8 @@ module.exports = function(grunt) {
             "docs",
             "shell:checkoutDocs",
             "bumpDocsBuild",
-            "shell:updateDocs"
+            "shell:updateDocs",
+            "plato"
         ]);
     });
 };

@@ -1,6 +1,6 @@
 better-dom [![Build Status](https://api.travis-ci.org/chemerisuk/better-dom.png?branch=master)](http://travis-ci.org/chemerisuk/better-dom)
 ==========
-Making DOM to be nice.
+> Sandbox for DOM extensions
 
 API description: http://chemerisuk.github.io/better-dom/.
 
@@ -9,74 +9,16 @@ The simplest way is to use [bower](http://bower.io/):
 
     bower install better-dom
 
-This will clone the latest version of the library into the `components` directory at the root of your project.
-
-Then include script below on your web page:
+This will clone the latest version of the library into the `components` directory at the root of your project. Then just include script below on your web page:
 
 ```html
-<!DOCTYPE html>
-<html>
-<head>
-    ...    
-</head>
-<body>
-    ...
-    <script src="components/build/better-dom.js" data-htc="components/extra/better-dom.htc"></script>
-</body>
-</html>
+<script src="components/build/better-dom.js" data-htc="components/extra/better-dom.htc"></script>
 ```
 
 ## Unobtrusive extensions
-The idea is to write DOM additions declaratively. `DOM.extend` used to define a new extension and after the call any existing matched element will be initialized with an appropriate constructor. But the coolest thing is that the same will happen even for HTML content inserted dynamically via `innerHTML` or any other javascript framework.
+`DOM.extend` used to define a new extension and any matched elements will be captured by it. But the coolest thing is that the same will happen even for future content inserted via `innerHTML` or using a javascript framework.
 
-No need to worry about when and how the extension will be initialized. As a result it's much simpler to create your own [components](#elastic-textarea) or to write [polyfills](#placeholder-polyfill) for old browsers.
-
-#### elastic textarea example
-This is a textarea extension which autoresizes itself to contain all entered text:
-
-```js
-DOM.extend("textarea.elastic", [
-    "div[style=position:relative]>pre[style=visibility:hidden;margin:0;border-style:solid]>span[style=display:inline-block;white-space:pre-wrap]"
-], {
-    constructor: function(wrapper) {
-        var holder = wrapper.child(0),
-            span = holder.child(0);
-
-        this.on("input", this._syncWithHolder, [span])._syncWithHolder(span);
-
-        this.parent("form").on("reset", this._syncWithHolder, [span, true], this);
-
-        holder.setStyle({
-            "font": this.getStyle("font"),
-            "padding": this.getStyle("padding"),
-            "border-width": this.getStyle("border-width")
-        });
-
-        wrapper.append(this.after(wrapper));
-    },
-    _syncWithHolder: function(span, defaultValue) {
-        value = this.get(defaultValue ? "defaultValue" : "value");
-
-        // use &nbsp; to fix issue with adding a new line
-        if (value[value.length - 1] === "\n") value += "&nbsp;";
-        
-        // IE doesn't respect newlines so use <br> instead
-        span.set(value.split("\n").join("<br>"));
-    }
-});
-
-DOM.importStyles("textarea.elastic", {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    width: "100%",
-    height: "100%",
-    overflow: "hidden",
-    resize: "none",
-    "box-sizing": "border-box"
-});
-```
-Check out [live demo](http://chemerisuk.github.io/better-elastic-textarea/).
+So as a developer you don't need to worry about when and how the extension will be initialized. As a result it's much simpler to create your own [components](#elastic-textarea-example) or to write [polyfills](#placeholder-polyfill-example) for old browsers.
 
 #### placeholder polyfill example
 The extension polyfills `[placeholder]` for old browsers
@@ -107,13 +49,18 @@ DOM.supports("placeholder", "input") || DOM.extend("[placeholder]", [
 ```
 Check out [live demo](http://chemerisuk.github.io/better-placeholder-polyfill/) (open in IE < 10).
 
+#### elastic textarea example
+This is a textarea extension which autoresizes itself to contain all entered text.
+
+Check out [live demo](http://chemerisuk.github.io/better-elastic-textarea/) and the [extension repository](https://github.com/chemerisuk/better-elastic-textarea).
+
 #### more code: dateinput polyfill
 The extension makes `input[type=date]` controls with the same UX for all browsers.
 
-Check out the [extension repository](https://github.com/chemerisuk/better-dateinput-polyfill).
+Check out [live demo](http://chemerisuk.github.io/better-dateinput-polyfill) the [extension repository](https://github.com/chemerisuk/better-dateinput-polyfill).
 
 ## Getter and setter
-One of the unclear moments about standard DOM APIs is notion of properties and attributes for a element. Every time a developer wants to get some value he or she needs to decide which entity to grab. Usually reading a property is faster, but a lot of people don't know that or just always use attribute to keep the algorithm the same everywhere.
+One of the unclear moments about standard DOM APIs is notion of properties and attributes for a element. Every time a developer wants to get some value he or she needs to decide which value to grab. Usually reading a property _is faster_, but a lot of people don't know that or just always use attributes to keep the accessing the same everywhere in a code.
 
 To fix that the library introduces smart getter and setter.
 
@@ -153,19 +100,31 @@ Event callback looses event object argument and it improves testability of your 
 
 ```js
 // NOTICE: handler don't have e as the first argument
-DOM.find("#link").on("click", function() {...});
-// NOTICE: the second options argument
-DOM.find("#link").on("keydown", {args: ["keyCode", "altKey"]}, function(keyCode, altKey) {...});
+input.on("click", function() {...});
+// NOTICE: event arguments in event name
+input.on("keydown(keyCode,altKey)", function(keyCode, altKey) {...});
 ```
 
-#### Call preventDefault() or stopPropagation() before logic
-It's a common situation that a handler throws an exception for a some reason. If preventDefault() or stopPropagation() are called at the end of logic than program may start to behave incorrectly.
+#### Correct return false interpretation
+jQuery has strange behavior of event handler that returns false and it's [cause of confusion](http://fuelyourcoding.com/jquery-events-stop-misusing-return-false/) for a lot of people. Additionally to preventing default action it also stops propagation and this is a very bad thing that may break plugin compatability. So the better-dom library has standards-friendly behavior.
 
 ```js
-// NOTICE: preventDefault is always called before the handler
-DOM.find("#link").on("click", {cancel: true}, handler);
-// NOTICE: stopPropagation is always called before the handler
-DOM.find("#link").on("click", {stop: true}, handler);
+// return false prevents ONLY default action
+DOM.find("a").on("click", function() { return false; });
+```
+
+#### Late binding
+Usually an event lintener function is bound when some `addEventListener` method called. This causes trouble when the function value is changed. The library helps to solve the problem by allowing to handle an event using _object property_ instead of just function.
+
+```js
+var link = DOM.find(".test-link"), 
+    obj = {handleClick: function() { console.log("Hello!"); }};
+
+link.on("click", obj, "handleClick");
+// every click on the link now logs "Hello!" into console
+obj.handleClick = function() { console.log("Hello, Maksim!"); }
+// every click on the link now logs "Hello, Maksim!" into console
+// NOTICE: there if no link.off("click") call
 ```
 
 #### Callback systems are brittle
