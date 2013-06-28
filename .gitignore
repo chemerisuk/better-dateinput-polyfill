@@ -1,3 +1,9 @@
 .DS_Store
+node_modules
 components
+dist
+coverage
 *.log
+reports
+specs.html
+.grunt

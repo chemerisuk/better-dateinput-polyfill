@@ -10,23 +10,23 @@ DOM.extend("input[type=date]", [
     constructor: function(calendar) {
         this
             // remove legacy dateinput if it exists
-            .set("type", "text") 
+            .set("type", "text")
             // sync value on click
             .on("click", this, "_syncInputWithCalendar", [calendar])
             // handle arrow keys, esc etc.
             .on("keydown(keyCode,ctrlKey)", this, "_handleCalendarKeyDown", [calendar]);
 
-        calendar.findAll("a").on("click(target)", this, "_handleCalendarNavClick");
+        calendar.findAll("a").invoke("on", "click(target)", this, "_handleCalendarNavClick");
         calendar.on("click(target) td", this, "_handleCalendarDayClick", [calendar]);
                 
         // hide calendar when a user clicks somewhere outside
         DOM.on("click", this, "_handleDocumentClick", [calendar]);
 
         // cache access to some elements
-        this.bind("_refreshCalendar", 
-            calendar.find(".better-dateinput-calendar-header"), 
+        this.bind("_refreshCalendar",
+            calendar.find(".better-dateinput-calendar-header"),
             calendar.findAll("td")
-        );                                                                               
+        );
 
         this.after(calendar);
 
@@ -70,7 +70,7 @@ DOM.extend("input[type=date]", [
         var currentDate = this.getCalendarDate(),
             delta = 0;
 
-        if (keyCode === 13) { 
+        if (keyCode === 13) {
             calendar.toggle(); // show/hide calendar on enter key
         } else if (keyCode === 27 || keyCode === 9) {
             calendar.hide(); // esc or tab key hides calendar
@@ -78,7 +78,7 @@ DOM.extend("input[type=date]", [
             this.set(""); // backspace or delete clears the value
         } else {
             if (keyCode === 74 || keyCode === 40) { delta = 7; }
-            else if (keyCode === 75 || keyCode === 38) { delta = -7; }                            
+            else if (keyCode === 75 || keyCode === 38) { delta = -7; }
             else if (keyCode === 76 || keyCode === 39) { delta = 1; }
             else if (keyCode === 72 || keyCode === 37) { delta = -1; }
 
@@ -120,7 +120,7 @@ DOM.extend("input[type=date]", [
             // move to begin of the start week
             iterDate.setDate(iterDate.getDate() - iterDate.getDay());
             
-            calendarDays.each(function(day, index) {
+            calendarDays.each(function(day) {
                 iterDate.setDate(iterDate.getDate() + 1);
                 
                 var mDiff = value.getMonth() - iterDate.getMonth(),
@@ -144,57 +144,5 @@ DOM.extend("input[type=date]", [
     },
     _handleDocumentClick: function(calendar) {
         if (!this.isFocused()) calendar.hide();
-    },
+    }
 });
-
-// I18N
-
-DOM.importStrings({
-    // days of week
-    "calendar.weekday.1": "Mon",
-    "calendar.weekday.2": "Tue",
-    "calendar.weekday.3": "Wed",
-    "calendar.weekday.4": "Thu",
-    "calendar.weekday.5": "Fri",
-    "calendar.weekday.6": "Sat",
-    "calendar.weekday.7": "Sun",
-    // monthes
-    "calendar.month.0": "January",
-    "calendar.month.1": "February",
-    "calendar.month.2": "March",
-    "calendar.month.3": "April",
-    "calendar.month.4": "May",
-    "calendar.month.5": "June",
-    "calendar.month.6": "July",
-    "calendar.month.7": "August",
-    "calendar.month.8": "September",
-    "calendar.month.9": "October",
-    "calendar.month.10": "November",
-    "calendar.month.11": "December", 
-});
-
-// ru language
-
-DOM.importStrings({
-    // days of week
-    "calendar.weekday.1": "Пн",
-    "calendar.weekday.2": "Вт",
-    "calendar.weekday.3": "Ср",
-    "calendar.weekday.4": "Чт",
-    "calendar.weekday.5": "Пт",
-    "calendar.weekday.6": "Сб",
-    "calendar.weekday.7": "Вс",
-    // monthes
-    "calendar.month.0": "Январь",
-    "calendar.month.1": "Февраль",
-    "calendar.month.2": "Март",
-    "calendar.month.3": "Апрель",
-    "calendar.month.4": "Май",
-    "calendar.month.5": "Июнь",
-    "calendar.month.6": "Июль",
-    "calendar.month.7": "Август",
-    "calendar.month.8": "Сентябрь",
-    "calendar.month.9": "Октябрь",
-    "calendar.month.10": "Ноябрь",
-    "calendar.month.11": "Декабрь", 
-}, "ru");
