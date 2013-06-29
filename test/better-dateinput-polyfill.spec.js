@@ -52,7 +52,7 @@ describe("better-dateinput-polyfill", function() {
 
                 dateinput._handleCalendarKeyDown(key, altKey, calendar);
                 expect(setSpy).toHaveBeenCalledWith(expected);
-            }
+            };
 
         expectKey(74, false, new Date(now.getTime() + 604800000));
         expectKey(40, false, new Date(now.getTime() + 604800000));
