@@ -1,6 +1,6 @@
 /**
  * @file better-dom
- * @version 1.0.0-rc.3
+ * @version 1.0.0
  * @overview Sandbox for DOM extensions
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -36,7 +36,7 @@
                 type = "DOM";
             }
 
-            return "Error: " + type + "." + method + " was called with illegal arguments. Check http://chemerisuk.github.io/better-dom/" + type + ".html#" + method + " to verify the function call";
+            return "Error: " + type + "." + method + " was called with illegal arguments. Check http://chemerisuk.github.io/better-dom" + type + ".html#" + method + " to verify the function call";
         },
         makeLoopMethod = (function(){
             var rcallback = /cb\.call\(([^)]+)\)/g,
@@ -111,10 +111,6 @@
         _forEach = makeLoopMethod({
             BODY:   "cb.call(that, a[i], i, a)"
         }),
-        _times = makeLoopMethod({
-            COUNT:  "a",
-            BODY:   "cb.call(that, i)"
-        }),
         _map = makeLoopMethod({
             BEFORE: "var out = []",
             BODY:   "out.push(cb.call(that, a[i], i, a))",
@@ -133,9 +129,14 @@
             BODY:   "that = (!i && that === undefined ? a[i] : cb(that, a[i], i, a))",
             AFTER:  "return that"
         }),
+        _foldr = makeLoopMethod({
+            BEFORE: "var j",
+            BODY:   "j = n - i - 1; that = (!i && that === undefined ? a[j] : cb(that, a[j], j, a))",
+            AFTER:  "return that"
+        }),
         _every = makeLoopMethod({
             BEFORE: "var out = true",
-            BODY:   "out = cb.call(that, a[i], a) && out",
+            BODY:   "out = cb.call(that, a[i], i, a) && out",
             AFTER:  "return out"
         }),
         _slice = function(list, index) {
@@ -612,7 +613,7 @@
                 event = document.createEvent(isCustomEvent ? "CustomEvent" : "Event");
 
                 if (isCustomEvent) {
-                    event.initCustomEvent(handler._type || type, true, false, detail);
+                    event.initCustomEvent(handler._type || type, true, true, detail);
                 } else {
                     event.initEvent(handler._type || type, true, true);
                 }
@@ -657,7 +658,7 @@
             };
         }
 
-        if (DOMNode.prototype.supports("oninvalid", "input")) {
+        if (DOMNode.prototype.supports("validity", "input")) {
             eventHooks.invalid = function(handler) {
                 handler.capturing = true;
             };
@@ -678,14 +679,15 @@
                     capturedEl;
 
                 return function() {
-                    var target = window.event.srcElement;
+                    var target = window.event.srcElement,
+                        type = target.type;
 
                     if (capturedEl) {
                         capturedEl.detachEvent(legacyInputEventName, propertyChangeEventHandler);
                         capturedEl = null;
                     }
 
-                    if (target.type === "input" || target.type === "textarea") {
+                    if (type === "text" || type === "password" || type === "textarea") {
                         (capturedEl = target).attachEvent(legacyInputEventName, propertyChangeEventHandler);
                     }
                 };
@@ -822,7 +824,7 @@
         }
 
         if (legacyIE) {
-            hooks.defaulPrevented = function(event) {
+            hooks.defaultPrevented = function(event) {
                 return event.returnValue === false;
             };
         }
@@ -1108,9 +1110,9 @@
      * @param  {String} selector css selector
      * @return {DOMElement}
      */
-    DOMElement.prototype.matches = function(selector) {
+    DOMElement.prototype.is = function(selector) {
         if (!selector || typeof selector !== "string") {
-            throw _makeError("matches", this);
+            throw _makeError("is", this);
         }
 
         return new SelectorMatcher(selector).test(this._node);
@@ -1161,7 +1163,11 @@
                 hook = hooks[name];
 
             if (name === undefined) {
-                name = el.type && "value" in el ? "value" : "innerHTML";
+                if (el instanceof Option) {
+                    name = el.hasAttribute("value") ? "value" : "text";
+                } else {
+                    name = el.type && "value" in el ? "value" : "innerHTML";
+                }
             } else if (typeof name !== "string") {
                 throw _makeError("get", this);
             }
@@ -1169,8 +1175,25 @@
             return hook ? hook(el) : (name in el ? el[name] : el.getAttribute(name));
         };
 
-        hooks.tagName = hooks.nodeName = function(el) {
+        hooks.tagName = function(el) {
             return el.nodeName.toLowerCase();
+        };
+
+        hooks.elements = function(el) {
+            return new DOMCollection(el.elements);
+        };
+
+        hooks.options = function(el) {
+            return new DOMCollection(el.options);
+        };
+
+        hooks.form = function(el) {
+            return DOMElement(el.form);
+        };
+
+        hooks.type = function(el) {
+            // some browsers don't recognize input[type=email] etc.
+            return el.getAttribute("type") || el.type;
         };
     })();
 
@@ -1202,6 +1225,8 @@
                 if (value === undefined) {
                     value = name;
                     name = el.type && "value" in el ? "value" : "innerHTML";
+                    // for IE use innerText because it doesn't trigger onpropertychange
+                    if (!window.addEventListener && name === "value") name = "innerText";
                 }
 
                 if (typeof value === "function") {
@@ -1584,8 +1609,6 @@
         Array.prototype.push.apply(this, _map(elements, DOMElement));
     }
 
-    DOMCollection.prototype = new DOMElement();
-
     DOMCollection.prototype = {
         constructor: DOMCollection,
         
@@ -1603,6 +1626,72 @@
         },
 
         /**
+         * (alias: <b>any</b>) Checks if the callback returns true for any element in the collection
+         * @memberOf DOMCollection.prototype
+         * @param  {Function} callback   callback function
+         * @param  {Object}   [thisArg]  callback context
+         * @return {Boolean} true, if any element in the collection return true
+         */
+        some: function(callback, thisArg) {
+            return _some(this, callback, thisArg);
+        },
+
+        /**
+         * (alias: <b>all</b>) Checks if the callback returns true for all elements in the collection
+         * @memberOf DOMCollection.prototype
+         * @param  {Function} callback   callback function
+         * @param  {Object}   [thisArg]  callback context
+         * @return {Boolean} true, if all elements in the collection returns true
+         */
+        every: function(callback, thisArg) {
+            return _every(this, callback, thisArg);
+        },
+
+        /**
+         * (alias: <b>collect</b>) Creates an array of values by running each element in the collection through the callback
+         * @memberOf DOMCollection.prototype
+         * @param  {Function} callback   callback function
+         * @param  {Object}   [thisArg]  callback context
+         * @return {Array} new array of the results of each callback execution
+         */
+        map: function(callback, thisArg) {
+            return _map(this, callback, thisArg);
+        },
+
+        /**
+         * (alias: <b>select</b>) Examines each element in a collection, returning an array of all elements the callback returns truthy for
+         * @memberOf DOMCollection.prototype
+         * @param  {Function} callback   callback function
+         * @param  {Object}   [thisArg]  callback context
+         * @return {DOMCollection} new DOMCollection of elements that passed the callback check
+         */
+        filter: function(callback, thisArg) {
+            return new DOMCollection(_filter(this, callback, thisArg));
+        },
+
+        /**
+         * (alias: <b>foldl</b>) Boils down a list of values into a single value (from start to end)
+         * @memberOf DOMCollection.prototype
+         * @param  {Function} callback callback function
+         * @param  {Object}   memo     initial value of the accumulator
+         * @return {Object} the accumulated value
+         */
+        reduce: function(callback, memo) {
+            return _foldl(this, callback, memo);
+        },
+
+        /**
+         * (alias: <b>foldr</b>) Boils down a list of values into a single value (from end to start)
+         * @memberOf DOMCollection.prototype
+         * @param  {Function} callback callback function
+         * @param  {Object}   memo     initial value of the accumulator
+         * @return {Object} the accumulated value
+         */
+        reduceRight: function(callback, memo) {
+            return _foldr(this, callback, memo);
+        },
+
+        /**
          * Calls the method named by name on each element in the collection
          * @memberOf DOMCollection.prototype
          * @param  {String}    name   name of the method
@@ -1617,23 +1706,28 @@
             }
 
             _forEach(this, function(el) {
-                el[name].apply(el, args);
+                if (args.length) {
+                    el[name].apply(el, args);
+                } else {
+                    el[name]();
+                }
             });
 
             return this;
         }
     };
 
-    // shortcuts
-    _forIn(DOMElement.prototype, function(value, key) {
-        if (~("" + value).indexOf("return this;")) {
-            var args = [key];
-
-            DOMCollection.prototype[key] = function() {
-                return this.invoke.apply(this, args.concat(_slice(arguments)));
-            };
-        }
-    });
+    // aliases
+    _forOwn({
+        all: "every",
+        any: "some",
+        collect: "map",
+        select: "filter",
+        foldl: "reduce",
+        foldr: "reduceRight"
+    }, function(value, key) {
+        this[key] = this[value];
+    }, DOMCollection.prototype);
 
     // NULL ELEMENT
     // ------------
@@ -1662,8 +1756,9 @@
      * @namespace DOM
      * @extends DOMNode
      */
-    // jshint unused:false
     var DOM = new DOMNode(document);
+
+    DOM.version = "1.0.0";
 
     // WATCH CALLBACK
     // --------------
@@ -1677,91 +1772,100 @@
      * @function
      */
     DOM.watch = (function() {
-        var docEl = document.documentElement,
-            watchers = [],
-            startNames, computed, cssPrefix, scripts, behaviorUrl;
+        var watchers, computed, cssPrefix, scripts, behaviorUrl;
 
-        if (!DOM.supports("addBehavior", "a")) {
-            // use trick discovered by Daniel Buchner:
+        if (window.CSSKeyframesRule || !document.attachEvent) {
+            // Inspired by trick discovered by Daniel Buchner:
             // https://github.com/csuwldcat/SelectorListener
-            startNames = ["animationstart", "oAnimationStart", "webkitAnimationStart"],
-            computed = _getComputedStyle(docEl),
-            cssPrefix = window.CSSKeyframesRule ? "" : (_slice(computed).join("").match(/-(moz|webkit|ms)-/) || (computed.OLink === "" && ["-o-"]))[0];
+            computed = _getComputedStyle(document.documentElement);
+            cssPrefix = window.CSSKeyframesRule ? "" : (_slice(computed).join().match(/-(moz|webkit)-/) || (computed.OLink === "" && ["-o-"]))[0];
+            watchers = {};
+
+            _forEach(["animationstart", "oAnimationStart", "webkitAnimationStart"], function(name) {
+                document.addEventListener(name, function(e) {
+                    var entry = watchers[e.animationName],
+                        el = e.target;
+
+                    if (entry) {
+                        // MUST cancelBubbling first otherwise may have extra calls in firefox
+                        if (entry.once) el.addEventListener(name, entry.once, false);
+
+                        entry.callback(DOMElement(el));
+                    }
+                }, false);
+            });
 
             return function(selector, callback, once) {
                 var animationName = _uniqueId("DOM"),
-                    cancelBubbling = function(e) {
-                        if (e.animationName === animationName) e.stopPropagation();
-                    },
-                    watcher = function(e) {
-                        var el = e.target;
+                    animations = [animationName];
 
-                        if (e.animationName === animationName) {
-                            // MUST cancelBubbling first otherwise may have
-                            // unexpected calls in firefox
-                            if (once) el.addEventListener(e.type, cancelBubbling, false);
-
-                            callback(DOMElement(el));
-                        }
-                    },
-                    animationNames = _foldl(watchers, function(res, watcher) {
-                        if (watcher.selector === selector) res.push(watcher.animationName);
-
-                        return res;
-                    }, [animationName]);
-
-                watcher.selector = selector;
-                watcher.animationName = animationName;
-
-                DOM.importStyles(
-                    "@" + cssPrefix + "keyframes " + animationName,
-                    "from {clip: rect(1px,auto,auto,auto)} to {clip: rect(0px,auto,auto,auto)}"
-                );
-
-                DOM.importStyles(
-                    selector,
-                    cssPrefix + "animation-duration:0.001s;" + cssPrefix + "animation-name:" + animationNames.join(",") + " !important"
-                );
-
-                _forEach(startNames, function(name) {
-                    document.addEventListener(name, watcher, false);
+                _forOwn(watchers, function(entry, key) {
+                    if (entry.selector === selector) animations.push(key);
                 });
 
-                watchers.push(watcher);
+                DOM.importStyles("@" + cssPrefix + "keyframes " + animationName, "1% {opacity: .99}");
+
+                DOM.importStyles(selector, {
+                    "animation-duration": "1ms",
+                    "animation-name": animations.join() + " !important"
+                });
+
+                watchers[animationName] = {
+                    selector: selector,
+                    callback: callback,
+                    once: once && function(e) {
+                        if (e.animationName === animationName) e.stopPropagation();
+                    }
+                };
             };
         } else {
-            scripts = document.scripts,
+            scripts = document.scripts;
             behaviorUrl = scripts[scripts.length - 1].getAttribute("data-htc");
+            watchers = [];
+
+            document.attachEvent("ondataavailable", function() {
+                var e = window.event,
+                    el = e.srcElement;
+
+                if (e._type === undefined) {
+                    _forEach(watchers, function(entry) {
+                        // do not execute callback if it was previously excluded
+                        if (_some(e.detail, function(x) { return x === entry.callback; })) return;
+
+                        if (entry.matcher.test(el)) {
+                            if (entry.once) el.attachEvent("on" + e.type, entry.once);
+
+                            _defer(function() { entry.callback(DOMElement(el)); });
+                        }
+                    });
+                }
+            });
 
             return function(selector, callback, once) {
-                var haveWatcherWithTheSameSelector = function(watcher) { return watcher.selector === selector; },
-                    isEqualToCallback = function(otherCallback) { return otherCallback === callback; },
-                    cancelCallback = function(canceledCallbacks) { canceledCallbacks.push(callback); },
-                    watcher = function(canceledCallbacks, el) {
-                        if (once) el.on("x(detail)", cancelCallback);
-
-                        // do not execute callback if it was previously excluded
-                        if (!_some(canceledCallbacks, isEqualToCallback)) {
-                            callback(el);
-                        }
-                    };
-
-                watcher.selector = selector;
-
-                DOM.on("x(detail,target) " + selector, watcher);
-
-                if (_some(watchers, haveWatcherWithTheSameSelector)) {
+                var behaviorExists = _some(watchers, function(x) { return x.matcher.selector === selector; });
+                
+                if (behaviorExists) {
                     // call the callback manually for each matched element
                     // because the behaviour is already attached to selector
                     // also execute the callback safely
-                    _forEach(DOM.findAll(selector), function(el) {
+                    DOM.findAll(selector).each(function(el) {
                         _defer(function() { callback(el); });
                     });
-                } else {
-                    DOM.importStyles(selector, {behavior: "url(" + behaviorUrl + ")"});
                 }
 
-                watchers.push(watcher);
+                watchers.push({
+                    callback: callback,
+                    matcher: new SelectorMatcher(selector),
+                    once: once && function() {
+                        var e = window.event;
+
+                        if (e._type === undefined) {
+                            (e.detail = e.detail || []).push(callback);
+                        }
+                    }
+                });
+
+                if (!behaviorExists) DOM.importStyles(selector, {behavior: "url(" + behaviorUrl + ")"});
             };
         }
     }());
@@ -1873,56 +1977,68 @@
     // -----------------
 
     (function() {
-        var operators = { // name / priority object
-            "(": 0,
-            ")": 1,
-            ">": 2,
-            "+": 2,
-            "*": 3,
-            "]": 3,
-            "[": 4,
-            ".": 5,
-            "#": 6,
-            ":": 7
+        var operators = {
+            // operator type / priority object
+            "(": 1,
+            ")": 2,
+            ">": 3,
+            "+": 3,
+            "*": 4,
+            "}": 4,
+            "{": 5,
+            "]": 4,
+            "[": 5,
+            ".": 6,
+            "#": 7,
+            ":": 8
         },
         emptyElements = " area base br col hr img input link meta param command keygen source ",
-        rattr = /([A-Za-z0-9_\-]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?/g,
-        normalizeAttrs = function(term, str) {
-            var index = str.indexOf("="),
-                name = ~index ? str.substr(0, index) : str,
-                value = ~index ? str.substr(index + 1) : "";
+        reEmpty = /<\?>|<\/\?>/g,
+        reAttr = /([A-Za-z0-9_\-]+)(?:=((?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s\]]+)))?/g,
+        normalizeAttrs = function(term, name, value) {
+            value = value || "";
 
             if (value[0] !== "\"" && value[0] !== "'") value = "\"" + value + "\"";
 
-            return term + " " + name + "=" + value;
-        },
-        toHtmlString = function(obj) {
-            return _isArray(obj) ? obj.join("") : obj.toString();
-        },
-        appendToAll = function(node) {
-            node.insertTerm(this, true);
+            return name + "=" + value;
         };
 
         // helper class
-        function HtmlBuilder(term, noparse) {
-            if (noparse) this.str = term;
-            else {
-                this.str = "<" + term + ">";
+        function HtmlBuilder(node, n) {
+            if (n) {
+                node = node.toString();
 
-                if (!~emptyElements.indexOf(" " + term + " ")) {
-                    this.str += "</" + term + ">";
+                for (var i = 0, v = []; i < n; ++i) {
+                    v[i] = node.split("$").join(i + 1);
                 }
+
+                this.push.apply(this, v);
+            } else {
+                this.push(HtmlBuilder.parse(node));
             }
         }
 
-        HtmlBuilder.prototype = {
-            insertTerm: function(term, last) {
-                var index = last ? this.str.lastIndexOf("<") : this.str.indexOf(">");
+        HtmlBuilder.parse = function(term) {
+            var result = "<" + term + ">";
 
-                this.str = this.str.substr(0, index) + term + this.str.substr(index);
+            if (!~emptyElements.indexOf(" " + term + " ")) {
+                result += "</" + term + ">";
+            }
+
+            return result;
+        };
+
+        HtmlBuilder.prototype = {
+            push: Array.prototype.push,
+            inject: function(term, first) {
+                _forEach(this, function(el, i) {
+                    var index = first ? el.indexOf(">") : el.lastIndexOf("<");
+                    // update value
+                    this[i] = el.substr(0, index) + term + el.substr(index);
+                }, this);
             },
             toString: function() {
-                return this.str;
+                return Array.prototype.join.call(this, "");
             }
         };
 
@@ -1936,18 +2052,20 @@
         DOM.parseTemplate = function(template) {
             var stack = [],
                 output = [],
-                term = "";
+                term = "",
+                skip;
 
             // parse exrpression into RPN
         
             _forEach(template, function(str) {
-                var top = stack[0], priority;
-
                 // concat .c1.c2 into single space separated class string
-                if (top === "." && str === ".") str = " ";
+                if (str === "." && stack[0] === ".") str = " ";
 
-                if (str in operators && (top !== "[" || str === "]")) {
-                    if (str === ":") term = "input";
+                var priority = operators[str];
+
+                if (priority && (!skip || skip === str)) {
+                    // append empty tag for text nodes or put missing '>' operator
+                    if (str === "{") term ? stack.unshift(">") : term = "?";
 
                     if (term) {
                         output.push(term);
@@ -1955,8 +2073,6 @@
                     }
 
                     if (str !== "(") {
-                        priority = operators[str];
-
                         while (operators[stack[0]] > priority) {
                             output.push(stack.shift());
                         }
@@ -1964,8 +2080,13 @@
 
                     if (str === ")") {
                         stack.shift(); // remove "(" symbol from stack
-                    } else if (str !== "]") { // don't need to have "]" in stack
+                    } else if (!skip) { // don't need to have "]" in stack
                         stack.unshift(str);
+
+                        if (str === "[") skip = "]";
+                        if (str === "{") skip = "}";
+                    } else {
+                        skip = null;
                     }
                 } else {
                     term += str;
@@ -1978,7 +2099,7 @@
 
             stack = [];
 
-            if (output.length === 1) output.push(new HtmlBuilder(output[0]));
+            if (output.length === 1) output.push(HtmlBuilder.parse(output[0]));
 
             // transform RPN into html nodes
 
@@ -1987,46 +2108,40 @@
 
                 if (str in operators) {
                     term = stack.shift();
-                    node = stack.shift() || "div";
+                    node = stack.shift() || "?";
 
                     if (typeof node === "string") node = new HtmlBuilder(node);
 
                     switch(str) {
                     case ".":
-                        node.insertTerm(" class=\"" + term + "\"");
+                        node.inject(" class=\"" + term + "\"", true);
                         break;
 
                     case "#":
-                        node.insertTerm(" id=\"" + term + "\"");
+                        node.inject(" id=\"" + term + "\"", true);
                         break;
 
                     case ":":
-                        node.insertTerm(" type=\"" + term + "\"");
+                        node.inject(" type=\"" + term + "\"", true);
                         break;
 
                     case "[":
-                        node.insertTerm(_foldl(term.match(rattr), normalizeAttrs, ""));
+                        node.inject(" " + term.replace(reAttr, normalizeAttrs), true);
                         break;
-                        
+
+                    case "{":
+                        node.inject(term);
+                        break;
+
                     case "+":
-                        term = toHtmlString(typeof term === "string" ? new HtmlBuilder(term) : term);
-
-                        _isArray(node) ? node.push(term) : node.str += term;
-                        break;
-
                     case ">":
-                        term = toHtmlString(typeof term === "string" ? new HtmlBuilder(term) : term);
+                        term = typeof term === "string" ? HtmlBuilder.parse(term) : term.toString();
 
-                        _isArray(node) ? _forEach(node, appendToAll, term) : node.insertTerm(term, true);
+                        node[str === "+" ? "push" : "inject"](term);
                         break;
 
                     case "*":
-                        str = toHtmlString(node);
-                        node = [];
-
-                        _times(parseInt(term, 10), function(i) {
-                            node.push(new HtmlBuilder(str.split("$").join(i + 1), true));
-                        });
+                        node = new HtmlBuilder(node, parseInt(term, 10));
                         break;
                     }
 
@@ -2036,7 +2151,7 @@
                 stack.unshift(str);
             });
 
-            return toHtmlString(stack[0]);
+            return stack[0].toString().replace(reEmpty, "");
         };
     })();
 
