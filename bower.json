@@ -6,7 +6,8 @@
         "src/better-dateinput-polyfill.js",
         "src/better-dateinput-polyfill.css",
         "i18n/better-dateinput-polyfill.en.js",
-        "i18n/better-dateinput-polyfill.ru.js"
+        "i18n/better-dateinput-polyfill.ru.js",
+        "i18n/better-dateinput-polyfill.fr.js"
     ],
     "keywords": [
         "better-dom"
