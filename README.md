@@ -16,12 +16,13 @@ Then append the following script on your page:
 <html>
 <head>
     ...
-    <link href="components/better-dateinput-polyfill/src/better-dateinput-polyfill.css" rel="stylesheet"/>
+    <link href="bower_components/better-dateinput-polyfill/src/better-dateinput-polyfill.css" rel="stylesheet"/>
 </head>
 <body>
     ...
-    <script src="components/better-dom/better-dom.js" data-htc="components/better-dom/better-dom.htc"></script>
-    <script src="components/better-dateinput-polyfill/src/better-dateinput-polyfill.js"></script>
+    <script src="bower_components/better-dom/better-dom.js" data-htc="components/better-dom/better-dom.htc"></script>
+    <script src="bower_components/better-dateinput-polyfill/src/better-dateinput-polyfill.js"></script>
+    <script src="bower_components/better-dateinput-polyfill/i18n/better-dateinput-polyfill.en.js"></script>
 </body>
 </html>
 ```
