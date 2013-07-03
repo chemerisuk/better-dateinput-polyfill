@@ -1,8 +1,17 @@
 .DS_Store
 node_modules
+<<<<<<< HEAD
+=======
+bower_components
+>>>>>>> master
 dist
 coverage
 *.log
 reports
+<<<<<<< HEAD
 specs.html
 .grunt
+=======
+_SpecRunner.html
+.grunt
+>>>>>>> master
