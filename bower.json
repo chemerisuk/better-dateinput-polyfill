@@ -3,7 +3,7 @@
     "description": "input[type=date] polyfill for better-dom",
     "version": "1.0.6",
     "main": [
-        "src/better-dateinput-polyfill.js", 
+        "src/better-dateinput-polyfill.js",
         "src/better-dateinput-polyfill.css",
         "i18n/better-dateinput-polyfill.en.js",
         "i18n/better-dateinput-polyfill.ru.js"
