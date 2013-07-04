@@ -1,16 +1,10 @@
 {
     "browser": true,
-
-    "boss": true,
-    "newcap": false,
-    "expr": true,
-    "evil": true,
     "onevar": true,
 
     "quotmark": "double",
     "indent": 4,
     "eqeqeq": true,
-    "strict": false,
     "undef": true,
     "noarg": true,
     "noempty": true,
@@ -22,11 +16,10 @@
     "nonew": true,
     
     "globals": {
-        "_": true,
         "DOM": true,
-        "define": true,
         "module": true,
         "require": true,
+        "define": true,
 
         "beforeEach": true,
         "afterEach": true,
