@@ -36,11 +36,7 @@ module.exports = function(grunt) {
             }
         },
         jshint: {
-            all: [
-                "Gruntfile.js",
-                "src/*.js",
-                "test/*.spec.js"
-            ],
+            all: ["Gruntfile.js", "src/*.js", "test/*.spec.js"],
             options: {
                 jshintrc: ".jshintrc"
             }
@@ -89,7 +85,7 @@ module.exports = function(grunt) {
     grunt.registerTask("test", ["jshint", "jasmine:unit"]);
     grunt.registerTask("dev", ["test", "shell:openCoverage", "watch"]);
 
-    grunt.registerTask("publish", "Publish a new version", function(version) {
+    grunt.registerTask("publish", "Publish a new version at github", function(version) {
         pkg.version = version;
 
         grunt.registerTask("updateFileVersion", function(filename) {

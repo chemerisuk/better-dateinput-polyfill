@@ -4,6 +4,5 @@ bower_components
 dist
 coverage
 *.log
-reports
-_SpecRunner.html
 .grunt
+_SpecRunner.html
