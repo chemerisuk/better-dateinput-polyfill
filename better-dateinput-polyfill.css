@@ -1,0 +1,94 @@
+/**
+ * @file better-dateinput-polyfill.css
+ * @version 1.0.8 2013-07-08T11:17:38
+ * @overview input[type=date] polyfill for better-dom
+ * @copyright Maksim Chemerisuk 2013
+ * @license MIT
+ * @see https://github.com/chemerisuk/better-dateinput-polyfill
+ */
+.better-dateinput-calendar {
+    position: absolute;
+    z-index: 9999;
+    cursor: default;
+    
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    border: 1px solid #CCC;
+    background: #FFF;
+    box-shadow: 0 0 1em #CCC;
+}
+
+.better-dateinput-calendar-header {
+    font-size: 1.25em;
+    line-height: 2em;
+    margin: 0 2em;
+    text-align: center;
+}
+
+.better-dateinput-calendar-prev,
+.better-dateinput-calendar-next {
+    position: absolute;
+    top: 0.5em;
+    background: #498CE2;
+    color: white;
+    text-decoration: none;
+    text-align: center;
+    line-height: 1.5em;
+    width: 1.5em;
+
+    border-radius: 1em;
+}
+
+.better-dateinput-calendar-prev {
+    left: 0.5em;
+}
+
+.better-dateinput-calendar-prev:before {
+    content: "<"
+}
+
+.better-dateinput-calendar-next {
+    right: 0.5em;
+}
+
+.better-dateinput-calendar-next:before {
+    content: ">"
+}
+
+.better-dateinput-calendar-days {
+    table-layout: fixed;
+    border-spacing: 0;
+}
+
+.better-dateinput-calendar-days td, 
+.better-dateinput-calendar-days th {
+    width: 3em;
+    height: 2em;
+    border: 1px solid #DDD;
+    text-indent: 0.5em;
+    vertical-align: middle;
+    text-align: left;
+    display: table-cell;
+}
+
+.better-dateinput-calendar-days th {
+    font-weight: bold;
+    background: #DDD;
+}
+
+.better-dateinput-calendar-days td:hover {
+    background: #EEE;
+}
+
+.better-dateinput-calendar-days .current-calendar-day {
+    background: #498CE2 !important;
+    color: #FFF;
+}
+
+.better-dateinput-calendar-days .prev-calendar-day,
+.better-dateinput-calendar-days .next-calendar-day {
+    color: #AAA;
+}
