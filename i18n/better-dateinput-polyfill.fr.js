@@ -20,4 +20,4 @@ DOM.importStrings({
     "calendar.month.9": "Octobre",
     "calendar.month.10": "Novembre",
     "calendar.month.11": "Decembre"
-});
+}, "fr");

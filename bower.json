@@ -1,18 +1,23 @@
 {
     "name": "better-dateinput-polyfill",
-    "description": "input[type=date] polyfill for better-dom",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "main": [
-        "src/better-dateinput-polyfill.js",
-        "src/better-dateinput-polyfill.css",
+        "better-dateinput-polyfill.js",
+        "better-dateinput-polyfill.css",
         "i18n/better-dateinput-polyfill.en.js",
         "i18n/better-dateinput-polyfill.ru.js",
         "i18n/better-dateinput-polyfill.fr.js"
+    ],
+    "ignore": [
+        ".*",
+        "src",
+        "test"
     ],
     "keywords": [
         "better-dom"
     ],
     "dependencies": {
+<<<<<<< HEAD
         "better-dom": "~1.0.0"
     },
 <<<<<<< HEAD
@@ -24,3 +29,8 @@
         "test"
     ]
 }
+=======
+        "better-dom": "~1.1.0"
+    }
+}
+>>>>>>> master

@@ -1,10 +1,10 @@
 /**
- * @file <%= pkg.name %>.js
- * @version <%= pkg.version %> <%= grunt.template.today('isoDateTime') %>
- * @overview <%= pkg.description %>
- * @copyright <%= pkg.author %> <%= grunt.template.today('yyyy') %>
- * @license <%= pkg.license %>
- * @see <%= pkg.repository.url %>
+ * @file better-dateinput-polyfill.js
+ * @version 1.0.8 2013-07-08T11:17:38
+ * @overview input[type=date] polyfill for better-dom
+ * @copyright Maksim Chemerisuk 2013
+ * @license MIT
+ * @see https://github.com/chemerisuk/better-dateinput-polyfill
  */
 (function(DOM) {
     "use strict";
