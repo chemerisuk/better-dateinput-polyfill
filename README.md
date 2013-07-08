@@ -1,4 +1,4 @@
-better-dateinput-polyfill
+better-dateinput-polyfill [![Build Status](https://api.travis-ci.org/chemerisuk/better-dateinput-polyfill.png?branch=master)](http://travis-ci.org/chemerisuk/better-dateinput-polyfill)
 =========================
 > `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
 
