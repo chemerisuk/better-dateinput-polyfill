@@ -17,20 +17,6 @@
         "better-dom"
     ],
     "dependencies": {
-<<<<<<< HEAD
-        "better-dom": "~1.0.0"
-    },
-<<<<<<< HEAD
-    "devDependencies": {},
-=======
->>>>>>> master
-    "ignore": [
-        "*.*",
-        "test"
-    ]
-}
-=======
         "better-dom": "~1.1.0"
     }
 }
->>>>>>> master

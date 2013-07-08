@@ -4,9 +4,5 @@ node_modules
 dist
 coverage
 *.log
-<<<<<<< HEAD
-reports
-=======
->>>>>>> master
 .grunt
 _SpecRunner.html
