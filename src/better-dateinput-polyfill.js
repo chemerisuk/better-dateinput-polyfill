@@ -1,16 +1,12 @@
-/*!
- * better-dateinput-polyfill (https://github.com/chemerisuk/better-dateinput-polyfill)
- * input[type=date] polyfill for better-dom (https://github.com/chemerisuk/better-dom)
- *
- * Copyright (c) 2013 Maksim Chemerisuk
+/**
+ * @file <%= pkg.name %>.js
+ * @version <%= pkg.version %> <%= grunt.template.today('isoDateTime') %>
+ * @overview <%= pkg.description %>
+ * @copyright <%= pkg.author %> <%= grunt.template.today('yyyy') %>
+ * @license <%= pkg.license %>
+ * @see <%= pkg.repository.url %>
  */
-(function(factory) {
-    if (typeof define === "function" && define.amd) {
-        define(["DOM"], factory);
-    } else {
-        factory(window.DOM);
-    }
-})(function(DOM) {
+(function(DOM) {
     "use strict";
 
     DOM.extend("input[type=date]", [
@@ -155,4 +151,4 @@
             if (!this.isFocused()) calendar.hide();
         }
     });
-});
+}(window.DOM));
