@@ -2,8 +2,8 @@
     "name": "better-dateinput-polyfill",
     "version": "1.0.7",
     "main": [
-        "src/better-dateinput-polyfill.js",
-        "src/better-dateinput-polyfill.css",
+        "better-dateinput-polyfill.js",
+        "better-dateinput-polyfill.css",
         "i18n/better-dateinput-polyfill.en.js",
         "i18n/better-dateinput-polyfill.ru.js",
         "i18n/better-dateinput-polyfill.fr.js"
