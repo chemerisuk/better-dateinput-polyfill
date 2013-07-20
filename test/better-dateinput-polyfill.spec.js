@@ -44,8 +44,9 @@ describe("better-dateinput-polyfill", function() {
         expect(spy.callCount).toBe(2);
     });
 
-    it("should handle arrow keys", function() {
+    it("should handle arrow keys with optional shiftKey", function() {
         var now = new Date(),
+            nowCopy = new Date(now.getTime()),
             getSpy = spyOn(dateinput, "getCalendarDate"),
             setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput),
             expectKey = function(key, altKey, expected) {
@@ -63,6 +64,38 @@ describe("better-dateinput-polyfill", function() {
         expectKey(39, false, new Date(now.getTime() + 86400000));
         expectKey(72, false, new Date(now.getTime() - 86400000));
         expectKey(37, false, new Date(now.getTime() - 86400000));
+
+        // cases with shift key
+        nowCopy.setMonth(nowCopy.getMonth() + 1);
+        expectKey(39, true, nowCopy);
+        nowCopy.setMonth(nowCopy.getMonth() - 2);
+        expectKey(37, true, nowCopy);
+        nowCopy.setMonth(nowCopy.getMonth() + 1);
+        nowCopy.setFullYear(nowCopy.getFullYear() + 1);
+        expectKey(40, true, nowCopy);
+        nowCopy.setFullYear(nowCopy.getFullYear() - 2);
+        expectKey(38, true, nowCopy);
+    });
+
+    it("should change month on nav buttons click", function() {
+        var now = new Date(),
+            spy = spyOn(calendar, "hasClass"),
+            getSpy = spyOn(dateinput, "getCalendarDate").andReturn(now),
+            setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput);
+
+        spy.andReturn(true);
+        //getSpy.andReturn(new Date(now.getTime()));
+        dateinput._handleCalendarNavClick(calendar);
+        expect(spy).toHaveBeenCalled();
+        expect(getSpy).toHaveBeenCalled();
+        expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() + 1, 1));
+
+        spy.andReturn(false);
+        //getSpy.andReturn(new Date(now.getTime()));
+        dateinput._handleCalendarNavClick(calendar);
+        expect(spy).toHaveBeenCalled();
+        expect(getSpy).toHaveBeenCalled();
+        expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() - 1, 1));
     });
 
 });

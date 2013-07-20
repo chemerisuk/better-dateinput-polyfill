@@ -92,9 +92,9 @@
                     this.setCalendarDate(currentDate)._syncCalendarWithInput(calendar, true);
                 }
 
-                // prevent default action except if it's TAB key
+                // prevent default action except if it was a TAB key
                 // so do not allow to change the value via manual input
-                if (keyCode !== 9) return false;
+                return keyCode === 9;
             }
         },
         _syncInputWithCalendar: function(calendar, skipCalendar) {
