@@ -9,12 +9,12 @@
         constructor: function(calendar) {
             this
                 // remove legacy dateinput if it exists
-                .set("type", "text")
+                .set({type: "text", autocomplete: "off"})
                 .addClass("better-dateinput")
                 // sync value on click
                 .on("click", this, "_syncInputWithCalendar", [calendar])
                 // handle arrow keys, esc etc.
-                .on("keydown(keyCode,ctrlKey)", this, "_handleCalendarKeyDown", [calendar]);
+                .on("keydown(keyCode,shiftKey)", this, "_handleCalendarKeyDown", [calendar]);
 
             calendar.findAll("a").invoke("on", "click(target)", this, "_handleCalendarNavClick");
             calendar.on("click(target) td", this, "_handleCalendarDayClick", [calendar]);
@@ -64,7 +64,7 @@
 
             return false;
         },
-        _handleCalendarKeyDown: function(keyCode, ctrlKey, calendar) {
+        _handleCalendarKeyDown: function(keyCode, shiftKey, calendar) {
             var currentDate = this.getCalendarDate(),
                 delta = 0;
 
@@ -81,7 +81,9 @@
                 else if (keyCode === 72 || keyCode === 37) { delta = -1; }
 
                 if (delta) {
-                    if (ctrlKey) {
+                    if (shiftKey && (keyCode === 40 || keyCode === 38)) {
+                        currentDate.setFullYear(currentDate.getFullYear() + (delta > 0 ? 1 : -1));
+                    } else if (shiftKey && (keyCode === 37 || keyCode === 39)) {
                         currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 1 : -1));
                     } else {
                         currentDate.setDate(currentDate.getDate() + delta);
@@ -90,10 +92,9 @@
                     this.setCalendarDate(currentDate)._syncCalendarWithInput(calendar, true);
                 }
 
-                if (keyCode !== 9) {
-                    // skip only TAB key so do not allow to change the value via manual input
-                    return false;
-                }
+                // prevent default action except if it's TAB key
+                // so do not allow to change the value via manual input
+                if (keyCode !== 9) return false;
             }
         },
         _syncInputWithCalendar: function(calendar, skipCalendar) {
