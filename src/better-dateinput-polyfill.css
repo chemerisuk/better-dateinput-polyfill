@@ -1,11 +1,3 @@
-/**
- * @file <%= pkg.name %>.css
- * @version <%= pkg.version %> <%= grunt.template.today('isoDateTime') %>
- * @overview <%= pkg.description %>
- * @copyright <%= pkg.author %> <%= grunt.template.today('yyyy') %>
- * @license <%= pkg.license %>
- * @see <%= pkg.repository.url %>
- */
 .better-dateinput-calendar {
     position: absolute;
     z-index: 9999;
@@ -16,9 +8,12 @@
     -ms-user-select: none;
     user-select: none;
 
-    border: 1px solid #CCC;
     background: #FFF;
-    box-shadow: 0 0 1em #CCC;
+    border: 1px solid #CCC;
+    border-radius: 5px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .better-dateinput-calendar-header {
@@ -47,7 +42,7 @@
 }
 
 .better-dateinput-calendar-prev:before {
-    content: "<"
+    content: "\276E"
 }
 
 .better-dateinput-calendar-next {
@@ -55,7 +50,7 @@
 }
 
 .better-dateinput-calendar-next:before {
-    content: ">"
+    content: "\276F"
 }
 
 .better-dateinput-calendar-days {

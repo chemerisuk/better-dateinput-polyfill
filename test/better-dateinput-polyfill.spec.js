@@ -25,9 +25,10 @@ describe("better-dateinput-polyfill", function() {
         expect(spy).toHaveBeenCalled();
     });
 
-    it("should not prevent default action on tab key", function() {
-        var result = dateinput._handleCalendarKeyDown(9, false, calendar);
-        expect(result).not.toBe(false);
+    it("should prevent default action on any key except tab", function() {
+        expect(dateinput._handleCalendarKeyDown(9, false, calendar)).not.toBe(false);
+        expect(dateinput._handleCalendarKeyDown(111, false, calendar)).toBe(false);
+        expect(dateinput._handleCalendarKeyDown(141, false, calendar)).toBe(false);
     });
 
     it("should reset calendar value on backspace or delete keys", function() {

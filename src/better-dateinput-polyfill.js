@@ -1,13 +1,7 @@
-/**
- * @file <%= pkg.name %>.js
- * @version <%= pkg.version %> <%= grunt.template.today('isoDateTime') %>
- * @overview <%= pkg.description %>
- * @copyright <%= pkg.author %> <%= grunt.template.today('yyyy') %>
- * @license <%= pkg.license %>
- * @see <%= pkg.repository.url %>
- */
 (function(DOM) {
     "use strict";
+
+    if ("orientation" in window) return; // skip mobile and tablet browsers
 
     DOM.extend("input[type=date]", [
         "div[hidden].%CLS%>p.%CLS%-header+a.%CLS%-prev+a.%CLS%-next+table.%CLS%-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7".replace(/%CLS%/g, "better-dateinput-calendar")
@@ -16,6 +10,7 @@
             this
                 // remove legacy dateinput if it exists
                 .set("type", "text")
+                .addClass("better-dateinput")
                 // sync value on click
                 .on("click", this, "_syncInputWithCalendar", [calendar])
                 // handle arrow keys, esc etc.
@@ -70,8 +65,6 @@
             return false;
         },
         _handleCalendarKeyDown: function(keyCode, ctrlKey, calendar) {
-            if (keyCode === 9) return; // skip TAB key
-
             var currentDate = this.getCalendarDate(),
                 delta = 0;
 
@@ -96,9 +89,12 @@
 
                     this.setCalendarDate(currentDate)._syncCalendarWithInput(calendar, true);
                 }
+
+                if (keyCode !== 9) {
+                    // skip only TAB key so do not allow to change the value via manual input
+                    return false;
+                }
             }
-            // do not allow to change the value via manual input
-            return false;
         },
         _syncInputWithCalendar: function(calendar, skipCalendar) {
             var value = (this.get("value") || "").split("-");
