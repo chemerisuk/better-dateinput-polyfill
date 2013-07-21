@@ -16,14 +16,14 @@
                 // handle arrow keys, esc etc.
                 .on("keydown(keyCode,shiftKey)", this, "_handleCalendarKeyDown", [calendar]);
 
-            calendar.findAll("a").invoke("on", "click(target)", this, "_handleCalendarNavClick");
+            calendar.findAll("a").on("click(target)", this, "_handleCalendarNavClick");
             calendar.on("click(target) td", this, "_handleCalendarDayClick", [calendar]);
                     
             // hide calendar when a user clicks somewhere outside
             DOM.on("click", this, "_handleDocumentClick", [calendar]);
 
             // cache access to some elements
-            this.bind("_refreshCalendar",
+            this.bind("setCalendarDate",
                 calendar.find(".better-dateinput-calendar-header"),
                 calendar.findAll("td")
             );
@@ -36,8 +36,36 @@
         getCalendarDate: function() {
             return this.getData("calendarDate");
         },
-        setCalendarDate: function(value) {
-            this._refreshCalendar(value);
+        setCalendarDate: function(calendarCaption, calendarDays, value) {
+            var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
+            // update caption
+            calendarCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
+            
+            if (!isNaN(iterDate.getTime())) {
+                // move to begin of the start week
+                iterDate.setDate(iterDate.getDate() - iterDate.getDay());
+                
+                calendarDays.each(function(day) {
+                    iterDate.setDate(iterDate.getDate() + 1);
+                    
+                    var mDiff = value.getMonth() - iterDate.getMonth(),
+                        dDiff = value.getDate() - iterDate.getDate();
+
+                    if (value.getFullYear() !== iterDate.getFullYear()) {
+                        mDiff *= -1;
+                    }
+
+                    day.set("className", mDiff ?
+                        (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
+                        (dDiff ? "calendar-day" : "current-calendar-day")
+                    );
+
+                    day.set(iterDate.getDate().toString());
+                });
+
+                // update current date
+                this.setData("calendarDate", value);
+            }
 
             return this;
         },
@@ -91,11 +119,11 @@
 
                     this.setCalendarDate(currentDate)._syncCalendarWithInput(calendar, true);
                 }
-
-                // prevent default action except if it was a TAB key
-                // so do not allow to change the value via manual input
-                return keyCode === 9;
             }
+
+            // prevent default action except if it was a TAB key
+            // so do not allow to change the value via manual input
+            return keyCode === 9;
         },
         _syncInputWithCalendar: function(calendar, skipCalendar) {
             var value = (this.get("value") || "").split("-");
@@ -112,37 +140,6 @@
             this.set(date.getFullYear() + "-" + zeroPadMonth + "-" + zeroPadDate);
 
             if (!skipCalendar) calendar.hide();
-        },
-        _refreshCalendar: function(calendarCaption, calendarDays, value) {
-            var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
-            // update caption
-            calendarCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
-            
-            if (!isNaN(iterDate.getTime())) {
-                // move to begin of the start week
-                iterDate.setDate(iterDate.getDate() - iterDate.getDay());
-                
-                calendarDays.each(function(day) {
-                    iterDate.setDate(iterDate.getDate() + 1);
-                    
-                    var mDiff = value.getMonth() - iterDate.getMonth(),
-                        dDiff = value.getDate() - iterDate.getDate();
-
-                    if (value.getFullYear() !== iterDate.getFullYear()) {
-                        mDiff *= -1;
-                    }
-
-                    day.set("className", mDiff ?
-                        (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                        (dDiff ? "calendar-day" : "current-calendar-day")
-                    );
-
-                    day.set(iterDate.getDate().toString());
-                });
-
-                // update current date
-                this.setData("calendarDate", value);
-            }
         },
         _handleDocumentClick: function(calendar) {
             if (!this.isFocused()) calendar.hide();

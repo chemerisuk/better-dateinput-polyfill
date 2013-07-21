@@ -4,8 +4,6 @@ describe("better-dateinput-polyfill", function() {
     beforeEach(function() {
         calendar = DOM.mock();
         dateinput = DOM.mock("input[type=date]");
-
-        spyOn(dateinput, "_refreshCalendar");
     });
 
     it("should toggle calendar visibility on enter key", function() {
@@ -28,7 +26,7 @@ describe("better-dateinput-polyfill", function() {
     it("should prevent default action on any key except tab", function() {
         expect(dateinput._handleCalendarKeyDown(9, false, calendar)).not.toBe(false);
         expect(dateinput._handleCalendarKeyDown(111, false, calendar)).toBe(false);
-        expect(dateinput._handleCalendarKeyDown(141, false, calendar)).toBe(false);
+        expect(dateinput._handleCalendarKeyDown(13, false, calendar)).toBe(false);
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
@@ -84,14 +82,12 @@ describe("better-dateinput-polyfill", function() {
             setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput);
 
         spy.andReturn(true);
-        //getSpy.andReturn(new Date(now.getTime()));
         dateinput._handleCalendarNavClick(calendar);
         expect(spy).toHaveBeenCalled();
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() + 1, 1));
 
         spy.andReturn(false);
-        //getSpy.andReturn(new Date(now.getTime()));
         dateinput._handleCalendarNavClick(calendar);
         expect(spy).toHaveBeenCalled();
         expect(getSpy).toHaveBeenCalled();
