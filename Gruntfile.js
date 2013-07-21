@@ -83,8 +83,17 @@ module.exports = function(grunt) {
             publish: {
                 files: [{ src: ["src/*"], dest: ".", expand: true, flatten: true }],
                 options: {
-                    processContent: function(content) {
-                        return grunt.template.process(content);
+                    processContent: function(content, srcpath) {
+                        return grunt.template.process(
+                            "/**\n" +
+                            " * @file " + srcpath.split("/").pop() + "\n" +
+                            " * @version <%= pkg.version %> <%= grunt.template.today('isoDateTime') %>\n" +
+                            " * @overview <%= pkg.description %>\n" +
+                            " * @copyright <%= pkg.author %> <%= grunt.template.today('yyyy') %>\n" +
+                            " * @license <%= pkg.license %>\n" +
+                            " * @see <%= pkg.repository.url %>\n" +
+                            " */\n"
+                        ) + content;
                     }
                 }
             }
@@ -116,7 +125,8 @@ module.exports = function(grunt) {
             "shell:updateBranches",
             "clean:bower",
             "shell:bower",
-            "shell:finishBranches"
+            "shell:finishBranches",
+            "shell:bower"
         ]);
     });
 };

@@ -1,12 +1,12 @@
 DOM.importStrings({
     // days of week
-    "calendar.weekday.1": "Lun",
-    "calendar.weekday.2": "Mar",
-    "calendar.weekday.3": "Mer",
-    "calendar.weekday.4": "Jeu",
-    "calendar.weekday.5": "Ven",
-    "calendar.weekday.6": "Sam",
-    "calendar.weekday.7": "Dim",
+    "calendar.weekday.1": "Lu",
+    "calendar.weekday.2": "Ma",
+    "calendar.weekday.3": "Me",
+    "calendar.weekday.4": "Je",
+    "calendar.weekday.5": "Ve",
+    "calendar.weekday.6": "Sa",
+    "calendar.weekday.7": "Di",
     // monthes
     "calendar.month.0": "Janvier",
     "calendar.month.1": "Février",

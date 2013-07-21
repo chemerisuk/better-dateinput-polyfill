@@ -1,6 +1,8 @@
-better-dateinput-polyfill
+better-dateinput-polyfill [![Build Status](https://api.travis-ci.org/chemerisuk/better-dateinput-polyfill.png?branch=master)](http://travis-ci.org/chemerisuk/better-dateinput-polyfill)
 =========================
 > `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
+
+[VIEW DEMO](http://chemerisuk.github.io/better-dateinput-polyfill/)
 
 Installing
 ----------
@@ -17,6 +19,7 @@ Then append the following script on your page:
 <head>
     ...
     <link href="bower_components/better-dateinput-polyfill/src/better-dateinput-polyfill.css" rel="stylesheet"/>
+    <!--[if IE]><script src="bower_components/html5shiv/dist/html5shiv.js"></script><![endif]-->
 </head>
 <body>
     ...
@@ -26,7 +29,3 @@ Then append the following script on your page:
 </body>
 </html>
 ```
-
-Demo
-----
-http://chemerisuk.github.io/better-dateinput-polyfill/
