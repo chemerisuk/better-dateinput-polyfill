@@ -1,65 +1,64 @@
 better-dom [![Build Status](https://api.travis-ci.org/chemerisuk/better-dom.png?branch=master)](http://travis-ci.org/chemerisuk/better-dom)
 ==========
-> Sandbox for DOM extensions
+> Sandbox for living DOM extensions
 
-API description: http://chemerisuk.github.io/better-dom/.
+[API DESCRIPTION](http://chemerisuk.github.io/better-dom/)
 
 ## Installation
 The simplest way is to use [bower](http://bower.io/):
 
     bower install better-dom
 
-This will clone the latest version of the library into the `bower_components` directory at the root of your project. Then just include script below on your web page:
+This will clone the latest version of the __better-dom__ with dependencies into the `bower_components` directory at the root of your project. Then just include scripts below on your web page:
 
 ```html
-<script src="bower_components/build/better-dom.js" data-htc="bower_components/extra/better-dom.htc"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    ...
+    <!--[if IE]><script src="bower_components/html5shiv/dist/html5shiv.js"></script><![endif]-->
+</head>
+<body>
+    ...
+    <script src="bower_components/better-dom/better-dom.js" data-htc="bower_components/better-dom/better-dom.htc"></script>
+</body>
+</html>
 ```
 
-## Unobtrusive
-`DOM.extend` used to define a new extension and any matched elements will be captured by it. But the coolest thing is that the same will happen even for future content inserted via `innerHTML` or using any other javascript framework.
+## Living extensions
+`DOM.extend` used to define a new extension and any matched element starts to be captured by it. But the coolest thing is that the same will happen even for future content inserted via `innerHTML` or using any other javascript framework.
 
-So as a developer you don't need to worry about when and how the extension will be initialized. Therefore it's much simpler to create new [extensions](#elastic-textarea-example) or to write [polyfills](#placeholder-polyfill-example) for old browsers.
+So as a developer you don't need to worry about when and how the extension is initialized. It just works. As a result it's much simpler to create new extensions or to write cross-browser polyfills.
 
-#### placeholder polyfill example
-This is a polyfill of the `[placeholder]` attribute for old browsers
+#### Several examples
+* [better-placeholder-polyfill](https://github.com/chemerisuk/better-placeholder-polyfill) - Placeholder attribute polyfill
+* [better-elastic-textarea](https://github.com/chemerisuk/better-elastic-textarea) - Make textarea to expand on user input
+* [better-dateinput-polyfill](https://github.com/chemerisuk/better-dateinput-polyfill) - input[type=date] polyfill
+* [better-form-validation](https://github.com/chemerisuk/better-form-validation) - Form validation polyfill
+* [better-prettydate](https://github.com/chemerisuk/better-prettydate) - Enhances time element to update text in realtime
+
+## Getter and setter
+Standard DOM APIs have a notion of property and attribute for a element. Usually reading a property _is faster_, but a lot of people don't know that or just alway use attributes to keep access the same everywhere in a code.
+
+To fix this confusion better-dom introduces smart getter and setter.
+
 ```js
-if (DOM.supports("placeholder", "input")) return;
+var link = DOM.find("#link");
 
-DOM.extend("[placeholder]", [
-    "input[style='box-sizing: border-box; position: absolute; color: graytext; background: none no-repeat 0 0; border-color: transparent']"
-], {
-    constructor: function(holder) {
-        var offset = this.offset();
+// returns value of the id property (i.e. "link" string)
+link.get("id");
+// returns value of "data-attr" attribute
+link.get("data-attr");
+// returns innerHTML of the element
+link.get();
 
-        this
-            .on("focus", holder, "hide")
-            .on("blur", this, "_showPlaceholder", [holder]);
-
-        holder
-            .set(this.get("placeholder"))
-            .setStyle("width", offset.right - offset.left)
-            .on("click", this, "fire", ["focus"]);
-
-        if (this.get() || this.isFocused()) holder.hide();
-
-        this.before(holder);
-    },
-    _showPlaceholder: function(holder) {
-        if (!this.get()) holder.show();
-    }
-});
+// sets property href (and that action updates attribute value too)
+link.set("href", "/some/path");
+// sets attribute "data-attr" to "123"
+link.set("data-attr", "123");
+// sets innerHTML to "some text"
+link.set("some text");
 ```
-Check out [live demo](http://chemerisuk.github.io/better-placeholder-polyfill/) (open in IE < 10, for example).
-
-#### elastic textarea example
-This is a textarea extension which autoresizes itself to contain all entered text.
-
-Check out [live demo](http://chemerisuk.github.io/better-elastic-textarea/) and the [extension repository](https://github.com/chemerisuk/better-elastic-textarea).
-
-#### more code: dateinput polyfill
-The extension makes `input[type=date]` controls with the same UX for all browsers.
-
-Check out [live demo](http://chemerisuk.github.io/better-dateinput-polyfill) the [extension repository](https://github.com/chemerisuk/better-dateinput-polyfill).
 
 ## Event handling best practices
 Events handling is a big part of writing a code for DOM. And there are some features included into the library APIs that help developers to avoid potential issues and keep their code easier to maintain in future.
@@ -104,29 +103,6 @@ DOM.ready(function() { throw Error("exception in a bad code"); });
 DOM.ready(function() { console.log("Nothing can break your code") });
 ```
 
-## Getter and setter
-Standard DOM APIs have a notion of property and attribute for a element. Usually reading a property _is faster_, but a lot of people don't know that or just alway use attributes to keep access the same everywhere in a code.
-
-To fix this confusion better-dom introduces smart getter and setter.
-
-```js
-var link = DOM.find("#link");
-
-// returns value of the id property (i.e. "link" string)
-link.get("id");
-// returns value of "data-attr" attribute
-link.get("data-attr");
-// returns innerHTML of the element
-link.get();
-
-// sets property href (and that action updates attribute value too)
-link.set("href", "/some/path");
-// sets attribute "data-attr" to "123"
-link.set("data-attr", "123");
-// sets innerHTML to "some text"
-link.set("some text");
-```
-
 ## Emmet expressions
 HTML strings are boring and complex, they take a lot of space. Let's fix that with [emmet](http://emmet.io/):
 
@@ -135,8 +111,7 @@ HTML strings are boring and complex, they take a lot of space. Let's fix that wi
 * `[a='value1' b="value2"]` instead of `<div a="value1" b="value2"></div>`
 * `ul>li.item$*3` instead of `<ul><li class="item1"></li><li class="item2"></li><li class="item3"></li></ul>`
 
-Because of code size emmet expressions support is only for HTML strings and has some limitations for now, but major features are in place.
-
+Because of code size emmet expressions support is only for HTML strings for now. Take a look at the [emmet cheat sheet](http://docs.emmet.io/cheat-sheet/) for more examples.
 
 ## Easy localization
 Multilanguage support is often required for an extension. `DOM.importStrings` allows to add a localized string which may be displayed in a html element using `data-i18n` attribute with the appropriate key.
@@ -160,6 +135,15 @@ span.set("lang", "ru");
 // now the span displays "Привет!"
 DOM.find("html").set("lang", "ru");
 // the line changes language globally
+```
+
+#### Behind the scenes
+All strings are actually stored in css and `:before` pseudoelement is used to display them. So the examples above actually create several css rules below:
+
+```css
+[data-i18n="hello.0"]:before {content: "Hello!"}
+[data-i18n="hello.0"]:lang(ru):before {content: "Привет!"}
+[data-i18n="hello.1"]:before {content: "Hello " attr(data-user) "!"}
 ```
 
 ## Browser support

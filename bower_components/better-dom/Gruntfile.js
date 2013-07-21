@@ -95,7 +95,7 @@ module.exports = function(grunt) {
                 command: [
                     // get a list of all files in stage and delete everything except for targets, node_modules, cache, temp, and logs
                     // rm does not delete root level hidden files
-                    "ls | grep -v ^jsdoc$ | grep -v ^node_modules$ | xargs rm -r ",
+                    "ls | grep -v ^jsdoc$ | grep -v ^node_modules$ | grep -v ^bower_components$ | xargs rm -r ",
 
                     // copy from the stage folder to the current (root) folder
                     "cp -r jsdoc/* . && rm -r jsdoc",
@@ -203,7 +203,7 @@ module.exports = function(grunt) {
                     "Element.set", "Element.styles", "Element.traversing", "Element.bind",
                     "Element.visibility", "Element.collection", "CompositeElement", "DOM.watch",
                     "DOM.create", "DOM.extend", "DOM.parsetemplate", "DOM.importstyles", "DOM.ready",
-                    "DOM.mock", "DOM.importstrings", "DOM.title"
+                    "DOM.importstrings", "DOM.title"
                 ],
                 onBuildWrite: function(id, path, contents) {
                     return contents.replace(/^define\(.*?\{\s*"use strict";[\r\n]*([.\s\S]+)\}\);\s*$/m, "$1");
