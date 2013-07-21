@@ -36,7 +36,7 @@
         getCalendarDate: function() {
             return this.getData("calendarDate");
         },
-        setCalendarDate: function(calendarCaption, calendarDays, value) {
+        setCalendarDate: function(/*INTERNAL*/calendarCaption, /*INTERNAL*/calendarDays, value) {
             var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
             // update caption
             calendarCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
