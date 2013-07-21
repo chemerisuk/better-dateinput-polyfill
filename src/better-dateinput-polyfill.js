@@ -12,11 +12,11 @@
                 .set({type: "text", autocomplete: "off"})
                 .addClass("better-dateinput")
                 // sync value on click
-                .on("click", this, "_syncInputWithCalendar", [calendar])
+                .on("focus", this, "_syncInputWithCalendar", [calendar])
                 // handle arrow keys, esc etc.
                 .on("keydown(keyCode,shiftKey)", this, "_handleCalendarKeyDown", [calendar]);
 
-            calendar.findAll("a").on("click(target)", this, "_handleCalendarNavClick");
+            calendar.findAll("a").on("click(target)", this, "_handleCalendarNavClick", [calendar]);
             calendar.on("click(target) td", this, "_handleCalendarDayClick", [calendar]);
                     
             // hide calendar when a user clicks somewhere outside
@@ -30,7 +30,7 @@
 
             this.after(calendar);
 
-            // show calendar for autofocused elements
+            // display calendar for autofocused elements
             if (this.isFocused()) this.fire("focus");
         },
         getCalendarDate: function() {
@@ -83,12 +83,13 @@
             // prevent focusing after click if the input is inside of a label
             return false;
         },
-        _handleCalendarNavClick: function(target) {
+        _handleCalendarNavClick: function(target, calendar) {
             var isNext = target.hasClass("better-dateinput-calendar-next"),
                 calendarDate = this.getCalendarDate(),
                 targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
 
-            this.setCalendarDate(targetDate).fire("focus");
+            this.setCalendarDate(targetDate)._syncCalendarWithInput(calendar, true);
+            this.fire("focus");
 
             return false;
         },
