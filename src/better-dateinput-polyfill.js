@@ -101,7 +101,7 @@
             } else if (keyCode === 27 || keyCode === 9) {
                 calendar.hide(); // esc or tab key hides calendar
             } else if (keyCode === 8 || keyCode === 46) {
-                this.set(""); // backspace or delete clears the value
+                this.set("")._syncInputWithCalendar(calendar, true); // backspace or delete clears the value
             } else {
                 if (keyCode === 74 || keyCode === 40) { delta = 7; }
                 else if (keyCode === 75 || keyCode === 38) { delta = -7; }

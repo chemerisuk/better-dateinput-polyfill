@@ -42,7 +42,7 @@
 }
 
 .better-dateinput-calendar-prev:before {
-    content: "\276E"
+    content: "\25C4"
 }
 
 .better-dateinput-calendar-next {
@@ -50,7 +50,7 @@
 }
 
 .better-dateinput-calendar-next:before {
-    content: "\276F"
+    content: "\25BA"
 }
 
 .better-dateinput-calendar-days {

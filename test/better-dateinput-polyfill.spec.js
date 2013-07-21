@@ -34,6 +34,8 @@ describe("better-dateinput-polyfill", function() {
 
         spy.andCallFake(function(value) {
             expect(value).toBe("");
+
+            return dateinput;
         });
 
         dateinput._handleCalendarKeyDown(8, false, calendar);
