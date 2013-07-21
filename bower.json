@@ -1,6 +1,6 @@
 {
     "name": "better-dateinput-polyfill",
-    "version": "1.0.8",
+    "version": "1.1.0",
     "main": [
         "better-dateinput-polyfill.js",
         "better-dateinput-polyfill.css",
