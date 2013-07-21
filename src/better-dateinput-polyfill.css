@@ -56,11 +56,12 @@
 .better-dateinput-calendar-days {
     table-layout: fixed;
     border-spacing: 0;
+    border-bottom: 1px solid #DDD;
 }
 
 .better-dateinput-calendar-days td, 
 .better-dateinput-calendar-days th {
-    width: 3em;
+    width: 2.5em;
     height: 2em;
     border: 1px solid #DDD;
     text-indent: 0.5em;
