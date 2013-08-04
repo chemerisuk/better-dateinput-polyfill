@@ -9,7 +9,8 @@
         "url": "https://github.com/chemerisuk/better-dateinput-polyfill"
     },
     "scripts": {
-        "test": "grunt test"
+        "test": "grunt test",
+        "install": "bower install"
     },
     "devDependencies": {
         "grunt": "0.4.1",

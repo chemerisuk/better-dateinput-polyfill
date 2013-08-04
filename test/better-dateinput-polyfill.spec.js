@@ -9,6 +9,7 @@ describe("better-dateinput-polyfill", function() {
     it("should toggle calendar visibility on enter key", function() {
         spyOn(dateinput, "getCalendarDate").andReturn(new Date());
         spyOn(dateinput, "get").andReturn("");
+        spyOn(dateinput, "getData").andReturn(calendar);
 
         var toggleSpy = spyOn(calendar, "toggle");
 
@@ -18,6 +19,8 @@ describe("better-dateinput-polyfill", function() {
 
     it("should hide calendar on escape key", function() {
         var spy = spyOn(calendar, "hide");
+
+        spyOn(dateinput, "getData").andReturn(calendar);
 
         dateinput._handleCalendarKeyDown(27, false, calendar);
         expect(spy).toHaveBeenCalled();
