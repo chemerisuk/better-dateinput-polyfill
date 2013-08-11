@@ -1,6 +1,5 @@
 describe("better-dateinput-polyfill", function() {
-    var calendar, dateinput, calendarCaption, calendarDays,
-        DOM = window.DOM;
+    var calendar, dateinput, calendarCaption, calendarDays;
 
     beforeEach(function() {
         calendar = DOM.mock();

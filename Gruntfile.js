@@ -17,14 +17,16 @@ module.exports = function(grunt) {
         },
         jasmine: {
             options: {
-                vendor: ["bower_components/better-dom/better-dom.js"],
-                specs: "test/*.spec.js",
                 keepRunner: true
             },
             unit: {
+                vendor: ["bower_components/better-dom/better-dom.js"],
+                specs: "test/*.spec.js",
                 src: ["src/*.js"]
             },
             coverage: {
+                vendor: ["bower_components/better-dom/better-dom.js"],
+                specs: "test/*.spec.js",
                 src: ["src/*.js"],
                 options: {
                     template: require("grunt-template-jasmine-istanbul"),
