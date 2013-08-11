@@ -14,10 +14,10 @@
                 // sync value on click
                 .on("focus", this, "_syncInputWithCalendar")
                 // handle arrow keys, esc etc.
-                .on("keydown(keyCode,shiftKey)", this, "handleCalendarKeyDown");
+                .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
 
-            calendar.findAll("a").on("click(target)", this, "handleCalendarNavClick");
-            calendar.on("click(target) td", this, "handleCalendarDayClick");
+            calendar.findAll("a").on("click", ["target"], this, "handleCalendarNavClick");
+            calendar.on("click td", ["target"], this, "handleCalendarDayClick");
                     
             // hide calendar when a user clicks somewhere outside
             DOM.on("click", this, "handleDocumentClick");
@@ -94,27 +94,27 @@
 
             return false;
         },
-        handleCalendarKeyDown: function(keyCode, shiftKey) {
+        handleCalendarKeyDown: function(which, shiftKey) {
             var calendar = this.getData("calendar"),
                 currentDate = this.getCalendarDate(),
                 delta = 0;
 
-            if (keyCode === 13) {
+            if (which === 13) {
                 calendar.toggle(); // show/hide calendar on enter key
-            } else if (keyCode === 27 || keyCode === 9) {
+            } else if (which === 27 || which === 9) {
                 calendar.hide(); // esc or tab key hides calendar
-            } else if (keyCode === 8 || keyCode === 46) {
+            } else if (which === 8 || which === 46) {
                 this.set("")._syncInputWithCalendar(true); // backspace or delete clears the value
             } else {
-                if (keyCode === 74 || keyCode === 40) { delta = 7; }
-                else if (keyCode === 75 || keyCode === 38) { delta = -7; }
-                else if (keyCode === 76 || keyCode === 39) { delta = 1; }
-                else if (keyCode === 72 || keyCode === 37) { delta = -1; }
+                if (which === 74 || which === 40) { delta = 7; }
+                else if (which === 75 || which === 38) { delta = -7; }
+                else if (which === 76 || which === 39) { delta = 1; }
+                else if (which === 72 || which === 37) { delta = -1; }
 
                 if (delta) {
-                    if (shiftKey && (keyCode === 40 || keyCode === 38)) {
+                    if (shiftKey && (which === 40 || which === 38)) {
                         currentDate.setFullYear(currentDate.getFullYear() + (delta > 0 ? 1 : -1));
-                    } else if (shiftKey && (keyCode === 37 || keyCode === 39)) {
+                    } else if (shiftKey && (which === 37 || which === 39)) {
                         currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 1 : -1));
                     } else {
                         currentDate.setDate(currentDate.getDate() + delta);
@@ -126,7 +126,7 @@
 
             // prevent default action except if it was a TAB key
             // so do not allow to change the value via manual input
-            return keyCode === 9;
+            return which === 9;
         },
         handleDocumentClick: function() {
             var calendar = this.getData("calendar");

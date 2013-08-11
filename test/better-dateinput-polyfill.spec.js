@@ -20,21 +20,21 @@ describe("better-dateinput-polyfill", function() {
 
         var toggleSpy = spyOn(calendar, "toggle");
 
-        dateinput.handleCalendarKeyDown(13, false, calendar);
+        dateinput.handleCalendarKeyDown(13, false);
         expect(toggleSpy).toHaveBeenCalled();
     });
 
     it("should hide calendar on escape key", function() {
         var spy = spyOn(calendar, "hide");
 
-        dateinput.handleCalendarKeyDown(27, false, calendar);
+        dateinput.handleCalendarKeyDown(27, false);
         expect(spy).toHaveBeenCalled();
     });
 
     it("should prevent default action on any key except tab", function() {
-        expect(dateinput.handleCalendarKeyDown(9, false, calendar)).not.toBe(false);
-        expect(dateinput.handleCalendarKeyDown(111, false, calendar)).toBe(false);
-        expect(dateinput.handleCalendarKeyDown(13, false, calendar)).toBe(false);
+        expect(dateinput.handleCalendarKeyDown(9, false)).not.toBe(false);
+        expect(dateinput.handleCalendarKeyDown(111, false)).toBe(false);
+        expect(dateinput.handleCalendarKeyDown(13, false)).toBe(false);
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
@@ -46,9 +46,9 @@ describe("better-dateinput-polyfill", function() {
             return dateinput;
         });
 
-        dateinput.handleCalendarKeyDown(8, false, calendar);
+        dateinput.handleCalendarKeyDown(8, false);
         expect(spy).toHaveBeenCalled();
-        dateinput.handleCalendarKeyDown(46, false, calendar);
+        dateinput.handleCalendarKeyDown(46, false);
         expect(spy.callCount).toBe(2);
     });
 
@@ -60,7 +60,7 @@ describe("better-dateinput-polyfill", function() {
             expectKey = function(key, altKey, expected) {
                 getSpy.andReturn(new Date(now.getTime()));
 
-                dateinput.handleCalendarKeyDown(key, altKey, calendar);
+                dateinput.handleCalendarKeyDown(key, altKey);
                 expect(setSpy).toHaveBeenCalledWith(expected);
             };
 
@@ -118,7 +118,7 @@ describe("better-dateinput-polyfill", function() {
         rowSpy.andReturn(2); // the third week of current month
         colSpy.andReturn(5); // the 5th day of the week
         getSpy.andReturn(now);
-        dateinput.handleCalendarDayClick(target, calendar);
+        dateinput.handleCalendarDayClick(target);
         expect(rowSpy).toHaveBeenCalled();
         expect(colSpy).toHaveBeenCalled();
         expect(getSpy).toHaveBeenCalled();
