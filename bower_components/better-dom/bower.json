@@ -1,29 +1,20 @@
 {
-  "name": "better-dom",
-  "version": "1.2.2",
-  "main": [
-    "better-dom.js",
-    "better-dom.htc"
-  ],
-  "ignore": [
-    ".*",
-    "test",
-    "src",
-    "extra"
-  ],
-  "dependencies": {
-    "html5shiv": "3.6.2"
-  },
-  "devDependencies": {
-    "jquery": "latest"
-  },
-  "gitHead": "7c455b41eacccb337a977d9f426f2d4e29c79fbd",
-  "readme": "better-dom [![Build Status](https://api.travis-ci.org/chemerisuk/better-dom.png?branch=master)](http://travis-ci.org/chemerisuk/better-dom)\n==========\n> Sandbox for living DOM extensions\n\n[API DESCRIPTION](http://chemerisuk.github.io/better-dom/)\n\n## Installation\nThe simplest way is to use [bower](http://bower.io/):\n\n    bower install better-dom\n\nThis will clone the latest version of the __better-dom__ with dependencies into the `bower_components` directory at the root of your project. Then just include scripts below on your web page:\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    ...\n    <!--[if IE]><script src=\"bower_components/html5shiv/dist/html5shiv.js\"></script><![endif]-->\n</head>\n<body>\n    ...\n    <script src=\"bower_components/better-dom/better-dom.js\" data-htc=\"bower_components/better-dom/better-dom.htc\"></script>\n</body>\n</html>\n```\n\n## Living extensions\n`DOM.extend` used to define a new extension and any matched element starts to be captured by it. But the coolest thing is that the same will happen even for future content inserted via `innerHTML` or using any other javascript framework.\n\nSo as a developer you don't need to worry about when and how the extension is initialized. It just works. As a result it's much simpler to create new extensions or to write cross-browser polyfills.\n\n#### Several examples\n* [better-placeholder-polyfill](https://github.com/chemerisuk/better-placeholder-polyfill) - Placeholder attribute polyfill\n* [better-elastic-textarea](https://github.com/chemerisuk/better-elastic-textarea) - Make textarea to expand on user input\n* [better-dateinput-polyfill](https://github.com/chemerisuk/better-dateinput-polyfill) - input[type=date] polyfill\n* [better-form-validation](https://github.com/chemerisuk/better-form-validation) - Form validation polyfill\n* [better-prettydate](https://github.com/chemerisuk/better-prettydate) - Enhances time element to update text in realtime\n\n## Getter and setter\nStandard DOM APIs have a notion of property and attribute for a element. Usually reading a property _is faster_, but a lot of people don't know that or just alway use attributes to keep access the same everywhere in a code.\n\nTo fix this confusion better-dom introduces smart getter and setter.\n\n```js\nvar link = DOM.find(\"#link\");\n\n// returns value of the id property (i.e. \"link\" string)\nlink.get(\"id\");\n// returns value of \"data-attr\" attribute\nlink.get(\"data-attr\");\n// returns innerHTML of the element\nlink.get();\n\n// sets property href (and that action updates attribute value too)\nlink.set(\"href\", \"/some/path\");\n// sets attribute \"data-attr\" to \"123\"\nlink.set(\"data-attr\", \"123\");\n// sets innerHTML to \"some text\"\nlink.set(\"some text\");\n```\n\n## Event handling best practices\nEvents handling is a big part of writing a code for DOM. And there are some features included into the library APIs that help developers to avoid potential issues and keep their code easier to maintain in future.\n\n#### Get rid of the event object\nEvent callbacks loose the event object argument and it improves testability of code.\n\n```js\n// NOTICE: handler don't have e as the first argument\ninput.on(\"click\", function() {...});\n// NOTICE: event arguments in event name\ninput.on(\"keydown(keyCode,altKey)\", function(keyCode, altKey) {...});\n```\n\n#### Correct return false interpretation\njQuery has strange behavior of event handler that returns false and it's a [cause of confusion](http://fuelyourcoding.com/jquery-events-stop-misusing-return-false/) for a lot of people. This library has standards-based behavior which does what everybody expected.\n\n```js\n// NOTICE: return false prevents ONLY default action\nDOM.find(\"a\").on(\"click\", function() { return false; });\n```\n\n#### Late binding\nUsually an event lintener function is bound when some `addEventListener` method called. This causes trouble when the function value is changed. The library helps to solve the problem by allowing to handle an event using _object property_ instead of just function.\n\n```js\nvar link = DOM.find(\".test-link\"), \n    obj = {handleClick: function() { console.log(\"Hello!\"); }};\n\nlink.on(\"click\", obj, \"handleClick\");\n// every click on the link now logs \"Hello!\" into console\nobj.handleClick = function() { console.log(\"Hello, Maksim!\"); }\n// every click on the link now logs \"Hello, Maksim!\" into console\n```\n\n#### Callback systems are brittle\nThe library doesn't use callback arrays, so any event listener can't break another one (read a [nice article](http://dean.edwards.name/weblog/2009/03/callbacks-vs-events/) for additional details).\n\n```js\nDOM.ready(function() { throw Error(\"exception in a bad code\"); });\n// NOTICE: you'll always see the message in console\nDOM.ready(function() { console.log(\"Nothing can break your code\") });\n```\n\n## Emmet expressions\nHTML strings are boring and complex, they take a lot of space. Let's fix that with [emmet](http://emmet.io/):\n\n* `nav>ul>li` instead of `<nav><ul><li></li></ul></nav>`\n* `form#search.wide` instead of `<form id=\"search\" class=\"wide\"></form>`\n* `[a='value1' b=\"value2\"]` instead of `<div a=\"value1\" b=\"value2\"></div>`\n* `ul>li.item$*3` instead of `<ul><li class=\"item1\"></li><li class=\"item2\"></li><li class=\"item3\"></li></ul>`\n\nBecause of code size emmet expressions support is only for HTML strings for now. Take a look at the [emmet cheat sheet](http://docs.emmet.io/cheat-sheet/) for more examples.\n\n## Easy localization\nMultilanguage support is often required for an extension. `DOM.importStrings` allows to add a localized string which may be displayed in a html element using `data-i18n` attribute with the appropriate key.\n\n```js\nDOM.importStrings(\"hello.0\", \"Hello!\");\n// NOTICE: optional parameter to specify language of the string\nDOM.importStrings(\"hello.0\", \"Привет!\", \"ru\");\n// element <span data-i18n=\"hello.0\"><span> will display \"Hello!\"\n```\nYou can use parametrized strings via special `{param}` substrings and appropriate `data-*` attributes.\n\n```js\nDOM.importStrings(\"hello.1\", \"Hello {user}!\");\n// element <a data-i18n=\"hello.1\" data-user=\"Maksim\"><a> will display \"Hello Maksim!\"\n```\nTo change a string language manually use setter with `lang` parameter.\n\n```js\nspan.set(\"lang\", \"ru\");\n// now the span displays \"Привет!\"\nDOM.find(\"html\").set(\"lang\", \"ru\");\n// the line changes language globally\n```\n\n#### Behind the scenes\nAll strings are actually stored in css and `:before` pseudoelement is used to display them. So the examples above actually create several css rules below:\n\n```css\n[data-i18n=\"hello.0\"]:before {content: \"Hello!\"}\n[data-i18n=\"hello.0\"]:lang(ru):before {content: \"Привет!\"}\n[data-i18n=\"hello.1\"]:before {content: \"Hello \" attr(data-user) \"!\"}\n```\n\n## Browser support\n* Chrome\n* Safari\n* Firefox\n* Opera\n* IE8+\n",
-  "readmeFilename": "README.md",
-  "_id": "better-dom@1.2.2",
-  "description": "better-dom [![Build Status](https://api.travis-ci.org/chemerisuk/better-dom.png?branch=master)](http://travis-ci.org/chemerisuk/better-dom) ========== > Sandbox for living DOM extensions",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/chemerisuk/better-dom"
-  }
+    "name": "better-dom",
+    "version": "1.3.0",
+    "main": [
+        "better-dom.js",
+        "better-dom.htc"
+    ],
+    "ignore": [
+        ".*",
+        "test",
+        "src",
+        "extra"
+    ],
+    "dependencies": {
+        "html5shiv": "3.6.2"
+    },
+    "devDependencies": {
+        "jquery": "latest"
+    }
 }
