@@ -12,23 +12,22 @@
                 .set({type: "text", autocomplete: "off"})
                 .addClass("better-dateinput")
                 // sync value on click
-                .on("focus", this, "_syncInputWithCalendar", [calendar])
+                .on("focus", this, "_syncInputWithCalendar")
                 // handle arrow keys, esc etc.
-                .on("keydown(keyCode,shiftKey)", this, "_handleCalendarKeyDown", [calendar]);
+                .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
 
-            calendar.findAll("a").on("click(target)", this, "_handleCalendarNavClick", [calendar]);
-            calendar.on("click(target) td", this, "_handleCalendarDayClick", [calendar]);
+            calendar.findAll("a").on("click", ["target"], this, "handleCalendarNavClick");
+            calendar.on("click td", ["target"], this, "handleCalendarDayClick");
                     
             // hide calendar when a user clicks somewhere outside
-            DOM.on("click", this, "_handleDocumentClick", [calendar]);
+            DOM.on("click", this, "handleDocumentClick");
 
-            // cache access to some elements
-            this.bind("setCalendarDate",
-                calendar.find(".better-dateinput-calendar-header"),
-                calendar.findAll("td")
-            );
-
-            this.after(calendar);
+            // append calendar to DOM and cache referencies to some queries
+            this.after(calendar).setData({
+                calendar: calendar,
+                calendarCaption: calendar.find(".better-dateinput-calendar-header"),
+                calendarDays: calendar.findAll("td")
+            });
 
             // display calendar for autofocused elements
             if (this.isFocused()) this.fire("focus");
@@ -36,8 +35,10 @@
         getCalendarDate: function() {
             return this.getData("calendarDate");
         },
-        setCalendarDate: function(/*INTERNAL*/calendarCaption, /*INTERNAL*/calendarDays, value) {
-            var iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
+        setCalendarDate: function(value) {
+            var calendarCaption = this.getData("calendarCaption"),
+                calendarDays = this.getData("calendarDays"),
+                iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
             // update caption
             calendarCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
             
@@ -69,7 +70,7 @@
 
             return this;
         },
-        _handleCalendarDayClick: function(target, calendar) {
+        handleCalendarDayClick: function(target) {
             var calendarDate = this.getCalendarDate(),
                 currentYear = calendarDate.getFullYear(),
                 currentMonth = calendarDate.getMonth(),
@@ -78,72 +79,77 @@
                 );
 
             this.setCalendarDate(targetDate);
-            this._syncCalendarWithInput(calendar);
+            this._syncCalendarWithInput();
 
             // prevent focusing after click if the input is inside of a label
             return false;
         },
-        _handleCalendarNavClick: function(target, calendar) {
+        handleCalendarNavClick: function(target) {
             var isNext = target.hasClass("better-dateinput-calendar-next"),
                 calendarDate = this.getCalendarDate(),
                 targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
 
-            this.setCalendarDate(targetDate)._syncCalendarWithInput(calendar, true);
+            this.setCalendarDate(targetDate)._syncCalendarWithInput(true);
             this.fire("focus");
 
             return false;
         },
-        _handleCalendarKeyDown: function(keyCode, shiftKey, calendar) {
-            var currentDate = this.getCalendarDate(),
+        handleCalendarKeyDown: function(which, shiftKey) {
+            var calendar = this.getData("calendar"),
+                currentDate = this.getCalendarDate(),
                 delta = 0;
 
-            if (keyCode === 13) {
+            if (which === 13) {
                 calendar.toggle(); // show/hide calendar on enter key
-            } else if (keyCode === 27 || keyCode === 9) {
+            } else if (which === 27 || which === 9) {
                 calendar.hide(); // esc or tab key hides calendar
-            } else if (keyCode === 8 || keyCode === 46) {
-                this.set("")._syncInputWithCalendar(calendar, true); // backspace or delete clears the value
+            } else if (which === 8 || which === 46) {
+                this.set("")._syncInputWithCalendar(true); // backspace or delete clears the value
             } else {
-                if (keyCode === 74 || keyCode === 40) { delta = 7; }
-                else if (keyCode === 75 || keyCode === 38) { delta = -7; }
-                else if (keyCode === 76 || keyCode === 39) { delta = 1; }
-                else if (keyCode === 72 || keyCode === 37) { delta = -1; }
+                if (which === 74 || which === 40) { delta = 7; }
+                else if (which === 75 || which === 38) { delta = -7; }
+                else if (which === 76 || which === 39) { delta = 1; }
+                else if (which === 72 || which === 37) { delta = -1; }
 
                 if (delta) {
-                    if (shiftKey && (keyCode === 40 || keyCode === 38)) {
+                    if (shiftKey && (which === 40 || which === 38)) {
                         currentDate.setFullYear(currentDate.getFullYear() + (delta > 0 ? 1 : -1));
-                    } else if (shiftKey && (keyCode === 37 || keyCode === 39)) {
+                    } else if (shiftKey && (which === 37 || which === 39)) {
                         currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 1 : -1));
                     } else {
                         currentDate.setDate(currentDate.getDate() + delta);
                     }
 
-                    this.setCalendarDate(currentDate)._syncCalendarWithInput(calendar, true);
+                    this.setCalendarDate(currentDate)._syncCalendarWithInput(true);
                 }
             }
 
             // prevent default action except if it was a TAB key
             // so do not allow to change the value via manual input
-            return keyCode === 9;
+            return which === 9;
         },
-        _syncInputWithCalendar: function(calendar, skipCalendar) {
-            var value = (this.get("value") || "").split("-");
+        handleDocumentClick: function() {
+            var calendar = this.getData("calendar");
+
+            if (!this.isFocused()) calendar.hide();
+        },
+        _syncInputWithCalendar: function(skipCalendar) {
+            var calendar = this.getData("calendar"),
+                value = (this.get("value") || "").split("-");
             // switch calendar to the input value date
             this.setCalendarDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10) - 1, parseInt(value[2],10)) : new Date());
 
             if (!skipCalendar) calendar.show();
         },
-        _syncCalendarWithInput: function(calendar, skipCalendar) {
-            var date = this.getCalendarDate(),
+        _syncCalendarWithInput: function(skipCalendar) {
+            var calendar = this.getData("calendar"),
+                date = this.getCalendarDate(),
                 zeroPadMonth = ("00" + (date.getMonth() + 1)).slice(-2),
                 zeroPadDate = ("00" + date.getDate()).slice(-2);
 
             this.set(date.getFullYear() + "-" + zeroPadMonth + "-" + zeroPadDate);
 
             if (!skipCalendar) calendar.hide();
-        },
-        _handleDocumentClick: function(calendar) {
-            if (!this.isFocused()) calendar.hide();
         }
     });
 }(window.DOM));
