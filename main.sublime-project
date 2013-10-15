@@ -10,7 +10,6 @@
 			"folder_exclude_patterns":
 			[
 				"node_modules",
-				".grunt",
 				"coverage"
 			],
 			"path": "."

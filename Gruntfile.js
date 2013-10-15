@@ -1,44 +1,32 @@
 module.exports = function(grunt) {
     "use strict";
 
-    var pkg = grunt.file.readJSON("package.json"),
-        gruntDependencies = function(name) {
-            return !name.indexOf("grunt-") && name !== "grunt-template-jasmine-istanbul";
-        };
+    var pkg = grunt.file.readJSON("package.json");
 
     grunt.initConfig({
         pkg: pkg,
 
         watch: {
             jasmine: {
-                files: ["src/*.js", "test/*.spec.js"],
-                tasks: ["jasmine:coverage"]
+                files: ["src/*.js", "test/spec/*.spec.js"],
+                tasks: ["karma:coverage:run"]
             }
         },
-        jasmine: {
+        karma: {
             options: {
-                keepRunner: true
-            },
-            unit: {
-                vendor: ["bower_components/better-dom/better-dom.js"],
-                specs: "test/*.spec.js",
-                src: ["src/*.js"]
+                configFile: "test/karma.conf.js"
             },
             coverage: {
-                vendor: ["bower_components/better-dom/better-dom.js"],
-                specs: "test/*.spec.js",
-                src: ["src/*.js"],
-                options: {
-                    template: require("grunt-template-jasmine-istanbul"),
-                    templateOptions: {
-                        coverage: "coverage/coverage.json",
-                        report: "coverage"
-                    }
-                }
+                preprocessors: { "src/*.js": "coverage" },
+                reporters: ["coverage", "progress"],
+                background: true
+            },
+            unit: {
+                singleRun: true
             }
         },
         jshint: {
-            all: ["Gruntfile.js", "src/*.js", "test/*.spec.js"],
+            all: ["Gruntfile.js", "src/*.js", "test/spec/*.spec.js"],
             options: {
                 jshintrc: ".jshintrc"
             }
@@ -47,9 +35,6 @@ module.exports = function(grunt) {
             bower: ["bower_components/"]
         },
         shell: {
-            openCoverage: {
-                command: "open coverage/index.html"
-            },
             bower: {
                 command: "bower install"
             },
@@ -83,7 +68,7 @@ module.exports = function(grunt) {
         },
         copy: {
             publish: {
-                files: [{ src: ["src/*"], dest: ".", expand: true, flatten: true }],
+                files: [{ src: ["src/*"], dest: "dist/", expand: true, flatten: true }],
                 options: {
                     processContent: function(content, srcpath) {
                         return grunt.template.process(
@@ -102,10 +87,12 @@ module.exports = function(grunt) {
         }
     });
 
-    Object.keys(pkg.devDependencies).filter(gruntDependencies).forEach(grunt.loadNpmTasks);
+    Object.keys(pkg.devDependencies).forEach(function(name) {
+        if (!name.indexOf("grunt-")) grunt.loadNpmTasks(name);
+    });
 
-    grunt.registerTask("test", ["jshint", "jasmine:unit"]);
-    grunt.registerTask("dev", ["test", "shell:openCoverage", "watch"]);
+    grunt.registerTask("test", ["jshint", "karma:unit"]);
+    grunt.registerTask("dev", ["jshint", "karma:coverage", "watch"]);
 
     grunt.registerTask("publish", "Publish a new version at github", function(version) {
         pkg.version = version;

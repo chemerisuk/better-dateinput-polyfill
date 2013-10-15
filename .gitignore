@@ -5,5 +5,3 @@ bower_components
 build
 coverage
 *.log
-.grunt
-_SpecRunner.html
