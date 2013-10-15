@@ -9,5 +9,6 @@
     "commit": "f65f9b0d776ae3b88d4c7f0b27c64e384aee47aa"
   },
   "_source": "git://github.com/aFarkas/html5shiv.git",
-  "_target": "3.6.2"
+  "_target": "3.6.2",
+  "_originalSource": "html5shiv"
 }

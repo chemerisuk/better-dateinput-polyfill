@@ -3,6 +3,4 @@
 node_modules
 build
 coverage
-*.log
-.grunt
-_SpecRunner.html
+test

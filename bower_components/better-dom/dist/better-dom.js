@@ -1,6 +1,6 @@
 /**
  * @file better-dom
- * @version 1.3.0 2013-08-11T13:04:38
+ * @version 1.5.3 2013-10-15T16:32:18
  * @overview Sandbox for living DOM extensions
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -16,6 +16,17 @@
     var _defer = function(callback) {
             return setTimeout(callback, 0);
         },
+        _trim = (function() {
+            var reTrim = /^\s+|\s+$/g;
+
+            return function(str) {
+                if (String.prototype.trim) {
+                    return str.trim();
+                } else {
+                    return str.replace(reTrim, "");
+                }
+            };
+        }()),
         _makeError = function(method, el) {
             var type;
 
@@ -54,7 +65,7 @@
 
         // OBJECT UTILS
         // ------------
-        
+
         _forIn = function(obj, callback, thisPtr) {
             for (var prop in obj) {
                 callback.call(thisPtr, obj[prop], prop, obj);
@@ -96,14 +107,14 @@
 
         // COLLECTION UTILS
         // ----------------
-        
+
         _forEach = makeLoopMethod({
             BODY:   "cb.call(that, a[i], i, a)",
             AFTER:  "return a"
         }),
         _map = makeLoopMethod({
-            BEFORE: "var out = []",
-            BODY:   "out.push(cb.call(that, a[i], i, a))",
+            BEFORE: "var out = Array(a && a.length || 0)",
+            BODY:   "out[i] = cb.call(that, a[i], i, a)",
             AFTER:  "return out"
         }),
         _some = makeLoopMethod({
@@ -130,8 +141,13 @@
             AFTER:  "return out"
         }),
         _slice = function(list, index) {
-            return Array.prototype.slice.call(list, index || 0);
+            return Array.prototype.slice.call(list, index | 0);
         },
+        _legacy = makeLoopMethod({
+            BEFORE: "that = a",
+            BODY:   "cb.call(that, a[i]._node, a[i], i)",
+            AFTER:  "return a"
+        }),
 
         // DOM UTILS
         // ---------
@@ -182,9 +198,9 @@
     // --------
 
     /**
-     * Prototype for a DOM node
+     * Used to represent a DOM node
      * @name $Node
-     * @param node native object
+     * @param node {Object} native node
      * @constructor
      * @private
      */
@@ -193,25 +209,19 @@
             this._node = node;
             this._data = {};
             this._listeners = [];
+
+            Array.prototype.push.call(this, node.__dom__ = this);
         }
     }
 
-    $Node.prototype = {
-        constructor: $Node
-    };
+    $Node.prototype = {};
 
     /**
      * Check element capability
      * @param {String} prop property to check
      * @param {String} [tag] name of element to test
      * @return {Boolean} true, if feature is supported
-     * @example
-     * input.supports("placeholder");
-     * // => true if an input supports placeholders
-     * DOM.supports("addEventListener");
-     * // => true if browser supports document.addEventListener
-     * DOM.supports("oninvalid", "input");
-     * // => true if browser supports `invalid` event
+     * @tutorial Feature detection
      */
     $Node.prototype.supports = function(prop, tagName) {
         // http://perfectionkills.com/detecting-event-support-without-browser-sniffing/
@@ -223,7 +233,7 @@
 
             isSupported = typeof node[prop] === "function";
         }
-            
+
         return isSupported;
     };
 
@@ -235,27 +245,15 @@
         // https://github.com/jquery/sizzle/blob/master/sizzle.js
 
         // TODO: disallow to use buggy selectors?
-        var rquickExpr = /^(?:#([\w\-]+)|(\w+)|\.([\w\-]+))$/,
+        var rquickExpr = document.getElementsByClassName ? /^(?:(\w+)|\.([\w\-]+))$/ : /^(?:(\w+))$/,
             rsibling = /[\x20\t\r\n\f]*[+~>]/,
             rescape = /'|\\/g,
             tmpId = "DOM" + new Date().getTime();
 
-        if (!document.getElementsByClassName) {
-            // exclude getElementsByClassName from pattern
-            rquickExpr = /^(?:#([\w\-]+)|(\w+))$/;
-        }
-        
         /**
-         * Finds element by selector
+         * Find the first matched element by css selector
          * @param  {String} selector css selector
          * @return {$Element} the first matched element
-         * @example
-         * var domBody = DOM.find("body");
-         *
-         * domBody.find("#element");
-         * // returns $Element with id="element"
-         * domBody.find(".link");
-         * // returns first element with class="link"
          */
         $Node.prototype.find = function(selector, /*INTERNAL*/multiple) {
             if (typeof selector !== "string") {
@@ -264,27 +262,20 @@
 
             var node = this._node,
                 quickMatch = rquickExpr.exec(selector),
-                m, elem, elements, old, nid, context;
+                m, elements, old, nid, context;
+
+            if (!node) return;
 
             if (quickMatch) {
-                // Speed-up: "#ID"
-                if (m = quickMatch[1]) {
-                    elem = document.getElementById(m);
-                    // Handle the case where IE, Opera, and Webkit return items by name instead of ID
-                    if ( elem && elem.parentNode && elem.id === m && (this === DOM || node.contains(elem)) ) {
-                        elements = [elem];
-                    }
                 // Speed-up: "TAG"
-                } else if (quickMatch[2]) {
+                if (quickMatch[1]) {
                     elements = node.getElementsByTagName(selector);
                 // Speed-up: ".CLASS"
-                } else if (m = quickMatch[3]) {
+                } else if (m = quickMatch[2]) {
                     elements = node.getElementsByClassName(m);
                 }
 
-                if (elements && !multiple) {
-                    elements = elements[0];
-                }
+                if (elements && !multiple) elements = elements[0];
             } else {
                 old = true;
                 nid = tmpId;
@@ -319,7 +310,7 @@
         };
 
         /**
-         * Finds all elements by selector
+         * Finds all matched elements by css selector
          * @param  {String} selector css selector
          * @return {$Element} collection of matched elements
          */
@@ -331,60 +322,44 @@
     // INTERNAL DATA
     // -------------
 
-    (function() {
-        var processObjectParam = function(value, name) { this.setData(name, value); };
+    /**
+     * Getter/setter of a data entry value. Tries to read the appropriate
+     * HTML5 data-* attribute if it exists
+     * @param  {String|Object} key     data key
+     * @param  {Object}        [value] data value to store
+     * @return {Object} data entry value or this in case of setter
+     * @tutorial Data
+     */
+    $Node.prototype.data = function(key, value) {
+        var len = arguments.length,
+            keyType = typeof key,
+            node = this._node,
+            data = this._data;
 
-        /**
-         * Read data entry value
-         * @param  {String} key data entry key
-         * @return {Object} data entry value
-         * @example
-         * var domLink = DOM.find(".link");
-         *
-         * domLink.setData("test", "message");
-         * domLink.getData("test");
-         * // returns string "message"
-         */
-        $Node.prototype.getData = function(key) {
-            if (typeof key !== "string") {
-                throw _makeError("getData", this);
-            }
-
-            var node = this._node,
-                result = this._data[key];
-
-            if (result === undefined && node.hasAttribute("data-" + key)) {
-                result = this._data[key] = node.getAttribute("data-" + key);
-            }
-
-            return result;
-        };
-
-        /**
-         * Store data entry value(s)
-         * @param {String|Object} key data entry key | key/value pairs
-         * @param {Object} value data to store
-         * @return {$Node}
-         * @example
-         * var domLink = DOM.find(".link");
-         *
-         * domLink.setData("test", "message");
-         * domLink.setData({a: "b", c: "d"});
-         */
-        $Node.prototype.setData = function(key, value) {
-            var keyType = typeof key;
-
+        if (len === 1) {
             if (keyType === "string") {
-                this._data[key] = value;
-            } else if (keyType === "object") {
-                _forOwn(key, processObjectParam, this);
-            } else {
-                throw _makeError("setData", this);
-            }
+                if (node) {
+                    value = data[key];
 
-            return this;
-        };
-    })();
+                    if (value === undefined && node.hasAttribute("data-" + key)) {
+                        value = data[key] = node.getAttribute("data-" + key);
+                    }
+                }
+
+                return value;
+            } else if (key && keyType === "object") {
+                return _forEach(this, function(el) {
+                    _extend(el._data, key);
+                });
+            }
+        } else if (len === 2 && keyType === "string") {
+            return _forEach(this, function(el) {
+                el._data[key] = value;
+            });
+        }
+
+        throw _makeError("data", this);
+    };
 
     // CONTAINS
     // --------
@@ -393,12 +368,11 @@
      * Check if element is inside of context
      * @param  {$Element} element element to check
      * @return {Boolean} true if success
-     * @example
-     * DOM.find("html").contains(DOM.find("body"));
-     * // returns true
      */
     $Node.prototype.contains = function(element) {
         var node = this._node, result;
+
+        if (!node) return;
 
         if (element instanceof $Element) {
             result = element.every(function(element) {
@@ -425,16 +399,11 @@
          * @param  {Object}   [context] callback context
          * @param  {Function|String} callback event callback/property name
          * @return {$Node}
-         * @example
-         * // NOTICE: handler don't have e as the first argument
-         * input.on("click", function() {...});
-         * // NOTICE: event properties in event name
-         * input.on("keydown", ["which", "altKey"], function(which, altKey) {...});
+         * @tutorial Event handling
          */
-        $Node.prototype.on = function(type, props, context, callback) {
-            var node = this._node,
-                eventType = typeof type,
-                hook, handler, selector, index;
+        $Node.prototype.on = function(type, props, context, callback, /*INTERNAL*/once) {
+            var eventType = typeof type,
+                selector, index;
 
             if (eventType === "string") {
                 index = type.indexOf(" ");
@@ -446,6 +415,7 @@
 
                 // handle optional props argument
                 if (Object.prototype.toString.call(props) !== "[object Array]") {
+                    once = callback;
                     callback = context;
                     context = props;
                     props = undefined;
@@ -453,135 +423,155 @@
 
                 // handle optional context argument
                 if (typeof context !== "object") {
+                    once = callback;
                     callback = context;
-                    context = this;
+                    context = undefined;
                 }
-                
-                handler = EventHandler(type, selector, context, callback, props, this);
-                handler.type = selector ? type + " " + selector : type;
-                handler.callback = callback;
-                handler.context = context;
-
-                if (hook = eventHooks[type]) hook(handler);
-
-                if (document.addEventListener) {
-                    node.addEventListener(handler._type || type, handler, !!handler.capturing);
-                } else {
-                    // IE8 doesn't support onscroll on document level
-                    if (this === DOM && type === "scroll") node = window;
-
-                    node.attachEvent("on" + (handler._type || type), handler);
-                }
-                // store event entry
-                this._listeners.push(handler);
-            } else if (eventType === "object") {
-                _forOwn(type, function(value, name) { this.on(name, value); }, this);
-            } else {
-                throw _makeError("on", this);
             }
 
-            return this;
+            return _legacy(this, function(node, el) {
+                var hook, handler;
+
+                if (eventType === "string") {
+                    if (once) {
+                        callback = (function(originalCallback) {
+                            return function() {
+                                // remove event listener
+                                el.off(handler.type, handler.context, callback);
+
+                                return originalCallback.apply(el, arguments);
+                            };
+                        }(callback));
+                    }
+
+                    handler = EventHandler(type, selector, context, callback, props, el);
+                    handler.type = selector ? type + " " + selector : type;
+                    handler.callback = callback;
+                    handler.context = context || el;
+
+                    if (hook = eventHooks[type]) hook(handler);
+
+                    if (document.addEventListener) {
+                        node.addEventListener(handler._type || type, handler, !!handler.capturing);
+                    } else {
+                        // IE8 doesn't support onscroll on document level
+                        if (el === DOM && type === "scroll") node = window;
+
+                        node.attachEvent("on" + (handler._type || type), handler);
+                    }
+                    // store event entry
+                    el._listeners.push(handler);
+                } else if (eventType === "object") {
+                    _forOwn(type, function(value, name) { el.on(name, value) });
+                } else {
+                    throw _makeError("on", el);
+                }
+            });
+        };
+
+        /**
+         * Bind a DOM event to the context and the callback only fire once before being removed
+         * @param  {String}   type type of event with optional selector to filter by
+         * @param  {Array}    [props] event properties to pass to the callback function
+         * @param  {Object}   [context] callback context
+         * @param  {Function|String} callback event callback/property name
+         * @return {$Node}
+         * @tutorial Event handling
+         */
+        $Node.prototype.once = function() {
+            var args = _slice(arguments);
+
+            args.push(true);
+
+            return this.on.apply(this, args);
         };
 
         /**
          * Unbind a DOM event from the context
-         * @param  {String}          type event type
+         * @param  {String}          type type of event
          * @param  {Object}          [context] callback context
          * @param  {Function|String} [callback] event handler
          * @return {$Node}
+         * @tutorial Event handling
          */
         $Node.prototype.off = function(type, context, callback) {
-            if (typeof type !== "string") {
-                throw _makeError("off", this);
-            }
+            if (typeof type !== "string") throw _makeError("off", this);
 
-            if (typeof context !== "object") {
+            if (arguments.length === 2) {
                 callback = context;
                 context = !callback ? undefined : this;
             }
 
-            _forEach(this._listeners, function(handler, index, events) {
-                var node = this._node;
+            return _legacy(this, function(node, el) {
+                _forEach(el._listeners, function(handler, index, events) {
+                    if (handler && type === handler.type && (!context || context === handler.context) && (!callback || callback === handler.callback)) {
+                        type = handler._type || handler.type;
 
-                if (handler && type === handler.type && (!context || context === handler.context) && (!callback || callback === handler.callback)) {
-                    type = handler._type || handler.type;
+                        if (document.removeEventListener) {
+                            node.removeEventListener(type, handler, !!handler.capturing);
+                        } else {
+                            // IE8 doesn't support onscroll on document level
+                            if (el === DOM && type === "scroll") node = window;
 
-                    // resize event supported only on window
-                    if (this === DOM && type === "resize") node = window;
+                            node.detachEvent("on" + type, handler);
+                        }
 
-                    if (document.removeEventListener) {
-                        node.removeEventListener(type, handler, !!handler.capturing);
-                    } else {
-                        // IE8 doesn't support onscroll on document level
-                        if (this === DOM && type === "scroll") node = window;
-
-                        node.detachEvent("on" + type, handler);
+                        delete events[index];
                     }
-                    
-                    delete events[index];
-                }
-            }, this);
-
-            return this;
+                });
+            });
         };
 
         /**
          * Triggers an event of specific type and executes it's default action if it exists
-         * @param  {String} eventType type of event
+         * @param  {String} type type of event
          * @param  {Object} [detail] event details
          * @return {$Node}
-         * @example
-         * var domLink = DOM.find(".link");
-         *
-         * domLink.fire("focus");
-         * // receive focus to the element
-         * domLink.fire("custom:event", {x: 1, y: 2});
-         * // trigger a custom:event on the element
+         * @tutorial Event handling
          */
         $Node.prototype.fire = function(type, detail) {
             if (typeof type !== "string") {
                 throw _makeError("fire", this);
             }
 
-            var node = this._node,
-                hook = eventHooks[type],
-                handler = {},
-                isCustomEvent, canContinue, event;
+            return _legacy(this, function(node, el) {
+                var hook = eventHooks[type],
+                    handler = {},
+                    isCustomEvent, canContinue, event;
 
-            if (hook) hook(handler);
+                if (hook) hook(handler);
 
-            isCustomEvent = handler.custom || !this.supports("on" + type);
+                isCustomEvent = handler.custom || !el.supports("on" + type);
 
-            if (document.createEvent) {
-                event = document.createEvent("HTMLEvents");
+                if (document.createEvent) {
+                    event = document.createEvent("HTMLEvents");
 
-                event.initEvent(handler._type || type, true, true);
-                event.detail = detail;
+                    event.initEvent(handler._type || type, true, true);
+                    event.detail = detail;
 
-                canContinue = node.dispatchEvent(event);
-            } else {
-                event = document.createEventObject();
-                // store original event type
-                event.srcUrn = isCustomEvent ? type : undefined;
-                event.detail = detail;
+                    canContinue = node.dispatchEvent(event);
+                } else {
+                    event = document.createEventObject();
+                    // store original event type
+                    event.srcUrn = isCustomEvent ? type : undefined;
+                    event.detail = detail;
 
-                node.fireEvent("on" + (isCustomEvent ? legacyCustomEventName : handler._type || type), event);
+                    node.fireEvent("on" + (isCustomEvent ? legacyCustomEventName : handler._type || type), event);
 
-                canContinue = event.returnValue !== false;
-            }
+                    canContinue = event.returnValue !== false;
+                }
 
-            // Call a native DOM method on the target with the same name as the event
-            // IE<9 dies on focus/blur to hidden element
-            if (canContinue && node[type] && (type !== "focus" && type !== "blur" || node.offsetWidth)) {
-                // Prevent re-triggering of the same event
-                EventHandler.veto = type;
-                
-                node[type]();
+                // Call a native DOM method on the target with the same name as the event
+                // IE<9 dies on focus/blur to hidden element
+                if (canContinue && node[type] && (type !== "focus" && type !== "blur" || node.offsetWidth)) {
+                    // Prevent re-triggering of the same event
+                    EventHandler.veto = type;
 
-                EventHandler.veto = false;
-            }
+                    node[type]();
 
-            return this;
+                    EventHandler.veto = false;
+                }
+            });
         };
 
         // firefox doesn't support focusin/focusout events
@@ -713,10 +703,10 @@
             test: function(el) {
                 if (this.quick) {
                     return (
-                        (!this.quick[1] || (el.nodeName || "").toLowerCase() === this.quick[1]) &&
+                        (!this.quick[1] || el.nodeName.toLowerCase() === this.quick[1]) &&
                         (!this.quick[2] || el.id === this.quick[2]) &&
                         (!this.quick[3] || el.hasAttribute(this.quick[3])) &&
-                        (!this.quick[4] || (" " + (el.className || "") + " ").indexOf(this.quick[4]) >= 0)
+                        (!this.quick[4] || (" " + el.className + " ").indexOf(this.quick[4]) >= 0)
                     );
                 }
 
@@ -762,23 +752,11 @@
                 };
             };
 
-        hooks.currentTarget = function(event, currentTarget) {
-            return $Element(currentTarget);
-        };
-
         if (document.addEventListener) {
-            hooks.target = function(event) {
-                return $Element(event.target);
-            };
-
             hooks.relatedTarget = function(event) {
                 return $Element(event.relatedTarget);
             };
         } else {
-            hooks.target = function(event) {
-                return $Element(event.srcElement);
-            };
-
             hooks.relatedTarget = function(event, currentTarget) {
                 var propName = ( event.toElement === currentTarget ? "from" : "to" ) + "Element";
 
@@ -811,34 +789,39 @@
         }
 
         return function(type, selector, context, callback, extras, currentTarget) {
+            context = context || currentTarget;
+            extras = extras || ["target", "defaultPrevented"];
+
             var matcher = SelectorMatcher(selector),
                 isCallbackProp = typeof callback === "string",
-                defaultEventHandler = function(e) {
+                defaultEventHandler = function(e, target) {
+                    e = e || window.event;
+
                     if (EventHandler.veto !== type) {
-                        var event = e || window.event,
-                            fn = isCallbackProp ? context[callback] : callback,
+                        var fn = isCallbackProp ? context[callback] : callback,
                             args = _map(extras, function(name) {
+                                switch (name) {
+                                case "type":
+                                    return type;
+                                case "currentTarget":
+                                    return currentTarget;
+                                case "target":
+                                    if (!target) target = e.target || e.srcElement;
+                                    // handle DOM variable correctly
+                                    return target ? $Element(target) : DOM;
+                                }
+
                                 var hook = hooks[name];
 
-                                return hook ? hook(event, currentTarget._node) : (name === "type" ? type : event[name]);
-                            }),
-                            result;
+                                return hook ? hook(e, currentTarget._node) : e[name];
+                            });
 
-                        if (!fn) return;
-
-                        // make performant call
-                        if (args.length) {
-                            result = fn.apply(context, args);
-                        } else {
-                            result = isCallbackProp ? context[callback]() : fn.call(context);
-                        }
-
-                        // prevent default if handler returns false
-                        if (result === false) {
-                            if (event.preventDefault) {
-                                event.preventDefault();
+                        if (fn && fn.apply(context, args) === false) {
+                            // prevent default if handler returns false
+                            if (e.preventDefault) {
+                                e.preventDefault();
                             } else {
-                                event.returnValue = false;
+                                e.returnValue = false;
                             }
                         }
                     }
@@ -850,7 +833,7 @@
                     root = currentTarget._node;
 
                 for (; node && node !== root; node = node.parentNode) {
-                    if (matcher.test(node)) return defaultEventHandler(e);
+                    if (matcher.test(node)) return defaultEventHandler(e, node);
                 }
             };
 
@@ -865,16 +848,13 @@
         };
     }());
 
-    
     // DOM ELEMENT
     // -----------
 
     /**
-     * Array-like object that represents a DOM element. For single element methods behaves
-     * according to their description. If an element is null or it's a composite element
-     * then getters return an undefined value
+     * Used to represent a DOM element (length == 1)
      * @name $Element
-     * @param element native element
+     * @param element {Object} native element
      * @extends $Node
      * @constructor
      * @private
@@ -883,18 +863,13 @@
         if (element && element.__dom__) return element.__dom__;
 
         if (!(this instanceof $Element)) {
-            return element ? new $Element(element) : new $CompositeElement();
+            return new $Element(element);
         }
 
         $Node.call(this, element);
-
-        if (element) {
-            Array.prototype.push.call(this, element.__dom__ = this);
-        }
     }
 
     $Element.prototype = new $Node();
-    $Element.prototype.constructor = $Element;
 
     // CLASSES MANIPULATION
     // --------------------
@@ -921,13 +896,17 @@
 
             if (methodName === "hasClass") {
                 return function() {
+                    if (!this._node) return;
+
                     return _every(arguments, strategy, this);
                 };
             } else {
                 return function() {
-                    _forEach(arguments, strategy, this);
+                    var args = arguments;
 
-                    return this;
+                    return _forEach(this, function(el) {
+                        _forEach(args, strategy, el);
+                    });
                 };
             }
         }
@@ -961,7 +940,7 @@
         $Element.prototype.removeClass = makeClassesMethod("remove", function(className) {
             className = (" " + this._node.className + " ").replace(rclass, " ").replace(" " + className + " ", " ");
 
-            this._node.className = className.substr(className[0] === " " ? 1 : 0, className.length - 2);
+            this._node.className = _trim(className);
         });
 
         /**
@@ -984,62 +963,68 @@
      * @return {$Element} clone of current element
      */
     $Element.prototype.clone = function() {
-        var node;
+        var node = this._node;
+
+        if (!node) return;
 
         if (document.addEventListener) {
-            node = this._node.cloneNode(true);
+            node = node.cloneNode(true);
         } else {
             node = document.createElement("div");
             node.innerHTML = this._node.outerHTML;
             node = node.firstChild;
         }
-        
+
         return new $Element(node);
     };
 
     // MANIPULATION
     // ------------
-    
+
     (function() {
         function makeManipulationMethod(methodName, fasterMethodName, strategy) {
+            var singleArg = !fasterMethodName,
+                manipulateContent = function(value) {
+                    return _legacy(this, function(node, el) {
+                        var valueType = typeof value,
+                            relatedNode = node.parentNode;
+
+                        if (valueType === "function") {
+                            value = value.call(el);
+                            valueType = typeof value;
+                        }
+
+                        if (valueType === "string") {
+                            value = _trim(DOM.template(value));
+
+                            relatedNode = fasterMethodName ? null : _parseFragment(value);
+                        } else if (value instanceof $Element) {
+                            return value.legacy(function(relatedNode) { strategy(node, relatedNode); });
+                        } else if (value !== undefined) {
+                            throw _makeError(methodName, el);
+                        }
+
+                        if (singleArg || relatedNode) {
+                            strategy(node, relatedNode);
+                        } else {
+                            node.insertAdjacentHTML(fasterMethodName, value);
+                        }
+                    });
+                };
+
             // always use _parseFragment because of HTML5 and NoScope bugs in IE
             if (document.attachEvent && !window.CSSKeyframesRule) fasterMethodName = false;
 
-            return function(value) {
-                var valueType = typeof value,
-                    node = this._node,
-                    relatedNode = node.parentNode;
-
-                if (valueType === "function") {
-                    value = value.call(this);
-                    valueType = typeof value;
-                }
-
-                if (valueType === "string") {
-                    if (value[0] !== "<") value = DOM.parseTemplate(value);
-
-                    relatedNode = fasterMethodName ? null : _parseFragment(value);
-                } else if (value instanceof $Element) {
-                    value.each(function(el) { strategy(node, el._node); });
-
-                    return this;
-                } else if (value !== undefined) {
-                    throw _makeError(methodName, this);
-                }
-
-                if (relatedNode) {
-                    strategy(node, relatedNode);
-                } else {
-                    node.insertAdjacentHTML(fasterMethodName, value);
-                }
+            return singleArg ? manipulateContent : function() {
+                _forEach(arguments, manipulateContent, this);
 
                 return this;
             };
         }
 
         /**
-         * Insert html string or native element after the current
-         * @param {String|$Element} content HTML string or $Element
+         * Insert html string or $Element after the current
+         * @param {...Mixed} contents HTMLString or $Element or functor that returns content
          * @return {$Element}
          * @function
          */
@@ -1048,8 +1033,8 @@
         });
 
         /**
-         * Insert html string or native element before the current
-         * @param {String|$Element} content HTML string or $Element
+         * Insert html string or $Element before the current
+         * @param {...Mixed} contents HTMLString or $Element or functor that returns content
          * @return {$Element}
          * @function
          */
@@ -1058,8 +1043,8 @@
         });
 
         /**
-         * Prepend html string or native element to the current
-         * @param {String|$Element} content HTML string or $Element
+         * Prepend html string or $Element to the current
+         * @param {...Mixed} contents HTMLString or $Element or functor that returns content
          * @return {$Element}
          * @function
          */
@@ -1068,8 +1053,8 @@
         });
 
         /**
-         * Append html string or native element to the current
-         * @param {String|$Element} content HTML string or $Element
+         * Append html string or $Element to the current
+         * @param {...Mixed} contents HTMLString or $Element or functor that returns content
          * @return {$Element}
          * @function
          */
@@ -1078,8 +1063,8 @@
         });
 
         /**
-         * Replace current element with html string or native element
-         * @param {String|$Element} content HTML string or $Element
+         * Replace current element with html string or $Element
+         * @param {Mixed} content HTMLString or $Element or functor that returns content
          * @return {$Element}
          * @function
          */
@@ -1092,8 +1077,8 @@
          * @return {$Element}
          * @function
          */
-        $Element.prototype.remove = makeManipulationMethod("remove", "", function(node, parentNode) {
-            parentNode.removeChild(node);
+        $Element.prototype.remove = makeManipulationMethod("remove", "", function(node, relatedNode) {
+            if (relatedNode) relatedNode.removeChild(node);
         });
     })();
 
@@ -1101,21 +1086,42 @@
      * Check if the element matches selector
      * @param  {String} selector css selector
      * @return {$Element}
+     * @function
      */
-    $Element.prototype.matches = function(selector) {
-        if (!selector || typeof selector !== "string") {
-            throw _makeError("matches", this);
-        }
+    $Element.prototype.matches = (function() {
+        var hooks = {};
 
-        return new SelectorMatcher(selector).test(this._node);
-    };
+        hooks[":focus"] = function(node) {
+            return node === document.activeElement;
+        };
 
-    
+        hooks[":hidden"] = function(node) {
+            return node.getAttribute("aria-hidden") === "true" ||
+                _getComputedStyle(node).display === "none" ||
+                !documentElement.contains(node);
+        };
+
+        return function(selector) {
+            if (!selector || typeof selector !== "string") {
+                throw _makeError("matches", this);
+            }
+
+            var node = this._node,
+                hook = hooks[selector];
+
+            if (!node) return;
+
+            return hook ? hook(node) : new SelectorMatcher(selector).test(node);
+        };
+    }());
+
     /**
      * Calculates offset of current context
      * @return {{top: Number, left: Number, right: Number, bottom: Number}} offset object
      */
     $Element.prototype.offset = function() {
+        if (!this._node) return;
+
         var boundingRect = this._node.getBoundingClientRect(),
             clientTop = documentElement.clientTop,
             clientLeft = documentElement.clientLeft,
@@ -1130,6 +1136,22 @@
         };
     };
 
+    /**
+     * Calculate width based on element's offset
+     * @return {Number} element width in pixels
+     */
+    $Element.prototype.width = function() {
+        return this.get("offsetWidth");
+    };
+
+    /**
+     * Calculate height based on element's offset
+     * @return {Number} element height in pixels
+     */
+    $Element.prototype.height = function() {
+        return this.get("offsetHeight");
+    };
+
     // GETTER
     // ------
 
@@ -1140,17 +1162,13 @@
          * Get property or attribute by name
          * @param  {String} [name] property/attribute name
          * @return {String} property/attribute value
-         * @example
-         * // returns value of the id property (i.e. "link" string)
-         * link.get("id");
-         * // returns value of "data-attr" attribute
-         * link.get("data-attr");
-         * // returns innerHTML of the element
-         * link.get();
+         * @tutorial Getter and setter
          */
         $Element.prototype.get = function(name) {
             var node = this._node,
                 hook = hooks[name];
+
+            if (!node) return;
 
             if (name === undefined) {
                 if (node.tagName === "OPTION") {
@@ -1166,7 +1184,7 @@
         };
 
         hooks.tagName = hooks.method = function(node, key) {
-            return node[key].toLowerCase();
+            return key in node ? node[key].toLowerCase() : "";
         };
 
         hooks.elements = hooks.options = function(node, key) {
@@ -1187,30 +1205,33 @@
     // ------
 
     (function() {
-        var hooks = {},
-            processObjectParam = function(value, name) { this.set(name, value); };
+        var hooks = {};
 
         /**
          * Set property/attribute value
          * @param {String} [name] property/attribute name
          * @param {String} value property/attribute value
          * @return {$Element}
-         * @example
-         * // sets property href (and that action updates attribute value too)
-         * link.set("href", "/some/path");
-         * // sets attribute "data-attr" to "123"
-         * link.set("data-attr", "123");
-         * // sets innerHTML to "some text"
-         * link.set("some text");
+         * @tutorial Getter and setter
          */
         $Element.prototype.set = function(name, value) {
-            var node = this._node,
-                nameType = typeof name,
-                hook;
+            var len = arguments.length,
+                nameType = typeof name;
 
-            if (nameType === "string") {
-                if (value === undefined) {
-                    value = name;
+            return _legacy(this, function(node, el) {
+                var initialName, hook;
+
+                if (len === 1) {
+                    if (name == null) {
+                        value = "";
+                    } else if (nameType === "object") {
+                        return _forOwn(name, function(value, name) { el.set(name, value) });
+                    } else {
+                        // handle numbers, booleans etc.
+                        value = nameType === "function" ? name : String(name);
+                    }
+
+                    initialName = name;
 
                     if (node.type && "value" in node) {
                         // for IE use innerText because it doesn't trigger onpropertychange
@@ -1218,28 +1239,43 @@
                     } else {
                         name = "innerHTML";
                     }
+                } else if (len > 2 || len === 0 || nameType !== "string") {
+                    throw _makeError("set", el);
                 }
 
                 if (typeof value === "function") {
-                    value = value.call(this, value.length ? this.get(name) : undefined);
+                    value = value.call(el, value.length ? el.get(name) : undefined);
                 }
 
                 if (hook = hooks[name]) {
                     hook(node, value);
-                } else if (value === null) {
+                } else if (value == null) {
                     node.removeAttribute(name);
                 } else if (name in node) {
                     node[name] = value;
                 } else {
                     node.setAttribute(name, value);
                 }
-            } else if (nameType === "object") {
-                _forOwn(name, processObjectParam, this);
-            } else {
-                throw _makeError("set", this);
+
+                if (initialName) {
+                    name = initialName;
+                    value = undefined;
+                }
+            });
+        };
+
+        hooks.defaultValue = function(node, value) {
+            // emulate defaultValue for select via selected attribute
+            if (node.tagName === "SELECT") {
+                _forEach(node.options, function(option) {
+                    if (option.value === value) {
+                        option.selected = true;
+                        option.setAttribute("selected", "selected");
+                    }
+                });
             }
 
-            return this;
+            node.defaultValue = value;
         };
 
         if (document.attachEvent) {
@@ -1248,47 +1284,85 @@
                 node.innerHTML = "";
                 node.appendChild(_parseFragment(value));
             };
-            
-            // fix hidden attribute for IE < 10
-            hooks.hidden = function(node, value) {
-                if (typeof value !== "boolean") {
-                    throw _makeError("set", this);
-                }
-
-                node.hidden = value;
-
-                if (value) {
-                    node.setAttribute("hidden", "hidden");
-                } else {
-                    node.removeAttribute("hidden");
-                }
-
-                // trigger redraw in IE
-                node.style.zoom = value ? "1" : "0";
-            };
         }
     })();
 
     // STYLES MANIPULATION
     // -------------------
-    
+
     (function() {
         var getStyleHooks = {},
             setStyleHooks = {},
             reDash = /\-./g,
             reCamel = /[A-Z]/g,
-            dashSeparatedToCamelCase = function(str) { return str[1].toUpperCase(); },
-            camelCaseToDashSeparated = function(str) { return "-" + str.toLowerCase(); },
+            directions = ["Top", "Right", "Bottom", "Left"],
             computed = _getComputedStyle(documentElement),
             // In Opera CSSStyleDeclaration objects returned by _getComputedStyle have length 0
-            props = computed.length ? _slice(computed) : _map(_keys(computed), function(key) { return key.replace(reCamel, camelCaseToDashSeparated); });
-        
+            props = computed.length ? _slice(computed) : _map(_keys(computed), function(key) {
+                return key.replace(reCamel, function(str) { return "-" + str.toLowerCase() });
+            });
+
+        /**
+         * CSS getter/setter for an element
+         * @param  {String} name    style property name
+         * @param  {String} [value] style property value
+         * @return {String|Object} property value or reference to this
+         */
+        $Element.prototype.style = function(name, value) {
+            var len = arguments.length,
+                node = this._node,
+                nameType = typeof name,
+                style, hook;
+
+            if (len === 1 && nameType === "string") {
+                if (!node) return;
+
+                style = node.style;
+                hook = getStyleHooks[name];
+
+                value = hook ? hook(style) : style[name];
+
+                if (!value) {
+                    style = _getComputedStyle(node);
+                    value = hook ? hook(style) : style[name];
+                }
+
+                return value;
+            }
+
+            return _legacy(this, function(node, el) {
+                var appendCssText = function(value, key) {
+                    var hook = setStyleHooks[key];
+
+                    if (typeof value === "function") {
+                        value = value.call(el, value.length ? el.style(key) : undefined);
+                    }
+
+                    if (value == null) value = "";
+
+                    if (hook) {
+                        hook(node.style, value);
+                    } else {
+                        node.style[key] = typeof value === "number" ? value + "px" : value.toString();
+                    }
+                };
+
+                if (len === 1 && name && nameType === "object") {
+                    _forOwn(name, appendCssText);
+                } else if (len === 2 && nameType === "string") {
+                    appendCssText(value, name);
+                } else {
+                    throw _makeError("style", el);
+                }
+            });
+        };
+
         _forEach(props, function(propName) {
             var prefix = propName[0] === "-" ? propName.substr(1, propName.indexOf("-", 1) - 1) : null,
                 unprefixedName = prefix ? propName.substr(prefix.length + 2) : propName,
-                stylePropName = propName.replace(reDash, dashSeparatedToCamelCase);
+                stylePropName = propName.replace(reDash, function(str) { return str[1].toUpperCase() });
 
-            // some browsers start vendor specific props in lowecase
+            // most of browsers starts vendor specific props in lowercase
             if (!(stylePropName in computed)) {
                 stylePropName = stylePropName[0].toLowerCase() + stylePropName.substr(1);
             }
@@ -1297,21 +1371,46 @@
                 getStyleHooks[unprefixedName] = function(style) {
                     return style[stylePropName];
                 };
+                setStyleHooks[unprefixedName] = function(style, value) {
+                    value = typeof value === "number" ? value + "px" : value.toString();
+                    // use __dom__ property to determine DOM.importStyles call
+                    style[style.__dom__ ? propName : stylePropName] = value;
+                };
+            }
 
-                setStyleHooks[unprefixedName] = function(name, value) {
-                    return propName + ":" + value;
+            // Exclude the following css properties from adding px
+            if (~" fill-opacity font-weight line-height opacity orphans widows z-index zoom ".indexOf(" " + propName + " ")) {
+                setStyleHooks[propName] = function(style, value) {
+                    style[style.__dom__ ? propName : stylePropName] = value.toString();
                 };
             }
         });
 
-        // shortcuts
+        // normalize float css property
+        if ("cssFloat" in computed) {
+            getStyleHooks.float = function(style) {
+                return style.cssFloat;
+            };
+            setStyleHooks.float = function(style, value) {
+                style.cssFloat = value.toString();
+            };
+        } else {
+            getStyleHooks.float = function(style) {
+                return style.styleFloat;
+            };
+            setStyleHooks.float = function(style, value) {
+                style.styleFloat = value.toString();
+            };
+        }
+
+        // normalize property shortcuts
         _forOwn({
             font: ["fontStyle", "fontSize", "/", "lineHeight", "fontFamily"],
-            padding: ["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"],
-            margin: ["marginTop", "marginRight", "marginBottom", "marginLeft"],
-            "border-width": ["borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth"],
-            "border-style": ["borderTopStyle", "borderRightStyle", "borderBottomStyle", "borderLeftStyle"]
-        }, function(value, key) {
+            padding: _map(directions, function(dir) { return "padding" + dir }),
+            margin: _map(directions, function(dir) { return "margin" + dir }),
+            "border-width": _map(directions, function(dir) { return "border" + dir + "Width" }),
+            "border-style": _map(directions, function(dir) { return "border" + dir + "Style" })
+        }, function(props, key) {
             getStyleHooks[key] = function(style) {
                 var result = [],
                     hasEmptyStyleValue = function(prop, index) {
@@ -1320,93 +1419,27 @@
                         return !result[index];
                     };
 
-                return _some(value, hasEmptyStyleValue) ? "" : result.join(" ");
+                return _some(props, hasEmptyStyleValue) ? "" : result.join(" ");
             };
-        });
-
-        // normalize float css property
-        if ("cssFloat" in computed) {
-            getStyleHooks.float = function(style) {
-                return style.cssFloat;
-            };
-        } else {
-            getStyleHooks.float = function(style) {
-                return style.styleFloat;
-            };
-        }
-        
-        _forEach("fill-opacity font-weight line-height opacity orphans widows z-index zoom".split(" "), function(propName) {
-            // Exclude the following css properties to add px
-            setStyleHooks[propName] = function(name, value) {
-                return name + ":" + value;
-            };
-        });
-
-        /**
-         * Get css style from element
-         * @param  {String} name property name
-         * @return {String} property value
-         */
-        $Element.prototype.getStyle = function(name) {
-            var style = this._node.style,
-                hook, result;
-
-            if (typeof name !== "string") {
-                throw _makeError("getStyle", this);
-            }
-
-            hook = getStyleHooks[name];
-
-            result = hook ? hook(style) : style[name];
-
-            if (!result) {
-                style = _getComputedStyle(this._node);
-
-                result = hook ? hook(style) : style[name];
-            }
-
-            return result;
-        };
-
-        /**
-         * Set css style for element
-         * @param {String} name  property name
-         * @param {String} value property value
-         * @return {$Element}
-         */
-        $Element.prototype.setStyle = function(name, value) {
-            var nameType = typeof name,
-                cssText = "", hook;
-
-            if (nameType === "string") {
-                hook = setStyleHooks[name];
-
-                cssText = ";" + (hook ? hook(name, value) : name + ":" + (typeof value === "number" ? value + "px" : value));
-            } else if (nameType === "object") {
-                _forOwn(name, function(value, key) {
-                    hook = setStyleHooks[key];
-
-                    cssText += ";" + (hook ? hook(key, value) : key + ":" + (typeof value === "number" ? value + "px" : value));
+            setStyleHooks[key] = function(style, value) {
+                _forEach(props, function(name) {
+                    style[name] = typeof value === "number" ? value + "px" : value.toString();
                 });
-            } else {
-                throw _makeError("setStyle", this);
-            }
-
-            this._node.style.cssText += cssText;
-
-            return this;
-        };
+            };
+        });
     })();
 
     // TRAVERSING
     // ----------
-    
+
     (function() {
         function makeTraversingMethod(propertyName, multiple) {
             return function(selector) {
                 var matcher = SelectorMatcher(selector),
                     nodes = multiple ? [] : null,
                     it = this._node;
+
+                if (!it) return;
 
                 while (it = it[propertyName]) {
                     if (it.nodeType === 1 && (!matcher || matcher.test(it))) {
@@ -1428,13 +1461,15 @@
                     throw _makeError("child", this);
                 }
 
+                if (!this._node) return;
+
                 var children = this._node.children,
                     matcher = SelectorMatcher(selector),
                     node;
 
                 if (!document.addEventListener) {
                     // fix IE8 bug with children collection
-                    children = _filter(children, function(node) { return node.nodeType === 1; });
+                    children = _filter(children, function(node) { return node.nodeType === 1 });
                 }
 
                 if (multiple) {
@@ -1495,11 +1530,7 @@
          * @param  {String} [selector] css selector
          * @return {$Element} matched child
          * @function
-         * @example
-         * var body = DOM.find("body");
-         *
-         * body.child(0); // => first child
-         * body.child(-1); // => last child
+         * @tutorial Traversing
          */
         $Element.prototype.child = makeChildTraversingMethod(false);
 
@@ -1508,6 +1539,7 @@
          * @param  {String} [selector] css selector
          * @return {$Element} collection of matched elements
          * @function
+         * @tutorial Traversing
          */
         $Element.prototype.children = makeChildTraversingMethod(true);
     })();
@@ -1517,9 +1549,7 @@
      * @return {$Element}
      */
     $Element.prototype.show = function() {
-        this.set("hidden", false);
-
-        return this;
+        return this.set("aria-hidden", false);
     };
 
     /**
@@ -1527,9 +1557,7 @@
      * @return {$Element}
      */
     $Element.prototype.hide = function() {
-        this.set("hidden", true);
-
-        return this;
+        return this.set("aria-hidden", true);
     };
 
     /**
@@ -1537,170 +1565,117 @@
      * @return {$Element}
      */
     $Element.prototype.toggle = function() {
-        this.set("hidden", !this.get("hidden"));
-
-        return this;
+        return this.set("aria-hidden", function(value) { return value !== "true" });
     };
 
     /**
-     * Check is element is hidden
-     * @return {Boolean} true if element is hidden
-     */
-    $Element.prototype.isHidden = function() {
-        return !!this.get("hidden");
-    };
-
-    /**
-     * Check if element has focus
-     * @return {Boolean} true if current element is focused
-     */
-    $Element.prototype.isFocused = function() {
-        return this._node === document.activeElement;
-    };
-
-    // COMPOSITE ELEMENT
-    // -----------------
-
-    /**
-     * Used to represent collection of DOM elements
-     * @private
+     * Used to represent a collection of DOM elements (length >= 1)
+     * @name $CompositeElement
+     * @param elements {Array|Object} array or array-like object with native elements
+     * @extends $Element
      * @constructor
+     * @private
      */
     function $CompositeElement(elements) {
         Array.prototype.push.apply(this, _map(elements, $Element));
     }
 
     $CompositeElement.prototype = new $Element();
-    $CompositeElement.prototype.constructor = $CompositeElement;
-
-    _forIn($CompositeElement.prototype, function(value, key, proto) {
-        if (typeof value === "function") {
-            var isGetter = value.toString().indexOf("return this;") < 0,
-                // this will be the arguments object
-                functor = function(el) { value.apply(el, this); };
-
-            proto[key] = isGetter ? function() {} : function() {
-                return _forEach(this, functor, arguments);
-            };
-        }
-    });
 
     // ELEMENT COLLECTION EXTESIONS
     // ----------------------------
 
-    _extend($Element.prototype, {
-        /**
-         * Executes callback on each element in the collection
-         * @memberOf $Element.prototype
-         * @param  {Function} callback callback function
-         * @param  {Object}   [thisArg]  callback context
-         * @return {$Element}
-         */
-        each: function(callback, thisArg) {
-            return _forEach(this, callback, thisArg);
-        },
+    (function() {
+        var makeCollectionMethod = function(fn) {
+                var code = fn.toString();
+                // extract function body
+                code = code.substring(code.indexOf("{") + 1, code.lastIndexOf("}"));
+                // use this variable unstead of a
+                code = code.replace(/a([^\w])/g, function(a, symbol) { return "this" + symbol; });
+                // compile the function
+                return Function("cb", "that", code);
+            };
 
-        /**
-         * (alias: <b>any</b>) Checks if the callback returns true for any element in the collection
-         * @memberOf $Element.prototype
-         * @param  {Function} callback   callback function
-         * @param  {Object}   [thisArg]  callback context
-         * @return {Boolean} true, if any element in the collection return true
-         */
-        some: function(callback, thisArg) {
-            return _some(this, callback, thisArg);
-        },
+        _extend($Element.prototype, {
+            /**
+             * Executes callback on each element in the collection
+             * @memberOf $Element.prototype
+             * @param  {Function} callback callback function
+             * @param  {Object}   [context]  callback context
+             * @return {$Element}
+             * @function
+             */
+            each: makeCollectionMethod(_forEach),
 
-        /**
-         * (alias: <b>all</b>) Checks if the callback returns true for all elements in the collection
-         * @memberOf $Element.prototype
-         * @param  {Function} callback   callback function
-         * @param  {Object}   [thisArg]  callback context
-         * @return {Boolean} true, if all elements in the collection returns true
-         */
-        every: function(callback, thisArg) {
-            return _every(this, callback, thisArg);
-        },
+            /**
+             * Checks if the callback returns true for any element in the collection
+             * @memberOf $Element.prototype
+             * @param  {Function} callback   callback function
+             * @param  {Object}   [context]  callback context
+             * @return {Boolean} true, if any element in the collection return true
+             * @function
+             */
+            some: makeCollectionMethod(_some),
 
-        /**
-         * (alias: <b>collect</b>) Creates an array of values by running each element in the collection through the callback
-         * @memberOf $Element.prototype
-         * @param  {Function} callback   callback function
-         * @param  {Object}   [thisArg]  callback context
-         * @return {Array} new array of the results of each callback execution
-         */
-        map: function(callback, thisArg) {
-            return _map(this, callback, thisArg);
-        },
+            /**
+             * Checks if the callback returns true for all elements in the collection
+             * @memberOf $Element.prototype
+             * @param  {Function} callback   callback function
+             * @param  {Object}   [context]  callback context
+             * @return {Boolean} true, if all elements in the collection returns true
+             * @function
+             */
+            every: makeCollectionMethod(_every),
 
-        /**
-         * (alias: <b>select</b>) Examines each element in a collection, returning an array of all elements the callback returns truthy for
-         * @memberOf $Element.prototype
-         * @param  {Function} callback   callback function
-         * @param  {Object}   [thisArg]  callback context
-         * @return {$Element} collection of elements that passed the callback check
-         */
-        filter: function(callback, thisArg) {
-            return new $CompositeElement(_filter(this, callback, thisArg));
-        },
+            /**
+             * Creates an array of values by running each element in the collection through the callback
+             * @memberOf $Element.prototype
+             * @param  {Function} callback   callback function
+             * @param  {Object}   [context]  callback context
+             * @return {Array} new array of the results of each callback execution
+             * @function
+             */
+            map: makeCollectionMethod(_map),
 
-        /**
-         * (alias: <b>foldl</b>) Boils down a list of values into a single value (from start to end)
-         * @memberOf $Element.prototype
-         * @param  {Function} callback callback function
-         * @param  {Object}   memo     initial value of the accumulator
-         * @return {Object} the accumulated value
-         */
-        reduce: function(callback, memo) {
-            return _foldl(this, callback, memo);
-        },
+            /**
+             * Examines each element in a collection, returning an array of all elements the callback returns truthy for
+             * @memberOf $Element.prototype
+             * @param  {Function} callback   callback function
+             * @param  {Object}   [context]  callback context
+             * @return {Array} new array with elements where callback returned true
+             * @function
+             */
+            filter: makeCollectionMethod(_filter),
 
-        /**
-         * (alias: <b>foldr</b>) Boils down a list of values into a single value (from end to start)
-         * @memberOf $Element.prototype
-         * @param  {Function} callback callback function
-         * @param  {Object}   memo     initial value of the accumulator
-         * @return {Object} the accumulated value
-         */
-        reduceRight: function(callback, memo) {
-            return _foldr(this, callback, memo);
-        },
+            /**
+             * Boils down a list of values into a single value (from start to end)
+             * @memberOf $Element.prototype
+             * @param  {Function} callback callback function
+             * @param  {Object}   [memo]   initial value of the accumulator
+             * @return {Object} the accumulated value
+             * @function
+             */
+            reduce: makeCollectionMethod(_foldl),
 
-        /**
-         * Calls the method named by name on each element in the collection
-         * @memberOf $Element.prototype
-         * @param  {String}    name   name of the method
-         * @param  {...Object} [args] arguments for the method call
-         * @return {$Element}
-         */
-        invoke: function(name) {
-            var args = _slice(arguments, 1);
+            /**
+             * Boils down a list of values into a single value (from end to start)
+             * @memberOf $Element.prototype
+             * @param  {Function} callback callback function
+             * @param  {Object}   [memo]   initial value of the accumulator
+             * @return {Object} the accumulated value
+             * @function
+             */
+            reduceRight: makeCollectionMethod(_foldr),
 
-            if (typeof name !== "string") {
-                throw _makeError("invoke", this);
-            }
-
-            return _forEach(this, function(el) {
-                if (args.length) {
-                    el[name].apply(el, args);
-                } else {
-                    el[name]();
-                }
-            });
-        }
-    });
-
-    // aliases
-    _forOwn({
-        all: "every",
-        any: "some",
-        collect: "map",
-        select: "filter",
-        foldl: "reduce",
-        foldr: "reduceRight"
-    }, function(value, key) {
-        this[key] = this[value];
-    }, $Element.prototype);
+            /**
+             * Executes code in a 'unsafe' block there the first callback argument is native DOM
+             * object. Use only when you need to communicate better-dom with third party scripts!
+             * @memberOf $Element.prototype
+             * @param  {Function} block unsafe block body (nativeNode, index)
+             */
+            legacy: makeCollectionMethod(_legacy)
+        });
+    }());
 
     // GLOBAL API
     // ----------
@@ -1712,114 +1687,7 @@
      */
     var DOM = new $Node(document);
 
-    DOM.version = "1.3.0";
-
-    // WATCH CALLBACK
-    // --------------
-
-    /**
-     * Execute callback when element with specified selector matches
-     * @memberOf DOM
-     * @param {String} selector css selector
-     * @param {Fuction} callback event handler
-     * @param {Boolean} [once] execute callback only at the first time
-     * @function
-     */
-    DOM.watch = (function() {
-        var animId = 19968, // use Chinese characters for animation names starting from 4E00
-            watchers, cssPrefix, scripts, behaviorUrl;
-
-        if (window.CSSKeyframesRule || !document.attachEvent) {
-            // Inspired by trick discovered by Daniel Buchner:
-            // https://github.com/csuwldcat/SelectorListener
-            cssPrefix = CSSRule.KEYFRAMES_RULE ? "" : "-webkit-";
-            watchers = {};
-
-            document.addEventListener(cssPrefix ? "webkitAnimationStart" : "animationstart", function(e) {
-                var entry = watchers[e.animationName],
-                    node = e.target;
-
-                if (entry) {
-                    // MUST cancelBubbling first because of extra calls in firefox
-                    if (entry.once) node.addEventListener(e.type, entry.once, false);
-
-                    entry.callback($Element(node));
-                }
-            }, false);
-
-            return function(selector, callback, once) {
-                var animationName = String.fromCharCode(animId++),
-                    animations = [animationName];
-
-                _forOwn(watchers, function(entry, key) {
-                    if (entry.selector === selector) animations.push(key);
-                });
-
-                DOM.importStyles("@" + cssPrefix + "keyframes " + animationName, "1% {opacity: .99}");
-
-                DOM.importStyles(selector, {
-                    "animation-duration": "1ms",
-                    "animation-name": animations.join() + " !important"
-                });
-
-                watchers[animationName] = {
-                    selector: selector,
-                    callback: callback,
-                    once: once && function(e) {
-                        if (e.animationName === animationName) e.stopPropagation();
-                    }
-                };
-            };
-        } else {
-            scripts = document.scripts;
-            behaviorUrl = scripts[scripts.length - 1].getAttribute("data-htc");
-            watchers = [];
-
-            document.attachEvent("ondataavailable", function() {
-                var e = window.event,
-                    node = e.srcElement;
-
-                if (e.srcUrn === "dataavailable") {
-                    _forEach(watchers, function(entry) {
-                        // do not execute callback if it was previously excluded
-                        if (_some(e.detail, function(x) { return x === entry.callback; })) return;
-
-                        if (entry.matcher.test(node)) {
-                            if (entry.once) node.attachEvent("on" + e.type, entry.once);
-
-                            _defer(function() { entry.callback($Element(node)); });
-                        }
-                    });
-                }
-            });
-
-            return function(selector, callback, once) {
-                var behaviorExists = _some(watchers, function(x) { return x.matcher.selector === selector; });
-                
-                if (behaviorExists) {
-                    // do safe call of the callback for each matched element
-                    // because the behaviour is already attached to selector
-                    DOM.findAll(selector).each(function(el) {
-                        _defer(function() { callback(el); });
-                    });
-                }
-
-                watchers.push({
-                    callback: callback,
-                    matcher: new SelectorMatcher(selector),
-                    once: once && function() {
-                        var e = window.event;
-
-                        if (e.srcUrn === "dataavailable") {
-                            (e.detail = e.detail || []).push(callback);
-                        }
-                    }
-                });
-
-                if (!behaviorExists) DOM.importStyles(selector, {behavior: "url(" + behaviorUrl + ")"});
-            };
-        }
-    }());
+    DOM.version = "1.5.3";
 
     // CREATE ELEMENT
     // --------------
@@ -1830,32 +1698,39 @@
         /**
          * Create a $Element instance
          * @memberOf DOM
-         * @param  {String} value element tag name or emmet expression
+         * @param  {Mixed}          value        native element or HTMLString or EmmetString
+         * @param  {Object}         [attributes] key/value pairs of the element attributes
+         * @param  {Object}         [styles]     key/value pairs of the element styles
          * @return {$Element} element
          */
-        DOM.create = function(value) {
-            if (typeof value !== "string") {
-                throw _makeError("create");
-            }
-
-            if (value.match(rquick)) {
-                value = document.createElement(value);
-            } else {
-                if (value[0] !== "<") value = DOM.parseTemplate(value);
-
-                value = _parseFragment(value);
-
-                if (value.childNodes.length === 1) {
-                    value = value.firstChild;
+        DOM.create = function(value, attributes, styles) {
+            if (typeof value === "string") {
+                if (rquick.test(value)) {
+                    value = new $Element(document.createElement(value));
                 } else {
-                    // wrap result with div
-                    var div = document.createElement("div");
-                    div.appendChild(value);
-                    value = div;
+                    value = _trim(DOM.template(value));
+
+                    var sandbox = document.createElement("div");
+
+                    sandbox.innerHTML = value;
+
+                    if (sandbox.childNodes.length === 1 && sandbox.firstChild.nodeType === 1) {
+                        // remove temporary element
+                        sandbox = sandbox.removeChild(sandbox.firstChild);
+                    }
+
+                    value = new $Element(sandbox);
                 }
+
+                if (attributes) value.set(attributes);
+                if (styles) value.style(styles);
+
+                return value;
             }
 
-            return new $Element(value);
+            if (value.nodeType === 1) return $Element(value);
+
+            throw _makeError("create", this);
         };
     })();
 
@@ -1865,41 +1740,14 @@
         /**
          * Define a DOM extension
          * @memberOf DOM
-         * @param  {String} selector extension css selector
-         * @param  {Array}  [template] extension templates
-         * @param  {Object} mixins extension mixins
-         * @example
-         * DOM.extend(".myplugin", [
-         *     "&#60;span&#62;myplugin text&#60;/span&#62;"
-         * ], {
-         *     constructor: function(tpl) {
-         *         // initialize extension
-         *     }
-         * });
-         *
-         * // emmet-like syntax example
-         * DOM.extend(".mycalendar", [
-         *     "table>(tr>th*7)+(tr>td*7)*6"
-         * ], {
-         *     constructor: function(tpl) {
-         *         // initialize extension
-         *     },
-         *     method: function() {
-         *         // this method will be mixed into every instance
-         *     }
-         * });
+         * @param  {String}          selector extension css selector
+         * @param  {Object|Function} mixins   extension mixins/constructor function
+         * @tutorial Living extensions
          */
-        DOM.extend = function(selector, template, mixins) {
-            if (mixins === undefined) {
-                mixins = template;
-                template = undefined;
-            }
+        DOM.extend = function(selector, mixins) {
+            if (typeof mixins === "function") mixins = {constructor: mixins};
 
-            if (typeof mixins === "function") {
-                mixins = {constructor: mixins};
-            }
-
-            if (!mixins || typeof mixins !== "object" || (selector !== "*" && ~selector.indexOf("*"))) {
+            if (!mixins || typeof mixins !== "object") {
                 throw _makeError("extend", this);
             }
 
@@ -1907,12 +1755,11 @@
                 // extending element prototype
                 _extend($Element.prototype, mixins);
             } else {
-                var clones = _map(template, DOM.create),
-                    watcher = function(el) {
+                var watcher = function(el) {
                         _extend(el, mixins);
 
                         if (mixins.hasOwnProperty("constructor")) {
-                            mixins.constructor.apply(el, _map(clones, function(proto) { return proto.clone(); }));
+                            mixins.constructor.apply(el);
 
                             el.constructor = $Element;
                         }
@@ -1922,33 +1769,29 @@
 
                 DOM.watch(selector, watcher, true);
             }
+
+            return this;
         };
 
         /**
-         * Return an {@link $Element} mock specified for optional selector
+         * Synchronously return dummy {@link $Element} instance specified for optional selector
          * @memberOf DOM
-         * @param  {String} [selector] selector of mock
+         * @param  {Mixed} [content] mock element content
          * @return {$Element} mock instance
          */
         DOM.mock = function(content) {
-            if (content && typeof content !== "string") {
-                throw _makeError("mock", this);
-            }
-
-            var el = content ? DOM.create(content) : $Element(),
-                makeMock = function(el) {
+            var el = content ? DOM.create(content) : new $Element(),
+                applyWatchers = function(el) {
                     _forOwn(watchers, function(watchers, selector) {
                         if (el.matches(selector)) {
                             _forEach(watchers, function(watcher) { watcher(el); });
                         }
                     });
+
+                    el.children().each(applyWatchers);
                 };
 
-            if (content) {
-                makeMock(el);
-
-                el.findAll("*").each(makeMock);
-            }
+            if (content) applyWatchers(el);
 
             return el;
         };
@@ -1960,19 +1803,13 @@
     (function() {
         // operator type / priority object
         var operators = {"(": 1,")": 2,"^": 3,">": 4,"+": 4,"*": 5,"}": 5,"{": 6,"]": 5,"[": 6,".": 7,"#": 8,":": 9},
-            emptyElements = " area base br col hr img input link meta param command keygen source ",
-            reEmpty = /<\?>|<\/\?>/g,
+            reTextTag = /<\?>|<\/\?>/g,
             reAttr = /([\w\-]+)(?:=((?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^\s\]]+)))?/g,
-            reIndex = /(\$+)(?:@(-)?([0-9]+)?)?/,
-            reIndexg = new RegExp(reIndex.source, "g"),
+            reIndex = /(\$+)(?:@(-)?([0-9]+)?)?/g,
+            reHtml = /^[\s<]/,
             normalizeAttrs = function(term, name, value, a, b, simple) {
                 // always wrap attribute values with quotes if they don't exist
                 return name + "=" + (simple || !value ? "\"" + (value || "") + "\"" : value);
-            },
-            formatIndex = function(index) {
-                return function(expr, fmt) {
-                    return (fmt + index).slice(-fmt.length).split("$").join("0");
-                };
             },
             injectTerm = function(term, first) {
                 return function(el) {
@@ -1981,29 +1818,32 @@
                     return el.substr(0, index) + term + el.substr(index);
                 };
             },
-            makeTerm = function(term) {
-                var result = "<" + term + ">";
+            makeTerm = (function() {
+                var results = {};
 
-                if (emptyElements.indexOf(" " + term + " ") < 0) {
-                    result += "</" + term + ">";
-                }
+                // populate empty tags
+                _forEach("area base br col hr img input link meta param command keygen source".split(" "), function(tag) {
+                    results[tag] = "<" + tag + ">";
+                });
 
-                return [result];
-            },
-            makeTerms = function(term, n) {
-                var parsed = reIndex.exec(term) || [],
-                    step = parsed[2] ? -1 : 1,
-                    index = parsed[3] ? +parsed[3] : 1,
-                    result = new Array(n),
-                    i = 0;
+                return function(tag) {
+                    var result = results[tag];
 
-                if (step < 0) index += n - 1;
+                    if (!result) {
+                        results[tag] = result = "<" + tag + "></" + tag + ">";
+                    }
 
-                for (; i < n; ++i, index += step) {
-                    result[i] = term.replace(reIndexg, formatIndex(index));
-                }
-
-                return result;
+                    return [result];
+                };
+            }()),
+            makeIndexedTerm = function(term) {
+                return function(_, i, arr) {
+                    return term.replace(reIndex, function(expr, fmt, sign, base) {
+                        var index = (sign ? arr.length - i - 1 : i) + (base ? base | 0 : 1);
+                        // make zero-padding index string
+                        return (fmt + index).slice(-fmt.length).split("$").join("0");
+                    });
+                };
             },
             toString = function(term) {
                 return typeof term === "string" ? term : term.join("");
@@ -2015,15 +1855,20 @@
          * @param  {String} template emmet-like expression
          * @return {String} HTML string
          * @see http://docs.emmet.io/cheat-sheet/
+         * @tutorial Microtemplating
          */
-        DOM.parseTemplate = function(template) {
+        DOM.template = function(template) {
             var stack = [],
                 output = [],
                 term = "",
                 i, n, str, priority, skip, node;
 
-            // parse exrpression into RPN
-            
+            if (typeof template !== "string") throw _makeError("template", this);
+
+            if (!template || reHtml.exec(template)) return template;
+
+            // parse expression into RPN
+
             for (i = 0, n = template.length; i < n; ++i) {
                 str = template[i];
                 // concat .c1.c2 into single space separated class string
@@ -2112,7 +1957,7 @@
                         break;
 
                     case "*":
-                        node = makeTerms(toString(node), parseInt(term, 10));
+                        node = _map(Array(term | 0), makeIndexedTerm(toString(node)));
                         break;
 
                     default:
@@ -2133,7 +1978,7 @@
                 stack.unshift(str);
             }
 
-            return toString(stack[0]).replace(reEmpty, "");
+            return toString(stack[0]).replace(reTextTag, "");
         };
     })();
 
@@ -2145,18 +1990,24 @@
             styleSheet = styleNode.sheet || styleNode.styleSheet;
 
         /**
-         * Import global css styles on page
+         * Append global css styles
          * @memberOf DOM
          * @param {String|Object} selector css selector or object with selector/rules pairs
          * @param {String} styles css rules
          */
         DOM.importStyles = function(selector, styles) {
             if (typeof styles === "object") {
-                var obj = {_node: {style: {cssText: ""}}};
+                var obj = new $Element({style: {"__dom__": true}});
 
-                $Element.prototype.setStyle.call(obj, styles);
+                $Element.prototype.style.call(obj, styles);
 
-                styles = obj._node.style.cssText.substr(1); // remove leading comma
+                styles = "";
+
+                _forOwn(obj._node.style, function(value, key) {
+                    styles += ";" + key + ":" + value;
+                });
+
+                styles = styles.substr(1);
             }
 
             if (typeof selector !== "string" || typeof styles !== "string") {
@@ -2171,11 +2022,113 @@
                     styleSheet.addRule(selector, styles);
                 });
             }
+
+            return this;
         };
-        
-        if (!DOM.supports("hidden", "a")) {
-            DOM.importStyles("[hidden]", "display:none");
+
+        DOM.importStyles("[aria-hidden=true]", "display:none");
+    }());
+
+    // WATCH CALLBACK
+    // --------------
+
+    /**
+     * Execute callback when element with specified selector is found in document tree
+     * @memberOf DOM
+     * @param {String} selector css selector
+     * @param {Fuction} callback event handler
+     * @param {Boolean} [once] execute callback only at the first time
+     * @function
+     */
+    DOM.watch = (function() {
+        // Inspired by trick discovered by Daniel Buchner:
+        // https://github.com/csuwldcat/SelectorListener
+
+        var watchers = [],
+            supportsAnimations = window.CSSKeyframesRule || !document.attachEvent,
+            handleWatcherEntry = function(e, node) {
+                return function(entry) {
+                    // do not execute callback if it was previously excluded
+                    if (_some(e.detail, function(x) { return x === entry.callback })) return;
+
+                    if (entry.matcher.test(node)) {
+                        if (entry.once) {
+                            if (supportsAnimations) {
+                                node.addEventListener(e.type, entry.once, false);
+                            } else {
+                                node.attachEvent("on" + e.type, entry.once);
+                            }
+                        }
+
+                        _defer(function() { entry.callback($Element(node)) });
+                    }
+                };
+            },
+            animId, cssPrefix, link, styles;
+
+        if (supportsAnimations) {
+            animId = "DOM" + new Date().getTime();
+            cssPrefix = window.WebKitAnimationEvent ? "-webkit-" : "";
+
+            DOM.importStyles("@" + cssPrefix + "keyframes " + animId, "1% {opacity: .99}");
+
+            styles = {
+                "animation-duration": "1ms",
+                "animation-name": animId + " !important"
+            };
+
+            document.addEventListener(cssPrefix ? "webkitAnimationStart" : "animationstart", function(e) {
+                if (e.animationName === animId) {
+                    _forEach(watchers, handleWatcherEntry(e, e.target));
+                }
+            }, false);
+        } else {
+            link = document.querySelector("link[rel=htc]");
+
+            if (!link) throw "You forgot to include <link> with rel='htc' on your page!";
+
+            styles = {behavior: "url(" + link.href + ") !important"};
+
+            document.attachEvent("ondataavailable", function() {
+                var e = window.event;
+
+                if (e.srcUrn === "dataavailable") {
+                    _forEach(watchers, handleWatcherEntry(e, e.srcElement));
+                }
+            });
         }
+
+        return function(selector, callback, once) {
+            if (!supportsAnimations) {
+                // do safe call of the callback for each matched element
+                // if the behaviour is already attached
+                DOM.findAll(selector).legacy(function(node, el) {
+                    if (node.behaviorUrns.length > 0) {
+                        _defer(function() { callback(el) });
+                    }
+                });
+            }
+
+            watchers.push({
+                callback: callback,
+                matcher: new SelectorMatcher(selector),
+                once: once && function(e) {
+                    if (supportsAnimations) {
+                        if (e.animationName !== animId) return;
+                    } else {
+                        e = window.event;
+
+                        if (e.srcUrn !== "dataavailable") return;
+                    }
+
+                    (e.detail = e.detail || []).push(callback);
+                }
+            });
+
+            if (_some(watchers, function(x) { return x.matcher.selector === selector })) {
+                DOM.importStyles(selector, styles);
+            }
+        };
     }());
 
     // READY CALLBACK
@@ -2225,6 +2178,41 @@
         };
     })();
 
+    // IMPORT SCRIPTS
+    // --------------
+
+    /**
+     * Import external scripts on the page and call optional callback when it will be done
+     * @memberOf DOM
+     * @param {...String} urls       script file urls
+     * @param {Function}  [callback] callback that is triggered when all scripts are loaded
+     */
+    DOM.importScripts = function() {
+        var args = _slice(arguments),
+            context = document.scripts[0],
+            callback = function() {
+                var arg = args.shift(),
+                    argType = typeof arg,
+                    script;
+
+                if (argType === "string") {
+                    script = document.createElement("script");
+                    script.src = arg;
+                    script.onload = callback;
+                    script.async = true;
+                    context.parentNode.insertBefore(script, context);
+                } else if (!arg.length && argType === "function") {
+                    arg();
+                } else {
+                    throw _makeError("importScripts", DOM);
+                }
+            };
+
+        callback();
+
+        return this;
+    };
+
     // IMPORT STRINGS
     // --------------
 
@@ -2235,17 +2223,11 @@
      * @param {String}         pattern string pattern
      * @param {String}         [lang]  string language
      * @function
-     * @example
-     * // have element &#60;a data-i18n="str.1" data-user="Maksim"&#62;&#60;a&#62; in markup
-     * DOM.importStrings("str.1", "Hello {user}!");
-     * DOM.importStrings("str.1", "Привет!", "ru");
-     * // the link text now is "Hello Maksim!"
-     * link.set("lang", "ru");
-     * // the link text now is "Привет!"
+     * @tutorial Localization
      */
     DOM.importStrings = (function() {
         var rparam = /\{([a-z\-]+)\}/g,
-            toContentAttr = function(term, attr) { return "\"attr(data-" + attr + ")\""; };
+            toContentAttr = function(term, attr) { return "\"attr(data-" + attr + ")\"" };
 
         return function(key, pattern, lang) {
             var keyType = typeof key,
@@ -2253,7 +2235,7 @@
 
             if (keyType === "string") {
                 selector = "[data-i18n=\"" + key + "\"]";
-                
+
                 if (lang) selector += ":lang(" + lang + ")";
 
                 content = "content:\"" + pattern.replace(rparam, toContentAttr) + "\"";
@@ -2268,6 +2250,8 @@
             } else {
                 throw _makeError("importStrings", this);
             }
+
+            return this;
         };
     }());
 
@@ -2301,10 +2285,15 @@
     // REGISTER API
     // ------------
 
-    window.DOM = DOM;
-    
-    if (typeof define === "function" && define.amd) {
-        define("DOM", function() { return DOM; });
+    // node export
+    if (typeof module === "object" && typeof module.exports === "object"){
+        module.exports = DOM;
+    } else {
+        // requireJS module definition
+        if (typeof window.define === "function" && define.amd) {
+            define("better-dom", function() { return DOM; });
+        }
     }
-    
+    // always register global variable
+    window.DOM = DOM;
 })(window, document, document.documentElement);

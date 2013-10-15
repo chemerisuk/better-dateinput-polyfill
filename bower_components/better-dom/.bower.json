@@ -1,9 +1,9 @@
 {
   "name": "better-dom",
-  "version": "1.3.0",
+  "version": "1.5.3",
   "main": [
-    "better-dom.js",
-    "better-dom.htc"
+    "dist/better-dom.js",
+    "dist/better-dom.htc"
   ],
   "ignore": [
     ".*",
@@ -15,15 +15,17 @@
     "html5shiv": "3.6.2"
   },
   "devDependencies": {
-    "jquery": "latest"
+    "jquery": "latest",
+    "jasmine": "~1.3.1"
   },
   "homepage": "https://github.com/chemerisuk/better-dom",
-  "_release": "1.3.0",
+  "_release": "1.5.3",
   "_resolution": {
     "type": "version",
-    "tag": "v1.3.0",
-    "commit": "6c95128fdd2c08fbffc11ed48e76ee38bfce498e"
+    "tag": "v1.5.3",
+    "commit": "1d883cc63579581d2b9b9eeb3b837d0b928bf7b1"
   },
   "_source": "git://github.com/chemerisuk/better-dom.git",
-  "_target": "~1.3.0"
+  "_target": "~1.5.3",
+  "_originalSource": "better-dom"
 }

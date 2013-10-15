@@ -1,9 +1,9 @@
 {
     "name": "better-dom",
-    "version": "1.3.0",
+    "version": "1.5.3",
     "main": [
-        "better-dom.js",
-        "better-dom.htc"
+        "dist/better-dom.js",
+        "dist/better-dom.htc"
     ],
     "ignore": [
         ".*",
@@ -15,6 +15,7 @@
         "html5shiv": "3.6.2"
     },
     "devDependencies": {
-        "jquery": "latest"
+        "jquery": "latest",
+        "jasmine": "~1.3.1"
     }
 }

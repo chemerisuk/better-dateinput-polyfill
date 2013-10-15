@@ -3,44 +3,20 @@ module.exports = function(grunt) {
 
     var pkg = grunt.file.readJSON("package.json"),
         gruntDeps = function(name) {
-            return !name.indexOf("grunt-") && name !== "grunt-template-jasmine-istanbul";
+            return !name.indexOf("grunt-");
         };
 
     grunt.initConfig({
         pkg: pkg,
 
-        jasmine: {
-            options: {
-                vendor: [
-                    "test/lib/jasmine-dom/jasmine-dom-fixtures.js",
-                    "test/lib/jasmine-dom/jasmine-dom-matchers.js",
-                    "node_modules/lodash/lodash.js"
-                ],
-                specs: "test/spec/*.spec.js",
-                keepRunner: true
-            },
-            unit: {
-                src: ["build/*.js"]
-            },
-            coverage: {
-                src: ["build/*.js"],
-                options: {
-                    template: require("grunt-template-jasmine-istanbul"),
-                    templateOptions: {
-                        coverage: "coverage/coverage.json",
-                        report: "coverage"
-                    }
-                }
-            }
-        },
         watch: {
             jasmine: {
                 files: ["test/spec/*.js"],
-                tasks: ["jasmine:coverage"]
+                tasks: ["karma:coverage:run"]
             },
             build: {
                 files: ["src/*.js"],
-                tasks: ["requirejs", "jasmine:coverage"]
+                tasks: ["requirejs", "karma:coverage:run"]
             }
         },
         jshint: {
@@ -53,28 +29,27 @@ module.exports = function(grunt) {
             dist: {
                 src: ["src/*.js", "jsdoc/README.md"],
                 options: {
-                    destination: "jsdoc"
+                    destination: "jsdoc",
+                    template: "node_modules/ink-docstrap/template",
+                    configure: "extra/jsdoc.conf.json"
                 }
             }
         },
         karma: {
-            unit: {
-                configFile: "test/lib/karma.conf"
+            options: {
+                configFile: "test/lib/karma.conf.js"
             },
-            speed: {
-                configFile: "test/lib/karma.conf",
-                browsers: ["<%= pkg.speed.browser %>"],
-                options: {
-                    files: [
-                        "node_modules/benchmark/benchmark.js",
-                        "test/lib/benchmine/benchmine-env.js",
-                        "test/lib/karma-benchmine-adapter.js",
-                        "test/lib/benchmine/benchmine-report-karma.js",
-                        "bower_components/jquery/jquery.js",
-                        "build/*.js",
-                        "test/speed/<%= pkg.speed.task %>.suite.js"
-                    ]
-                }
+            all: {
+                browsers: ["PhantomJS", "Chrome", "ChromeCanary", "Opera", "Safari", "Firefox"],
+                singleRun: true
+            },
+            coverage: {
+                preprocessors: { "build/*.js": "coverage" },
+                reporters: ["coverage", "progress"],
+                background: true
+            },
+            unit: {
+                singleRun: true
             }
         },
         shell: {
@@ -140,22 +115,18 @@ module.exports = function(grunt) {
         copy: {
             dist: {
                 files: {
-                    "dist/<%= pkg.name %>-<%= pkg.version %>.js": ["<%= pkg.name %>.js"],
-                    "dist/<%= pkg.name %>-<%= pkg.version %>.htc": ["<%= pkg.name %>.htc"]
-                }
-            },
-            publish: {
-                files: {
-                    "<%= pkg.name %>.js": ["build/<%= pkg.name %>.js"],
-                    "<%= pkg.name %>.htc": ["extra/<%= pkg.name %>.htc"]
+                    "dist/<%= pkg.name %>.js": ["build/<%= pkg.name %>.js"],
+                    "dist/<%= pkg.name %>.htc": ["extra/<%= pkg.name %>.htc"]
                 }
             },
             readme: {
                 options: {
                     processContent: function(content) {
                         return content
-                            // remove build status indicator
-                            .replace(/\[!\[Build Status\][^\n]*/, "")
+                            // remove the first line
+                            .replace(/^# .+/, "&nbsp;")
+                            // remove docs link
+                            .replace("[API DOCUMENTATION](http://chemerisuk.github.io/better-dom/)", "")
                             // remove source code
                             .replace(/```[^`]+```/g, "");
                     }
@@ -200,10 +171,10 @@ module.exports = function(grunt) {
                     "Node.supports", "Node.find", "Node.data", "Node.contains", "Node.events",
                     "SelectorMatcher", "EventHandler", "Element.classes", "Element.clone",
                     "Element.manipulation", "Element.matches", "Element.offset", "Element.get",
-                    "Element.set", "Element.styles", "Element.traversing",
-                    "Element.visibility", "Element.collection", "CompositeElement", "DOM.watch",
-                    "DOM.create", "DOM.extend", "DOM.parsetemplate", "DOM.importstyles", "DOM.ready",
-                    "DOM.importstrings", "DOM.title"
+                    "Element.set", "Element.style", "Element.traversing",
+                    "Element.visibility", "Element.collection", "CompositeElement",
+                    "DOM.create", "DOM.extend", "DOM.template", "DOM.importstyles", "DOM.watch",
+                    "DOM.ready", "DOM.importscripts", "DOM.importstrings", "DOM.title"
                 ],
                 onBuildWrite: function(id, path, contents) {
                     return contents.replace(/^define\(.*?\{\s*"use strict";[\r\n]*([.\s\S]+)\}\);\s*$/m, "$1");
@@ -229,30 +200,17 @@ module.exports = function(grunt) {
     Object.keys(pkg.devDependencies).filter(gruntDeps).forEach(grunt.loadNpmTasks);
 
     grunt.registerTask("dev", [
-        "test",
+        "requirejs:compile",
+        "jshint",
         "connect",
+        "karma:coverage",
         "watch"
     ]);
 
     grunt.registerTask("test", [
         "requirejs:compile",
         "jshint",
-        "jasmine:unit"
-    ]);
-
-    grunt.registerTask("default", [
-        "clean",
-        "copy:dist",
-        "uglify"
-    ]);
-
-    grunt.registerTask("dist-test", [
-        "requirejs:compile",
-        "copy:publish",
-        "copy:dist",
-        "uglify",
-        "shell:rollbackPublished",
-        "clean:dist"
+        "karma:unit"
     ]);
 
     grunt.registerTask("docs", [
@@ -260,13 +218,6 @@ module.exports = function(grunt) {
         "copy:readme",
         "jsdoc"
     ]);
-
-    grunt.registerTask("speed", "Run speed suite on a specified browser", function(task, browser) {
-        pkg.speed = {};
-        pkg.speed.task = task;
-        pkg.speed.browser = browser || "PhantomJS";
-        grunt.task.run(["requirejs:compile", "karma:speed"]);
-    });
 
     grunt.registerTask("publish", "Publish a new version routine", function(version) {
         grunt.config.set("pkg.version", version);
@@ -288,11 +239,11 @@ module.exports = function(grunt) {
 
         grunt.task.run([
             "shell:checkVersionTag",
-            "karma:unit",
+            "karma:all",
             "updateFileVersion:package.json",
             "updateFileVersion:bower.json",
             "requirejs:compile",
-            "copy:publish",
+            "copy:dist",
             "docs",
             "shell:checkoutDocs",
             "bumpDocsBuild",

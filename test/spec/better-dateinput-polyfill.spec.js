@@ -7,7 +7,7 @@ describe("better-dateinput-polyfill", function() {
         calendarDays = DOM.mock();
         dateinput = DOM.mock("input[type=date]");
 
-        spyOn(dateinput, "getData").andCallFake(function(key) {
+        spyOn(dateinput, "data").andCallFake(function(key) {
             if (key === "calendar") return calendar;
             else if (key === "calendarCaption") return calendarCaption;
             else if (key === "calendarDays") return calendarDays;
@@ -130,7 +130,7 @@ describe("better-dateinput-polyfill", function() {
     });
 
     it("should hide calendar on outer focus", function() {
-        var focusedSpy = spyOn(dateinput, "isFocused"),
+        var focusedSpy = spyOn(dateinput, "matches"),
             hideSpy = spyOn(calendar, "hide");
 
         focusedSpy.andReturn(true);
