@@ -1,8 +1,16 @@
+.better-dateinput {
+    width: 8em;
+    -webkit-appearance: none;
+    border-radius: 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
 .better-dateinput-calendar {
     position: absolute;
     z-index: 9999;
     cursor: default;
-    
+
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -59,7 +67,7 @@
     border-bottom: 1px solid #DDD;
 }
 
-.better-dateinput-calendar-days td, 
+.better-dateinput-calendar-days td,
 .better-dateinput-calendar-days th {
     width: 2.5em;
     height: 2em;

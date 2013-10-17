@@ -8,7 +8,7 @@ describe("better-dateinput-polyfill", function() {
         dateinput = DOM.mock("input[type=date]");
 
         spyOn(dateinput, "data").andCallFake(function(key) {
-            if (key === "calendar") return calendar;
+            if (key === "datepicker") return calendar;
             else if (key === "calendarCaption") return calendarCaption;
             else if (key === "calendarDays") return calendarDays;
         });
