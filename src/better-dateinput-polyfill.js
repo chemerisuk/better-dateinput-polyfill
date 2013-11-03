@@ -3,6 +3,7 @@
 
     var DATEINPUT_CLASS  = "better-dateinput",
         DATEPICKER_KEY = "datepicker",
+        DATEPICKER_DATE_KEY = "datepicker-date",
         DATEPICKER_TEMPLATE = DOM.template("div.%CLS%>p.%CLS%-header+a.%CLS%-prev+a.%CLS%-next+table.%CLS%-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7".replace(/%CLS%/g, "better-dateinput-calendar")),
 
         extension = function() { this.addClass(DATEINPUT_CLASS) };
@@ -59,7 +60,7 @@
                 if (this.matches(":focus")) this.fire("focus");
             },
             getCalendarDate: function() {
-                return this.data("calendarDate");
+                return this.data(DATEPICKER_DATE_KEY);
             },
             setCalendarDate: function(value) {
                 var calendarCaption = this.data("calendarCaption"),
@@ -91,7 +92,7 @@
                     });
 
                     // update current date
-                    this.data("calendarDate", value);
+                    this.data(DATEPICKER_DATE_KEY, value);
                 }
 
                 return this;
