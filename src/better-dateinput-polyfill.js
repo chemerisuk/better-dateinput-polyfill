@@ -22,7 +22,7 @@
                 .set({type: "text", name: null})
                 .addClass("better-dateinput")
                 // sync value on click
-                .on("focus", [], this, "_syncInputWithCalendar")
+                .on("focus", this, "_syncInputWithCalendar")
                 // handle arrow keys, esc etc.
                 .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
 
@@ -101,7 +101,7 @@
                 calendarDate = this.getCalendarDate(),
                 targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
 
-            this.setCalendarDate(targetDate)._syncCalendarWithInput(true);
+            this.setCalendarDate(targetDate)._syncCalendarWithInput();
             this.fire("focus");
 
             return false;
@@ -118,7 +118,7 @@
             } else if (which === 27 || which === 9) {
                 calendar.hide(); // esc or tab key hides calendar
             } else if (which === 8 || which === 46) {
-                this.set("")._syncInputWithCalendar(true); // backspace or delete clears the value
+                this.set("")._syncInputWithCalendar(); // backspace or delete clears the value
             } else {
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
@@ -134,7 +134,7 @@
                         currentDate.setDate(currentDate.getDate() + delta);
                     }
 
-                    this.setCalendarDate(currentDate)._syncCalendarWithInput(true);
+                    this.setCalendarDate(currentDate)._syncCalendarWithInput();
                 }
             }
 
@@ -147,7 +147,7 @@
 
             if (!this.matches(":focus")) calendar.hide();
         },
-        _syncInputWithCalendar: function(skipCalendar) {
+        _syncInputWithCalendar: function() {
             var calendar = this.data(CALENDAR_KEY),
                 parts = this.get().split("/"),
                 value = new Date(),
@@ -163,9 +163,9 @@
             // switch calendar to the input value date
             this.setCalendarDate(value);
 
-            if (!skipCalendar) calendar.show();
+            calendar.show();
         },
-        _syncCalendarWithInput: function(skipCalendar) {
+        _syncCalendarWithInput: function() {
             var current = this.getCalendarDate();
 
             this.set(function() {
@@ -175,8 +175,6 @@
 
                 return (AMPM ? month : date) + "/" + (AMPM ? date : month) + "/" + year;
             });
-
-            if (!skipCalendar) this.data(CALENDAR_KEY).hide();
         }
     });
 }(window.DOM));
