@@ -15,6 +15,8 @@
             var calendar = DOM.create(DATEPICKER_TEMPLATE).hide(),
                 dateinput = DOM.create("input[type=hidden]", {name: this.get("name")});
 
+            if (AMPM) calendar.find("th").before(calendar.findAll("th")[6]);
+
             this
                 // remove legacy dateinput if it exists
                 .set({type: "text", name: null})
@@ -46,7 +48,7 @@
         },
         setCalendarDate: function(value) {
             // FIXME: remove DOM.mock() in future
-            var calendarCaption = this.data(CALENDAR_KEY).find(".better-dateinput-calendar-header") || DOM.mock(),
+            var calendarCaption = this.data(CALENDAR_KEY).find("p") || DOM.mock(),
                 calendarDays = this.data(CALENDAR_KEY).findAll("td") || DOM.mock(),
                 iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
             // update caption
@@ -54,7 +56,7 @@
 
             if (!isNaN(iterDate.getTime())) {
                 // move to begin of the start week
-                iterDate.setDate(iterDate.getDate() - iterDate.getDay());
+                iterDate.setDate(iterDate.getDate() - iterDate.getDay() - (AMPM ? 1 : 0));
 
                 calendarDays.each(function(day) {
                     iterDate.setDate(iterDate.getDate() + 1);
@@ -145,9 +147,19 @@
         },
         _syncInputWithCalendar: function(skipCalendar) {
             var calendar = this.data(CALENDAR_KEY),
-                value = (this.get("value") || "").split("-");
+                parts = this.get().split("/"),
+                value = new Date(),
+                year, month, date;
+
+            if (parts.length === 3) {
+                date = parseFloat(parts[AMPM ? 1 : 0]);
+                month = parseFloat(parts[AMPM ? 0 : 1]) - 1;
+                year = parseFloat(parts[2]);
+
+                value = new Date(year, month, date);
+            }
             // switch calendar to the input value date
-            this.setCalendarDate(value.length > 1 ? new Date( parseFloat(value[0]), parseFloat(value[1]) - 1, parseFloat(value[2])) : new Date());
+            this.setCalendarDate(value);
 
             if (!skipCalendar) calendar.show();
         },
