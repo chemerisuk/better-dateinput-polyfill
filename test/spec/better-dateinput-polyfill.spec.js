@@ -1,16 +1,13 @@
 describe("better-dateinput-polyfill", function() {
-    var calendar, dateinput, calendarCaption, calendarDays;
+    var calendar, dateinput;
 
     beforeEach(function() {
         calendar = DOM.mock();
-        calendarCaption = DOM.mock();
-        calendarDays = DOM.mock();
         dateinput = DOM.mock("input[type=date]");
 
         spyOn(dateinput, "data").andCallFake(function(key) {
-            if (key === "calendar") return calendar;
-            else if (key === "calendarCaption") return calendarCaption;
-            else if (key === "calendarDays") return calendarDays;
+            if (key === "date-picker") return calendar;
+            else if (key === "date-input") return DOM.mock();
         });
     });
 

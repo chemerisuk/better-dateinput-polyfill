@@ -3,46 +3,50 @@
 
     var COMPONENT_CLASS = "better-dateinput",
         CALENDAR_CLASS = COMPONENT_CLASS + "-calendar",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+a.$c-prev+a.$c-next+table.$c-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS});
+        INPUT_KEY = "date-input",
+        CALENDAR_KEY = "date-picker",
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+a.$c-prev+a.$c-next+table.$c-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS}),
+        zeropad = function(value) { return ("00" + value).slice(-2) };
 
     DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
         // polyfill timeinput for desktop browsers
         constructor: function() {
-            var calendar = DOM.create(DATEPICKER_TEMPLATE).hide();
+            var calendar = DOM.create(DATEPICKER_TEMPLATE).hide(),
+                dateinput = DOM.create("input[type=hidden]", {name: this.get("name")});
 
             this
                 // remove legacy dateinput if it exists
-                .set({type: "text", autocomplete: "off"})
+                .set({type: "text", name: null})
                 .addClass("better-dateinput")
                 // sync value on click
                 .on("focus", [], this, "_syncInputWithCalendar")
                 // handle arrow keys, esc etc.
                 .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
 
-            calendar.on("click a", this, "handleCalendarNavClick");
-            calendar.on("click td", this, "handleCalendarDayClick");
+            calendar
+                .on("click a", this, "handleCalendarNavClick")
+                .on("click td", this, "handleCalendarDayClick");
 
             // hide calendar when a user clicks somewhere outside
             DOM.on("click", this, "handleDocumentClick");
 
-            // append calendar to DOM and cache referencies to some queries
-            this.data({
-                calendar: calendar,
-                calendarCaption: calendar.find(".better-dateinput-calendar-header"),
-                calendarDays: calendar.findAll("td")
-            });
-
-            this.after(calendar);
+            this
+                .data(CALENDAR_KEY, calendar)
+                .data(INPUT_KEY, dateinput)
+                .after(calendar, dateinput);
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
         getCalendarDate: function() {
-            return this.data("calendarDate");
+            var isoParts = (this.data(INPUT_KEY).get() || "").split("-");
+
+            return new Date(parseFloat(isoParts[0]), parseFloat(isoParts[1]) - 1, parseFloat(isoParts[2]));
         },
         setCalendarDate: function(value) {
-            var calendarCaption = this.data("calendarCaption"),
-                calendarDays = this.data("calendarDays"),
+            // FIXME: remove DOM.mock() in future
+            var calendarCaption = this.data(CALENDAR_KEY).find(".better-dateinput-calendar-header") || DOM.mock(),
+                calendarDays = this.data(CALENDAR_KEY).findAll("td") || DOM.mock(),
                 iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
             // update caption
             calendarCaption.i18n("calendar.month." + value.getMonth(), {year: value.getFullYear() || ""});
@@ -70,7 +74,7 @@
                 });
 
                 // update current date
-                this.data("calendarDate", value);
+                this.data(INPUT_KEY).set(value.getFullYear() + "-" + zeropad(value.getMonth() + 1) + "-" + zeropad(value.getDate()));
             }
 
             return this;
@@ -100,7 +104,7 @@
             return false;
         },
         handleCalendarKeyDown: function(which, shiftKey) {
-            var calendar = this.data("calendar"),
+            var calendar = this.data(CALENDAR_KEY),
                 currentDate = this.getCalendarDate(),
                 delta = 0;
 
@@ -134,12 +138,12 @@
             return which === 9;
         },
         handleDocumentClick: function() {
-            var calendar = this.data("calendar");
+            var calendar = this.data(CALENDAR_KEY);
 
             if (!this.matches(":focus")) calendar.hide();
         },
         _syncInputWithCalendar: function(skipCalendar) {
-            var calendar = this.data("calendar"),
+            var calendar = this.data(CALENDAR_KEY),
                 value = (this.get("value") || "").split("-");
             // switch calendar to the input value date
             this.setCalendarDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10) - 1, parseInt(value[2],10)) : new Date());
@@ -147,7 +151,7 @@
             if (!skipCalendar) calendar.show();
         },
         _syncCalendarWithInput: function(skipCalendar) {
-            var calendar = this.data("calendar"),
+            var calendar = this.data(CALENDAR_KEY),
                 date = this.getCalendarDate(),
                 zeroPadMonth = ("00" + (date.getMonth() + 1)).slice(-2),
                 zeroPadDate = ("00" + date.getDate()).slice(-2);
