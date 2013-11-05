@@ -29,9 +29,9 @@
     text-align: center;
 }
 
-.better-dateinput-calendar-prev,
-.better-dateinput-calendar-next {
+.better-dateinput-calendar > button {
     position: absolute;
+    left: 0.5em;
     top: 0.5em;
 
     text-decoration: none;
@@ -40,21 +40,24 @@
     width: 1.5em;
 
     border-radius: 5px;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: 0;
+    font-size: 1em;
+    outline: none;
 }
 
-.better-dateinput-calendar-prev {
-    left: 0.5em;
+.better-dateinput-calendar > button:before {
+    content: "\25C0";
 }
 
-.better-dateinput-calendar-prev:before {
-    content: "\25C4"
-}
-
-.better-dateinput-calendar-next {
+.better-dateinput-calendar > button + button {
+    left: inherit;
     right: 0.5em;
 }
 
-.better-dateinput-calendar-next:before {
+.better-dateinput-calendar > button + button:before {
     content: "\25BA"
 }
 
@@ -79,8 +82,7 @@
     text-shadow: 1px 1px 0 #EEE;
 }
 
-.better-dateinput-calendar-prev:hover,
-.better-dateinput-calendar-next:hover,
+.better-dateinput-calendar > button:hover,
 .better-dateinput-calendar-days td:hover {
     background: #EEE;
 }

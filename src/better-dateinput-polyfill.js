@@ -1,11 +1,12 @@
 (function(DOM) {
     "use strict";
 
-    var COMPONENT_CLASS = "better-dateinput",
+    var AMPM = DOM.find("html").get("lang") === "en-US",
+        COMPONENT_CLASS = "better-dateinput",
         CALENDAR_CLASS = COMPONENT_CLASS + "-calendar",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+a.$c-prev+a.$c-next+table.$c-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS}),
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+button+button+table.$c-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS}),
         zeropad = function(value) { return ("00" + value).slice(-2) };
 
     DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
@@ -24,7 +25,7 @@
                 .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
 
             calendar
-                .on("click a", this, "handleCalendarNavClick")
+                .on("click button", this, "handleCalendarNavClick")
                 .on("click td", this, "handleCalendarDayClick");
 
             // hide calendar when a user clicks somewhere outside
@@ -94,7 +95,7 @@
             return false;
         },
         handleCalendarNavClick: function(target) {
-            var isNext = target.hasClass("better-dateinput-calendar-next"),
+            var isNext = !target.next("button").length,
                 calendarDate = this.getCalendarDate(),
                 targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
 
@@ -146,7 +147,7 @@
             var calendar = this.data(CALENDAR_KEY),
                 value = (this.get("value") || "").split("-");
             // switch calendar to the input value date
-            this.setCalendarDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10) - 1, parseInt(value[2],10)) : new Date());
+            this.setCalendarDate(value.length > 1 ? new Date( parseFloat(value[0]), parseFloat(value[1]) - 1, parseFloat(value[2])) : new Date());
 
             if (!skipCalendar) calendar.show();
         },

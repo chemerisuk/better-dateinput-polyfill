@@ -84,19 +84,17 @@ describe("better-dateinput-polyfill", function() {
 
     it("should change month on nav buttons click", function() {
         var now = new Date(),
-            spy = spyOn(calendar, "hasClass"),
             getSpy = spyOn(dateinput, "getCalendarDate").andReturn(now),
-            setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput);
+            setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput),
+            target = DOM.mock();
 
-        spy.andReturn(true);
-        dateinput.handleCalendarNavClick(calendar);
-        expect(spy).toHaveBeenCalled();
+        dateinput.handleCalendarNavClick(target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() + 1, 1));
 
-        spy.andReturn(false);
-        dateinput.handleCalendarNavClick(calendar);
-        expect(spy).toHaveBeenCalled();
+        spyOn(target, "next").andReturn(dateinput);
+
+        dateinput.handleCalendarNavClick(target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() - 1, 1));
     });
