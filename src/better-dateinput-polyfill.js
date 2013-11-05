@@ -152,14 +152,17 @@
             if (!skipCalendar) calendar.show();
         },
         _syncCalendarWithInput: function(skipCalendar) {
-            var calendar = this.data(CALENDAR_KEY),
-                date = this.getCalendarDate(),
-                zeroPadMonth = ("00" + (date.getMonth() + 1)).slice(-2),
-                zeroPadDate = ("00" + date.getDate()).slice(-2);
+            var current = this.getCalendarDate();
 
-            this.set(date.getFullYear() + "-" + zeroPadMonth + "-" + zeroPadDate);
+            this.set(function() {
+                var year = current.getFullYear(),
+                    month = current.getMonth() + 1,
+                    date = current.getDate();
 
-            if (!skipCalendar) calendar.hide();
+                return (AMPM ? month : date) + "/" + (AMPM ? date : month) + "/" + year;
+            });
+
+            if (!skipCalendar) this.data(CALENDAR_KEY).hide();
         }
     });
 }(window.DOM));
