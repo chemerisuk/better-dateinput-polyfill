@@ -8,16 +8,16 @@ DOM.importStrings({
     "calendar.weekday.6": "Sa",
     "calendar.weekday.7": "Di",
     // monthes
-    "calendar.month.0": "Janvier",
-    "calendar.month.1": "Février",
-    "calendar.month.2": "Mars",
-    "calendar.month.3": "Avril",
-    "calendar.month.4": "Mai",
-    "calendar.month.5": "Juin",
-    "calendar.month.6": "Juillet",
-    "calendar.month.7": "Août",
-    "calendar.month.8": "Septembre",
-    "calendar.month.9": "Octobre",
-    "calendar.month.10": "Novembre",
-    "calendar.month.11": "Decembre"
+    "calendar.month.0": "Janvier {year}",
+    "calendar.month.1": "Février {year}",
+    "calendar.month.2": "Mars {year}",
+    "calendar.month.3": "Avril {year}",
+    "calendar.month.4": "Mai {year}",
+    "calendar.month.5": "Juin {year}",
+    "calendar.month.6": "Juillet {year}",
+    "calendar.month.7": "Août {year}",
+    "calendar.month.8": "Septembre {year}",
+    "calendar.month.9": "Octobre {year}",
+    "calendar.month.10": "Novembre {year}",
+    "calendar.month.11": "Decembre {year}"
 }, "fr");

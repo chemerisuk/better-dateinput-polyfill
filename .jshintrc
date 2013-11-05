@@ -1,6 +1,7 @@
 {
     "browser": true,
     "onevar": true,
+    "eqnull": true,
 
     "quotmark": "double",
     "indent": 4,
@@ -14,7 +15,8 @@
     "immed": true,
     "latedef": true,
     "nonew": true,
-    
+    "lastsemic": true,
+
     "globals": {
         "DOM": true,
         "module": true,

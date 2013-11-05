@@ -1,11 +1,12 @@
 (function(DOM) {
     "use strict";
 
-    if ("orientation" in window) return; // skip mobile and tablet browsers
+    var COMPONENT_CLASS = "better-dateinput",
+        CALENDAR_CLASS = COMPONENT_CLASS + "-calendar",
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+a.$c-prev+a.$c-next+table.$c-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS});
 
-    var DATEPICKER_TEMPLATE = DOM.template("div.%CLS%>p.%CLS%-header+a.%CLS%-prev+a.%CLS%-next+table.%CLS%-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7".replace(/%CLS%/g, "better-dateinput-calendar"));
-
-    DOM.extend("input[type=date]", {
+    DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
+        // polyfill timeinput for desktop browsers
         constructor: function() {
             var calendar = DOM.create(DATEPICKER_TEMPLATE).hide();
 
@@ -18,7 +19,7 @@
                 // handle arrow keys, esc etc.
                 .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
 
-            calendar.findAll("a").on("click", this, "handleCalendarNavClick");
+            calendar.on("click a", this, "handleCalendarNavClick");
             calendar.on("click td", this, "handleCalendarDayClick");
 
             // hide calendar when a user clicks somewhere outside
@@ -30,8 +31,8 @@
                 calendarCaption: calendar.find(".better-dateinput-calendar-header"),
                 calendarDays: calendar.findAll("td")
             });
-            // TODO: remove the check in future
-            if (this.parent().length) this.after(calendar);
+
+            this.after(calendar);
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
@@ -44,7 +45,7 @@
                 calendarDays = this.data("calendarDays"),
                 iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
             // update caption
-            calendarCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
+            calendarCaption.i18n("calendar.month." + value.getMonth(), {year: value.getFullYear() || ""});
 
             if (!isNaN(iterDate.getTime())) {
                 // move to begin of the start week
