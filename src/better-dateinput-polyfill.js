@@ -22,7 +22,7 @@
                 .set({type: "text", name: null})
                 .addClass("better-dateinput")
                 // sync value on click
-                .on("focus", this, "_syncInputWithCalendar")
+                .on("focus", this, "handleCalendarFocus")
                 // handle arrow keys, esc etc.
                 .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
 
@@ -50,35 +50,38 @@
             // FIXME: remove DOM.mock() in future
             var calendarCaption = this.data(CALENDAR_KEY).find("p") || DOM.mock(),
                 calendarDays = this.data(CALENDAR_KEY).findAll("td") || DOM.mock(),
-                iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
+                now = new Date(),
+                year = (value || now).getFullYear(),
+                month = (value || now).getMonth(),
+                date = (value || now).getDate(),
+                iterDate = new Date(year, month, 0);
             // update caption
-            calendarCaption.i18n("calendar.month." + value.getMonth(), {year: value.getFullYear() || ""});
+            calendarCaption.i18n("calendar.month." + month, {year: year});
+            // move to begin of the start week
+            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - (AMPM ? 1 : 0));
 
-            if (!isNaN(iterDate.getTime())) {
-                // move to begin of the start week
-                iterDate.setDate(iterDate.getDate() - iterDate.getDay() - (AMPM ? 1 : 0));
+            calendarDays.each(function(day) {
+                iterDate.setDate(iterDate.getDate() + 1);
 
-                calendarDays.each(function(day) {
-                    iterDate.setDate(iterDate.getDate() + 1);
+                var mDiff = month - iterDate.getMonth(),
+                    dDiff = date - iterDate.getDate();
 
-                    var mDiff = value.getMonth() - iterDate.getMonth(),
-                        dDiff = value.getDate() - iterDate.getDate();
+                if (year !== iterDate.getFullYear()) {
+                    mDiff *= -1;
+                }
 
-                    if (value.getFullYear() !== iterDate.getFullYear()) {
-                        mDiff *= -1;
-                    }
+                day.set("class", mDiff ?
+                    (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
+                    (dDiff ? "calendar-day" : "current-calendar-day")
+                );
 
-                    day.set("className", mDiff ?
-                        (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                        (dDiff ? "calendar-day" : "current-calendar-day")
-                    );
+                day.set(iterDate.getDate().toString());
+            });
 
-                    day.set(iterDate.getDate().toString());
-                });
+            // update current date
+            this.data(INPUT_KEY).set(year + "-" + zeropad(month + 1) + "-" + zeropad(date));
 
-                // update current date
-                this.data(INPUT_KEY).set(value.getFullYear() + "-" + zeropad(value.getMonth() + 1) + "-" + zeropad(value.getDate()));
-            }
+            if (value) this.set((AMPM ? month + 1 : date) + "/" + (AMPM ? date : month + 1) + "/" + year);
 
             return this;
         },
@@ -91,7 +94,6 @@
                 );
 
             this.setCalendarDate(targetDate);
-            this._syncCalendarWithInput();
 
             // prevent focusing after click if the input is inside of a label
             return false;
@@ -101,7 +103,7 @@
                 calendarDate = this.getCalendarDate(),
                 targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
 
-            this.setCalendarDate(targetDate)._syncCalendarWithInput();
+            this.setCalendarDate(targetDate);
             this.fire("focus");
 
             return false;
@@ -118,7 +120,7 @@
             } else if (which === 27 || which === 9) {
                 calendar.hide(); // esc or tab key hides calendar
             } else if (which === 8 || which === 46) {
-                this.set("")._syncInputWithCalendar(); // backspace or delete clears the value
+                this.set("").handleCalendarFocus(); // backspace or delete clears the value
             } else {
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
@@ -134,7 +136,7 @@
                         currentDate.setDate(currentDate.getDate() + delta);
                     }
 
-                    this.setCalendarDate(currentDate)._syncCalendarWithInput();
+                    this.setCalendarDate(currentDate);
                 }
             }
 
@@ -147,11 +149,10 @@
 
             if (!this.matches(":focus")) calendar.hide();
         },
-        _syncInputWithCalendar: function() {
+        handleCalendarFocus: function() {
             var calendar = this.data(CALENDAR_KEY),
                 parts = this.get().split("/"),
-                value = new Date(),
-                year, month, date;
+                value, year, month, date;
 
             if (parts.length === 3) {
                 date = parseFloat(parts[AMPM ? 1 : 0]);
@@ -164,17 +165,6 @@
             this.setCalendarDate(value);
 
             calendar.show();
-        },
-        _syncCalendarWithInput: function() {
-            var current = this.getCalendarDate();
-
-            this.set(function() {
-                var year = current.getFullYear(),
-                    month = current.getMonth() + 1,
-                    date = current.getDate();
-
-                return (AMPM ? month : date) + "/" + (AMPM ? date : month) + "/" + year;
-            });
         }
     });
 }(window.DOM));
