@@ -1,6 +1,6 @@
 /**
  * @file better-dateinput-polyfill.js
- * @version 1.2.0 2013-10-15T17:15:16
+ * @version 1.2.1 2013-11-05T19:50:36
  * @overview input[type=date] polyfill for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -9,76 +9,87 @@
 (function(DOM) {
     "use strict";
 
-    if ("orientation" in window) return; // skip mobile and tablet browsers
+    var AMPM = DOM.find("html").get("lang") === "en-US",
+        COMPONENT_CLASS = "better-dateinput",
+        CALENDAR_CLASS = COMPONENT_CLASS + "-calendar",
+        INPUT_KEY = "date-input",
+        CALENDAR_KEY = "date-picker",
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+button+button+table.$c-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS}),
+        zeropad = function(value) { return ("00" + value).slice(-2) };
 
-    var DATEPICKER_TEMPLATE = DOM.template("div.%CLS%>p.%CLS%-header+a.%CLS%-prev+a.%CLS%-next+table.%CLS%-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7".replace(/%CLS%/g, "better-dateinput-calendar"));
-
-    DOM.extend("input[type=date]", {
+    DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
+        // polyfill timeinput for desktop browsers
         constructor: function() {
-            var calendar = DOM.create(DATEPICKER_TEMPLATE).hide();
+            var calendar = DOM.create(DATEPICKER_TEMPLATE).hide(),
+                dateinput = DOM.create("input[type=hidden]", {name: this.get("name")});
+
+            if (AMPM) calendar.find("th").before(calendar.findAll("th")[6]);
 
             this
                 // remove legacy dateinput if it exists
-                .set({type: "text", autocomplete: "off"})
+                .set({type: "text", name: null})
                 .addClass("better-dateinput")
                 // sync value on click
-                .on("focus", [], this, "_syncInputWithCalendar")
+                .on("focus", this, "handleCalendarFocus")
                 // handle arrow keys, esc etc.
                 .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
 
-            calendar.findAll("a").on("click", this, "handleCalendarNavClick");
-            calendar.on("click td", this, "handleCalendarDayClick");
+            calendar
+                .on("click button", this, "handleCalendarNavClick")
+                .on("click td", this, "handleCalendarDayClick");
 
             // hide calendar when a user clicks somewhere outside
             DOM.on("click", this, "handleDocumentClick");
 
-            // append calendar to DOM and cache referencies to some queries
-            this.data({
-                calendar: calendar,
-                calendarCaption: calendar.find(".better-dateinput-calendar-header"),
-                calendarDays: calendar.findAll("td")
-            });
-            // TODO: remove the check in future
-            if (this.parent().length) this.after(calendar);
+            this
+                .data(CALENDAR_KEY, calendar)
+                .data(INPUT_KEY, dateinput)
+                .after(calendar, dateinput);
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
         getCalendarDate: function() {
-            return this.data("calendarDate");
+            var isoParts = (this.data(INPUT_KEY).get() || "").split("-");
+
+            return new Date(parseFloat(isoParts[0]), parseFloat(isoParts[1]) - 1, parseFloat(isoParts[2]));
         },
         setCalendarDate: function(value) {
-            var calendarCaption = this.data("calendarCaption"),
-                calendarDays = this.data("calendarDays"),
-                iterDate = new Date(value.getFullYear(), value.getMonth(), 0);
+            // FIXME: remove DOM.mock() in future
+            var calendarCaption = this.data(CALENDAR_KEY).find("p") || DOM.mock(),
+                calendarDays = this.data(CALENDAR_KEY).findAll("td") || DOM.mock(),
+                now = new Date(),
+                year = (value || now).getFullYear(),
+                month = (value || now).getMonth(),
+                date = (value || now).getDate(),
+                iterDate = new Date(year, month, 0);
             // update caption
-            calendarCaption.set("<span data-i18n='calendar.month." + value.getMonth() + "'> " + (isNaN(value.getFullYear()) ? "" : value.getFullYear()));
+            calendarCaption.i18n("calendar.month." + month, {year: year});
+            // move to begin of the start week
+            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - (AMPM ? 1 : 0));
 
-            if (!isNaN(iterDate.getTime())) {
-                // move to begin of the start week
-                iterDate.setDate(iterDate.getDate() - iterDate.getDay());
+            calendarDays.each(function(day) {
+                iterDate.setDate(iterDate.getDate() + 1);
 
-                calendarDays.each(function(day) {
-                    iterDate.setDate(iterDate.getDate() + 1);
+                var mDiff = month - iterDate.getMonth(),
+                    dDiff = date - iterDate.getDate();
 
-                    var mDiff = value.getMonth() - iterDate.getMonth(),
-                        dDiff = value.getDate() - iterDate.getDate();
+                if (year !== iterDate.getFullYear()) {
+                    mDiff *= -1;
+                }
 
-                    if (value.getFullYear() !== iterDate.getFullYear()) {
-                        mDiff *= -1;
-                    }
+                day.set("class", mDiff ?
+                    (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
+                    (dDiff ? "calendar-day" : "current-calendar-day")
+                );
 
-                    day.set("className", mDiff ?
-                        (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                        (dDiff ? "calendar-day" : "current-calendar-day")
-                    );
+                day.set(iterDate.getDate().toString());
+            });
 
-                    day.set(iterDate.getDate().toString());
-                });
+            // update current date
+            this.data(INPUT_KEY).set(year + "-" + zeropad(month + 1) + "-" + zeropad(date));
 
-                // update current date
-                this.data("calendarDate", value);
-            }
+            if (value) this.set((AMPM ? month + 1 : date) + "/" + (AMPM ? date : month + 1) + "/" + year);
 
             return this;
         },
@@ -91,32 +102,33 @@
                 );
 
             this.setCalendarDate(targetDate);
-            this._syncCalendarWithInput();
 
             // prevent focusing after click if the input is inside of a label
             return false;
         },
         handleCalendarNavClick: function(target) {
-            var isNext = target.hasClass("better-dateinput-calendar-next"),
+            var isNext = !target.next("button").length,
                 calendarDate = this.getCalendarDate(),
                 targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
 
-            this.setCalendarDate(targetDate)._syncCalendarWithInput(true);
+            this.setCalendarDate(targetDate);
             this.fire("focus");
 
             return false;
         },
         handleCalendarKeyDown: function(which, shiftKey) {
-            var calendar = this.data("calendar"),
+            var calendar = this.data(CALENDAR_KEY),
                 currentDate = this.getCalendarDate(),
                 delta = 0;
 
             if (which === 13) {
+                calendar.hide(); // hide picker to submit form
+            } else if (which === 32) {
                 calendar.toggle(); // show/hide calendar on enter key
             } else if (which === 27 || which === 9) {
                 calendar.hide(); // esc or tab key hides calendar
             } else if (which === 8 || which === 46) {
-                this.set("")._syncInputWithCalendar(true); // backspace or delete clears the value
+                this.set("").handleCalendarFocus(); // backspace or delete clears the value
             } else {
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
@@ -132,36 +144,35 @@
                         currentDate.setDate(currentDate.getDate() + delta);
                     }
 
-                    this.setCalendarDate(currentDate)._syncCalendarWithInput(true);
+                    this.setCalendarDate(currentDate);
                 }
             }
 
-            // prevent default action except if it was a TAB key
+            // prevent default action except if it was TAB or ENTER
             // so do not allow to change the value via manual input
-            return which === 9;
+            return which === 9 || which === 13;
         },
         handleDocumentClick: function() {
-            var calendar = this.data("calendar");
+            var calendar = this.data(CALENDAR_KEY);
 
             if (!this.matches(":focus")) calendar.hide();
         },
-        _syncInputWithCalendar: function(skipCalendar) {
-            var calendar = this.data("calendar"),
-                value = (this.get("value") || "").split("-");
+        handleCalendarFocus: function() {
+            var calendar = this.data(CALENDAR_KEY),
+                parts = this.get().split("/"),
+                value, year, month, date;
+
+            if (parts.length === 3) {
+                date = parseFloat(parts[AMPM ? 1 : 0]);
+                month = parseFloat(parts[AMPM ? 0 : 1]) - 1;
+                year = parseFloat(parts[2]);
+
+                value = new Date(year, month, date);
+            }
             // switch calendar to the input value date
-            this.setCalendarDate(value.length > 1 ? new Date( parseInt(value[0],10), parseInt(value[1],10) - 1, parseInt(value[2],10)) : new Date());
+            this.setCalendarDate(value);
 
-            if (!skipCalendar) calendar.show();
-        },
-        _syncCalendarWithInput: function(skipCalendar) {
-            var calendar = this.data("calendar"),
-                date = this.getCalendarDate(),
-                zeroPadMonth = ("00" + (date.getMonth() + 1)).slice(-2),
-                zeroPadDate = ("00" + date.getDate()).slice(-2);
-
-            this.set(date.getFullYear() + "-" + zeroPadMonth + "-" + zeroPadDate);
-
-            if (!skipCalendar) calendar.hide();
+            calendar.show();
         }
     });
 }(window.DOM));

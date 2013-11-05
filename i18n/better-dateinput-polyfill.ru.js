@@ -8,16 +8,16 @@ DOM.importStrings({
     "calendar.weekday.6": "Сб",
     "calendar.weekday.7": "Вс",
     // monthes
-    "calendar.month.0": "Январь",
-    "calendar.month.1": "Февраль",
-    "calendar.month.2": "Март",
-    "calendar.month.3": "Апрель",
-    "calendar.month.4": "Май",
-    "calendar.month.5": "Июнь",
-    "calendar.month.6": "Июль",
-    "calendar.month.7": "Август",
-    "calendar.month.8": "Сентябрь",
-    "calendar.month.9": "Октябрь",
-    "calendar.month.10": "Ноябрь",
-    "calendar.month.11": "Декабрь"
+    "calendar.month.0": "Январь {year}",
+    "calendar.month.1": "Февраль {year}",
+    "calendar.month.2": "Март {year}",
+    "calendar.month.3": "Апрель {year}",
+    "calendar.month.4": "Май {year}",
+    "calendar.month.5": "Июнь {year}",
+    "calendar.month.6": "Июль {year}",
+    "calendar.month.7": "Август {year}",
+    "calendar.month.8": "Сентябрь {year}",
+    "calendar.month.9": "Октябрь {year}",
+    "calendar.month.10": "Ноябрь {year}",
+    "calendar.month.11": "Декабрь {year}"
 }, "ru");

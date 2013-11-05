@@ -1,9 +1,13 @@
 .better-dateinput {
     width: 8em;
+<<<<<<< HEAD
     -webkit-appearance: none;
     border-radius: 0;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
+=======
+    text-align: center;
+>>>>>>> master
 }
 
 .better-dateinput-calendar {
@@ -32,33 +36,45 @@
     text-align: center;
 }
 
-.better-dateinput-calendar-prev,
-.better-dateinput-calendar-next {
+.better-dateinput-calendar > button {
     position: absolute;
+    left: 0.5em;
     top: 0.5em;
 
-    text-decoration: none;
-    text-align: center;
-    line-height: 1.5em;
+    font-size: 1em;
+    height: 1.5em;
     width: 1.5em;
+    display: block;
 
-    border-radius: 5px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0.25em;
+
+    outline: none;
+    background: none;
 }
 
-.better-dateinput-calendar-prev {
-    left: 0.5em;
+.better-dateinput-calendar > button:before {
+    content: "";
+    display: inline-block;
+    height: 0;
+    width: 0;
+    border-style: solid;
+    border-width: 0.5em 0.75em 0.5em 0;
+    border-color: transparent;
+    border-right-color: inherit;
 }
 
-.better-dateinput-calendar-prev:before {
-    content: "\25C4"
-}
-
-.better-dateinput-calendar-next {
+.better-dateinput-calendar > button + button {
+    left: inherit;
     right: 0.5em;
 }
 
-.better-dateinput-calendar-next:before {
-    content: "\25BA"
+.better-dateinput-calendar > button + button:before {
+    border-width: 0.5em 0 0.5em 0.75em;
+    border-color: transparent;
+    border-left-color: inherit;
 }
 
 .better-dateinput-calendar-days {
@@ -73,9 +89,7 @@
     height: 2em;
     border: 1px solid #DDD;
     text-indent: 0.5em;
-    vertical-align: middle;
     text-align: left;
-    display: table-cell;
 }
 
 .better-dateinput-calendar-days th {
@@ -84,8 +98,7 @@
     text-shadow: 1px 1px 0 #EEE;
 }
 
-.better-dateinput-calendar-prev:hover,
-.better-dateinput-calendar-next:hover,
+.better-dateinput-calendar > button:hover,
 .better-dateinput-calendar-days td:hover {
     background: #EEE;
 }

@@ -1,26 +1,29 @@
 describe("better-dateinput-polyfill", function() {
-    var calendar, dateinput, calendarCaption, calendarDays;
+    var calendar, dateinput;
 
     beforeEach(function() {
         calendar = DOM.mock();
-        calendarCaption = DOM.mock();
-        calendarDays = DOM.mock();
         dateinput = DOM.mock("input[type=date]");
 
         spyOn(dateinput, "data").andCallFake(function(key) {
+<<<<<<< HEAD
             if (key === "datepicker") return calendar;
             else if (key === "calendarCaption") return calendarCaption;
             else if (key === "calendarDays") return calendarDays;
+=======
+            if (key === "date-picker") return calendar;
+            else if (key === "date-input") return DOM.mock();
+>>>>>>> master
         });
     });
 
-    it("should toggle calendar visibility on enter key", function() {
+    it("should toggle calendar visibility on space key", function() {
         spyOn(dateinput, "getCalendarDate").andReturn(new Date());
         spyOn(dateinput, "get").andReturn("");
 
         var toggleSpy = spyOn(calendar, "toggle");
 
-        dateinput.handleCalendarKeyDown(13, false);
+        dateinput.handleCalendarKeyDown(32, false);
         expect(toggleSpy).toHaveBeenCalled();
     });
 
@@ -34,7 +37,7 @@ describe("better-dateinput-polyfill", function() {
     it("should prevent default action on any key except tab", function() {
         expect(dateinput.handleCalendarKeyDown(9, false)).not.toBe(false);
         expect(dateinput.handleCalendarKeyDown(111, false)).toBe(false);
-        expect(dateinput.handleCalendarKeyDown(13, false)).toBe(false);
+        expect(dateinput.handleCalendarKeyDown(13, false)).not.toBe(false);
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
@@ -87,19 +90,17 @@ describe("better-dateinput-polyfill", function() {
 
     it("should change month on nav buttons click", function() {
         var now = new Date(),
-            spy = spyOn(calendar, "hasClass"),
             getSpy = spyOn(dateinput, "getCalendarDate").andReturn(now),
-            setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput);
+            setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput),
+            target = DOM.mock();
 
-        spy.andReturn(true);
-        dateinput.handleCalendarNavClick(calendar);
-        expect(spy).toHaveBeenCalled();
+        dateinput.handleCalendarNavClick(target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() + 1, 1));
 
-        spy.andReturn(false);
-        dateinput.handleCalendarNavClick(calendar);
-        expect(spy).toHaveBeenCalled();
+        spyOn(target, "next").andReturn(dateinput);
+
+        dateinput.handleCalendarNavClick(target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() - 1, 1));
     });

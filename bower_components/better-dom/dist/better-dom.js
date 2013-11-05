@@ -1,6 +1,6 @@
 /**
  * @file better-dom
- * @version 1.5.3 2013-10-15T16:32:18
+ * @version 1.5.5 2013-11-04T07:14:45
  * @overview Sandbox for living DOM extensions
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -127,12 +127,13 @@
             AFTER:  "return out"
         }),
         _foldl = makeLoopMethod({
-            BODY:   "that = (!i && that === undefined ? a[i] : cb(that, a[i], i, a))",
+            BEFORE: "if (a && arguments.length < 2) that = a[0]",
+            BODY:   "that = cb(that, a[arguments.length < 2 ? i + 1 : i], i, a)",
             AFTER:  "return that"
         }),
         _foldr = makeLoopMethod({
-            BEFORE: "var j",
-            BODY:   "j = n - i - 1; that = (!i && that === undefined ? a[j] : cb(that, a[j], j, a))",
+            BEFORE: "var j; if (a && arguments.length < 2) that = a[a.length - 1]",
+            BODY:   "j = n - i - 1; that = cb(that, a[arguments.length < 2 ? j - 1 : j], j, a)",
             AFTER:  "return that"
         }),
         _every = makeLoopMethod({
@@ -211,31 +212,12 @@
             this._listeners = [];
 
             Array.prototype.push.call(this, node.__dom__ = this);
+        } else {
+            this.length = 0;
         }
     }
 
     $Node.prototype = {};
-
-    /**
-     * Check element capability
-     * @param {String} prop property to check
-     * @param {String} [tag] name of element to test
-     * @return {Boolean} true, if feature is supported
-     * @tutorial Feature detection
-     */
-    $Node.prototype.supports = function(prop, tagName) {
-        // http://perfectionkills.com/detecting-event-support-without-browser-sniffing/
-        var node = document.createElement(tagName || this._node.tagName || "div"),
-            isSupported = prop in node;
-
-        if (!isSupported && !prop.indexOf("on")) {
-            node.setAttribute(prop, "return;");
-
-            isSupported = typeof node[prop] === "function";
-        }
-
-        return isSupported;
-    };
 
     // SEARCH BY QUERY
     // ---------------
@@ -328,7 +310,7 @@
      * @param  {String|Object} key     data key
      * @param  {Object}        [value] data value to store
      * @return {Object} data entry value or this in case of setter
-     * @tutorial Data
+     * @see https://github.com/chemerisuk/better-dom/wiki/Data-property
      */
     $Node.prototype.data = function(key, value) {
         var len = arguments.length,
@@ -370,26 +352,18 @@
      * @return {Boolean} true if success
      */
     $Node.prototype.contains = function(element) {
-        var node = this._node, result;
+        var node = this._node;
 
-        if (!node) return;
+        if (!(element instanceof $Element)) throw _makeError("contains", this);
 
-        if (element instanceof $Element) {
-            result = element.every(function(element) {
-                return node.contains(element._node);
-            });
-        } else {
-            throw _makeError("contains", this);
-        }
-
-        return result;
+        if (node) return element.every(function(el) { return node.contains(el._node) });
     };
 
     // DOM EVENTS
     // ----------
 
     (function() {
-        var eventHooks = {},
+        var hooks = {},
             legacyCustomEventName = "dataavailable";
 
         /**
@@ -399,7 +373,7 @@
          * @param  {Object}   [context] callback context
          * @param  {Function|String} callback event callback/property name
          * @return {$Node}
-         * @tutorial Event handling
+         * @see https://github.com/chemerisuk/better-dom/wiki/Event-handling
          */
         $Node.prototype.on = function(type, props, context, callback, /*INTERNAL*/once) {
             var eventType = typeof type,
@@ -449,7 +423,7 @@
                     handler.callback = callback;
                     handler.context = context || el;
 
-                    if (hook = eventHooks[type]) hook(handler);
+                    if (hook = hooks[type]) hook(handler);
 
                     if (document.addEventListener) {
                         node.addEventListener(handler._type || type, handler, !!handler.capturing);
@@ -476,7 +450,7 @@
          * @param  {Object}   [context] callback context
          * @param  {Function|String} callback event callback/property name
          * @return {$Node}
-         * @tutorial Event handling
+         * @see https://github.com/chemerisuk/better-dom/wiki/Event-handling
          */
         $Node.prototype.once = function() {
             var args = _slice(arguments);
@@ -492,7 +466,7 @@
          * @param  {Object}          [context] callback context
          * @param  {Function|String} [callback] event handler
          * @return {$Node}
-         * @tutorial Event handling
+         * @see https://github.com/chemerisuk/better-dom/wiki/Event-handling
          */
         $Node.prototype.off = function(type, context, callback) {
             if (typeof type !== "string") throw _makeError("off", this);
@@ -526,39 +500,39 @@
          * Triggers an event of specific type and executes it's default action if it exists
          * @param  {String} type type of event
          * @param  {Object} [detail] event details
-         * @return {$Node}
-         * @tutorial Event handling
+         * @return {Boolean} true if default action wasn't prevented
+         * @see https://github.com/chemerisuk/better-dom/wiki/Event-handling
          */
         $Node.prototype.fire = function(type, detail) {
             if (typeof type !== "string") {
                 throw _makeError("fire", this);
             }
 
-            return _legacy(this, function(node, el) {
-                var hook = eventHooks[type],
+            return _every(this, function(el) {
+                var node = el._node,
+                    hook = hooks[type],
                     handler = {},
-                    isCustomEvent, canContinue, event;
+                    isCustomEvent, canContinue, e;
 
                 if (hook) hook(handler);
 
-                isCustomEvent = handler.custom || !el.supports("on" + type);
-
                 if (document.createEvent) {
-                    event = document.createEvent("HTMLEvents");
+                    e = document.createEvent("HTMLEvents");
 
-                    event.initEvent(handler._type || type, true, true);
-                    event.detail = detail;
+                    e.initEvent(handler._type || type, true, true);
+                    e.detail = detail;
 
-                    canContinue = node.dispatchEvent(event);
+                    canContinue = node.dispatchEvent(e);
                 } else {
-                    event = document.createEventObject();
+                    isCustomEvent = handler.custom || !("on" + type in node);
+                    e = document.createEventObject();
                     // store original event type
-                    event.srcUrn = isCustomEvent ? type : undefined;
-                    event.detail = detail;
+                    e.srcUrn = isCustomEvent ? type : undefined;
+                    e.detail = detail;
 
-                    node.fireEvent("on" + (isCustomEvent ? legacyCustomEventName : handler._type || type), event);
+                    node.fireEvent("on" + (isCustomEvent ? legacyCustomEventName : handler._type || type), e);
 
-                    canContinue = event.returnValue !== false;
+                    canContinue = e.returnValue !== false;
                 }
 
                 // Call a native DOM method on the target with the same name as the event
@@ -571,22 +545,24 @@
 
                     EventHandler.veto = false;
                 }
+
+                return canContinue;
             });
         };
 
         // firefox doesn't support focusin/focusout events
-        if ($Node.prototype.supports("onfocusin", "input")) {
+        if ("onfocusin" in document.createElement("a")) {
             _forOwn({focus: "focusin", blur: "focusout"}, function(value, prop) {
-                eventHooks[prop] = function(handler) { handler._type = value; };
+                hooks[prop] = function(handler) { handler._type = value };
             });
         } else {
-            eventHooks.focus = eventHooks.blur = function(handler) {
+            hooks.focus = hooks.blur = function(handler) {
                 handler.capturing = true;
             };
         }
 
-        if ($Node.prototype.supports("validity", "input")) {
-            eventHooks.invalid = function(handler) {
+        if (document.createElement("input").validity) {
+            hooks.invalid = function(handler) {
                 handler.capturing = true;
             };
         }
@@ -660,63 +636,177 @@
                     };
                 })());
 
-                eventHooks.submit = function(handler) {
+                hooks.submit = function(handler) {
                     handler.custom = true;
                 };
             }
         }
     }());
 
+    // NODE FUNCTIONAL
+    // ---------------
+
+    (function() {
+        function makeCollectionMethod(fn) {
+            var code = fn.toString();
+            // extract function body
+            code = code.substring(code.indexOf("{") + 1, code.lastIndexOf("}"));
+            // use this variable unstead of a
+            code = code.replace(/a([^\w])/g, function(a, symbol) { return "this" + symbol; });
+            // compile the function
+            return Function("cb", "that", code);
+        }
+
+        _extend($Node.prototype, {
+            /**
+             * Executes callback on each element in the collection
+             * @memberOf $Element.prototype
+             * @param  {Function} callback callback function
+             * @param  {Object}   [context]  callback context
+             * @return {$Element}
+             * @function
+             */
+            each: makeCollectionMethod(_forEach),
+
+            /**
+             * Checks if the callback returns true for any element in the collection
+             * @memberOf $Element.prototype
+             * @param  {Function} callback   callback function
+             * @param  {Object}   [context]  callback context
+             * @return {Boolean} true, if any element in the collection return true
+             * @function
+             */
+            some: makeCollectionMethod(_some),
+
+            /**
+             * Checks if the callback returns true for all elements in the collection
+             * @memberOf $Element.prototype
+             * @param  {Function} callback   callback function
+             * @param  {Object}   [context]  callback context
+             * @return {Boolean} true, if all elements in the collection returns true
+             * @function
+             */
+            every: makeCollectionMethod(_every),
+
+            /**
+             * Creates an array of values by running each element in the collection through the callback
+             * @memberOf $Element.prototype
+             * @param  {Function} callback   callback function
+             * @param  {Object}   [context]  callback context
+             * @return {Array} new array of the results of each callback execution
+             * @function
+             */
+            map: makeCollectionMethod(_map),
+
+            /**
+             * Examines each element in a collection, returning an array of all elements the callback returns truthy for
+             * @memberOf $Element.prototype
+             * @param  {Function} callback   callback function
+             * @param  {Object}   [context]  callback context
+             * @return {Array} new array with elements where callback returned true
+             * @function
+             */
+            filter: makeCollectionMethod(_filter),
+
+            /**
+             * Boils down a list of values into a single value (from start to end)
+             * @memberOf $Element.prototype
+             * @param  {Function} callback callback function
+             * @param  {Object}   [memo]   initial value of the accumulator
+             * @return {Object} the accumulated value
+             * @function
+             */
+            reduce: makeCollectionMethod(_foldl),
+
+            /**
+             * Boils down a list of values into a single value (from end to start)
+             * @memberOf $Element.prototype
+             * @param  {Function} callback callback function
+             * @param  {Object}   [memo]   initial value of the accumulator
+             * @return {Object} the accumulated value
+             * @function
+             */
+            reduceRight: makeCollectionMethod(_foldr),
+
+            /**
+             * Executes code in a 'unsafe' block there the first callback argument is native DOM
+             * object. Use only when you need to communicate better-dom with third party scripts!
+             * @memberOf $Element.prototype
+             * @param  {Function} block unsafe block body (nativeNode, index)
+             * @function
+             */
+            legacy: makeCollectionMethod(_legacy)
+        });
+    }());
+
+    /**
+     * Get property by name
+     * @param  {String} name property name
+     * @return {String} property value
+     */
+    $Node.prototype.get = function(name) {
+        if (typeof name !== "string") throw _makeError(this, "get");
+
+        return this._node[name];
+    };
+
+    /**
+     * Set property value
+     * @param  {String} name  property name
+     * @param  {String} value property value
+     */
+    $Node.prototype.set = function(name, value) {
+        if (typeof name !== "string" || typeof value !== "string") throw _makeError(this, "set");
+
+        this._node[name] = value;
+
+        return this;
+    };
+
     /**
      * Helper for css selectors
      * @private
      * @constructor
      */
+    // jshint unused:false
     var SelectorMatcher = (function() {
         // Quick matching inspired by
         // https://github.com/jquery/jquery
         var rquickIs = /^(\w*)(?:#([\w\-]+))?(?:\[([\w\-]+)\])?(?:\.([\w\-]+))?$/,
-            ctor =  function(selector) {
-                if (!(this instanceof SelectorMatcher)) {
-                    return selector ? new SelectorMatcher(selector) : null;
-                }
-
-                this.selector = selector;
-
-                var quick = rquickIs.exec(selector);
-                // TODO: support attribute value check
-                if (this.quick = quick) {
-                    //   0  1    2   3          4
-                    // [ _, tag, id, attribute, class ]
-                    if (quick[1]) quick[1] = quick[1].toLowerCase();
-                    if (quick[4]) quick[4] = " " + quick[4] + " ";
-                }
-            },
             matchesProp = _foldl("m oM msM mozM webkitM".split(" "), function(result, prefix) {
                 var propertyName = prefix + "atchesSelector";
 
                 if (!result) return documentElement[propertyName] && propertyName;
             }, null),
-            isEqual = function(val) { return val === this; };
+            isEqual = function(val) { return val === this };
 
-        ctor.prototype = {
-            test: function(el) {
-                if (this.quick) {
+        return function(selector) {
+            if (typeof selector !== "string") return null;
+
+            var quick = rquickIs.exec(selector);
+            // TODO: support attribute value check
+            if (quick) {
+                //   0  1    2   3          4
+                // [ _, tag, id, attribute, class ]
+                if (quick[1]) quick[1] = quick[1].toLowerCase();
+                if (quick[4]) quick[4] = " " + quick[4] + " ";
+            }
+
+            return function(el) {
+                if (quick) {
                     return (
-                        (!this.quick[1] || el.nodeName.toLowerCase() === this.quick[1]) &&
-                        (!this.quick[2] || el.id === this.quick[2]) &&
-                        (!this.quick[3] || el.hasAttribute(this.quick[3])) &&
-                        (!this.quick[4] || (" " + el.className + " ").indexOf(this.quick[4]) >= 0)
+                        (!quick[1] || el.nodeName.toLowerCase() === quick[1]) &&
+                        (!quick[2] || el.id === quick[2]) &&
+                        (!quick[3] || el.hasAttribute(quick[3])) &&
+                        (!quick[4] || (" " + el.className + " ").indexOf(quick[4]) >= 0)
                     );
                 }
 
-                if (matchesProp) return el[matchesProp](this.selector);
+                if (matchesProp) return el[matchesProp](selector);
 
-                return _some(document.querySelectorAll(this.selector), isEqual, el);
-            }
+                return _some(document.querySelectorAll(selector), isEqual, el);
+            };
         };
-
-        return ctor;
     }());
 
     /**
@@ -750,7 +840,8 @@
                         });
                     }
                 };
-            };
+            },
+            testEl = document.createElement("div");
 
         if (document.addEventListener) {
             hooks.relatedTarget = function(event) {
@@ -833,13 +924,13 @@
                     root = currentTarget._node;
 
                 for (; node && node !== root; node = node.parentNode) {
-                    if (matcher.test(node)) return defaultEventHandler(e, node);
+                    if (matcher(node)) return defaultEventHandler(e, node);
                 }
             };
 
             if (~debouncedEvents.indexOf(type)) {
                 result = createDebouncedEventWrapper(result);
-            } else if (!document.addEventListener && (!currentTarget.supports("on" + type) || type === "submit")) {
+            } else if (!document.addEventListener && (type === "submit" || !("on" + type in testEl))) {
                 // handle custom events for IE8
                 result = createCustomEventWrapper(result, type);
             }
@@ -960,22 +1051,29 @@
 
     /**
      * Clone element
+     * @param {Boolean} [deep=true] true if the children should also be cloned, or false to do shallow copy
      * @return {$Element} clone of current element
      */
-    $Element.prototype.clone = function() {
+    $Element.prototype.clone = function(deep) {
+        if (!arguments.length) deep = true;
+
+        if (typeof deep !== "boolean") throw _makeError("clone", this);
+
         var node = this._node;
 
-        if (!node) return;
+        if (node) {
+            if (document.addEventListener) {
+                node = node.cloneNode(deep);
+            } else {
+                node = document.createElement("div");
+                node.innerHTML = this._node.outerHTML;
+                node = node.firstChild;
 
-        if (document.addEventListener) {
-            node = node.cloneNode(true);
-        } else {
-            node = document.createElement("div");
-            node.innerHTML = this._node.outerHTML;
-            node = node.firstChild;
+                if (!deep) node.innerHTML = "";
+            }
+
+            return new $Element(node);
         }
-
-        return new $Element(node);
     };
 
     // MANIPULATION
@@ -1029,7 +1127,7 @@
          * @function
          */
         $Element.prototype.after = makeManipulationMethod("after", "afterend", function(node, relatedNode) {
-            node.parentNode.insertBefore(relatedNode, node.nextSibling);
+            if (node.parentNode) node.parentNode.insertBefore(relatedNode, node.nextSibling);
         });
 
         /**
@@ -1039,7 +1137,7 @@
          * @function
          */
         $Element.prototype.before = makeManipulationMethod("before", "beforebegin", function(node, relatedNode) {
-            node.parentNode.insertBefore(relatedNode, node);
+            if (node.parentNode) node.parentNode.insertBefore(relatedNode, node);
         });
 
         /**
@@ -1069,7 +1167,7 @@
          * @function
          */
         $Element.prototype.replace = makeManipulationMethod("replace", "", function(node, relatedNode) {
-            node.parentNode.replaceChild(relatedNode, node);
+            if (node.parentNode) node.parentNode.replaceChild(relatedNode, node);
         });
 
         /**
@@ -1077,8 +1175,8 @@
          * @return {$Element}
          * @function
          */
-        $Element.prototype.remove = makeManipulationMethod("remove", "", function(node, relatedNode) {
-            if (relatedNode) relatedNode.removeChild(node);
+        $Element.prototype.remove = makeManipulationMethod("remove", "", function(node) {
+            if (node.parentNode) node.parentNode.removeChild(node);
         });
     })();
 
@@ -1101,17 +1199,21 @@
                 !documentElement.contains(node);
         };
 
-        return function(selector) {
-            if (!selector || typeof selector !== "string") {
+        return function(selector, deep) {
+            if (!selector || typeof selector !== "string" || deep !== undefined && typeof deep !== "boolean") {
                 throw _makeError("matches", this);
             }
 
             var node = this._node,
-                hook = hooks[selector];
+                checker = hooks[selector] || SelectorMatcher(selector);
 
-            if (!node) return;
+            while (node && node !== document) {
+                if (checker(node)) return true;
 
-            return hook ? hook(node) : new SelectorMatcher(selector).test(node);
+                node = deep ? node.parentNode : null;
+            }
+
+            return false;
         };
     }());
 
@@ -1137,7 +1239,7 @@
     };
 
     /**
-     * Calculate width based on element's offset
+     * Calculate element's width in pixels
      * @return {Number} element width in pixels
      */
     $Element.prototype.width = function() {
@@ -1145,7 +1247,7 @@
     };
 
     /**
-     * Calculate height based on element's offset
+     * Calculate element's height in pixels
      * @return {Number} element height in pixels
      */
     $Element.prototype.height = function() {
@@ -1162,7 +1264,7 @@
          * Get property or attribute by name
          * @param  {String} [name] property/attribute name
          * @return {String} property/attribute value
-         * @tutorial Getter and setter
+         * @see https://github.com/chemerisuk/better-dom/wiki/Getter-and-setter
          */
         $Element.prototype.get = function(name) {
             var node = this._node,
@@ -1173,6 +1275,8 @@
             if (name === undefined) {
                 if (node.tagName === "OPTION") {
                     name = node.hasAttribute("value") ? "value" : "text";
+                } else if (node.tagName === "SELECT") {
+                    return node.options[node.selectedIndex].value;
                 } else {
                     name = node.type && "value" in node ? "value" : "innerHTML";
                 }
@@ -1183,22 +1287,14 @@
             return hook ? hook(node, name) : (name in node ? node[name] : node.getAttribute(name));
         };
 
-        hooks.tagName = hooks.method = function(node, key) {
-            return key in node ? node[key].toLowerCase() : "";
-        };
-
-        hooks.elements = hooks.options = function(node, key) {
-            return new $CompositeElement(node[key]);
-        };
-
-        hooks.form = function(node) {
-            return $Element(node.form);
-        };
-
         hooks.type = function(node) {
             // some browsers don't recognize input[type=email] etc.
             return node.getAttribute("type") || node.type;
         };
+
+        if (!("textContent" in documentElement)) {
+            hooks.textContent = function(node) { return node.innerText };
+        }
     })();
 
     // SETTER
@@ -1212,7 +1308,7 @@
          * @param {String} [name] property/attribute name
          * @param {String} value property/attribute value
          * @return {$Element}
-         * @tutorial Getter and setter
+         * @see https://github.com/chemerisuk/better-dom/wiki/Getter-and-setter
          */
         $Element.prototype.set = function(name, value) {
             var len = arguments.length,
@@ -1277,6 +1373,12 @@
 
             node.defaultValue = value;
         };
+
+        if (!("textContent" in documentElement)) {
+            hooks.textContent = function(node, value) {
+                node.innerText = value;
+            };
+        }
 
         if (document.attachEvent) {
             // fix NoScope elements in IE < 10
@@ -1392,14 +1494,14 @@
                 return style.cssFloat;
             };
             setStyleHooks.float = function(style, value) {
-                style.cssFloat = value.toString();
+                style.cssFloat = value;
             };
         } else {
             getStyleHooks.float = function(style) {
                 return style.styleFloat;
             };
             setStyleHooks.float = function(style, value) {
-                style.styleFloat = value.toString();
+                style.styleFloat = value;
             };
         }
 
@@ -1439,13 +1541,13 @@
                     nodes = multiple ? [] : null,
                     it = this._node;
 
-                if (!it) return;
+                if (it) {
+                    while (it = it[propertyName]) {
+                        if (it.nodeType === 1 && (!matcher || matcher(it))) {
+                            if (!multiple) break;
 
-                while (it = it[propertyName]) {
-                    if (it.nodeType === 1 && (!matcher || matcher.test(it))) {
-                        if (!multiple) break;
-
-                        nodes.push(it);
+                            nodes.push(it);
+                        }
                     }
                 }
 
@@ -1461,7 +1563,7 @@
                     throw _makeError("child", this);
                 }
 
-                if (!this._node) return;
+                if (!this._node) return multiple ? new $Element() : new $CompositeElement();
 
                 var children = this._node.children,
                     matcher = SelectorMatcher(selector),
@@ -1473,14 +1575,14 @@
                 }
 
                 if (multiple) {
-                    return new $CompositeElement(!matcher ? children : _filter(children, matcher.test, matcher));
+                    return new $CompositeElement(!matcher ? children : _filter(children, matcher));
                 }
 
                 if (index < 0) index = children.length + index;
 
                 node = children[index];
 
-                return $Element(!matcher || matcher.test(node) ? node : null);
+                return $Element(!matcher || matcher(node) ? node : null);
             };
         }
 
@@ -1489,6 +1591,7 @@
          * @param {String} [selector] css selector
          * @return {$Element} matched element
          * @function
+         * @see https://github.com/chemerisuk/better-dom/wiki/Traversing
          */
         $Element.prototype.next = makeTraversingMethod("nextSibling");
 
@@ -1497,6 +1600,7 @@
          * @param {String} [selector] css selector
          * @return {$Element} matched element
          * @function
+         * @see https://github.com/chemerisuk/better-dom/wiki/Traversing
          */
         $Element.prototype.prev = makeTraversingMethod("previousSibling");
 
@@ -1505,6 +1609,7 @@
          * @param {String} [selector] css selector
          * @return {$Element} collection of matched elements
          * @function
+         * @see https://github.com/chemerisuk/better-dom/wiki/Traversing
          */
         $Element.prototype.nextAll = makeTraversingMethod("nextSibling", true);
 
@@ -1513,6 +1618,7 @@
          * @param {String} [selector] css selector
          * @return {$Element} collection of matched elements
          * @function
+         * @see https://github.com/chemerisuk/better-dom/wiki/Traversing
          */
         $Element.prototype.prevAll = makeTraversingMethod("previousSibling", true);
 
@@ -1521,6 +1627,7 @@
          * @param {String} [selector] css selector
          * @return {$Element} matched element
          * @function
+         * @see https://github.com/chemerisuk/better-dom/wiki/Traversing
          */
         $Element.prototype.parent = makeTraversingMethod("parentNode");
 
@@ -1530,7 +1637,7 @@
          * @param  {String} [selector] css selector
          * @return {$Element} matched child
          * @function
-         * @tutorial Traversing
+         * @see https://github.com/chemerisuk/better-dom/wiki/Traversing
          */
         $Element.prototype.child = makeChildTraversingMethod(false);
 
@@ -1539,7 +1646,7 @@
          * @param  {String} [selector] css selector
          * @return {$Element} collection of matched elements
          * @function
-         * @tutorial Traversing
+         * @see https://github.com/chemerisuk/better-dom/wiki/Traversing
          */
         $Element.prototype.children = makeChildTraversingMethod(true);
     })();
@@ -1568,6 +1675,30 @@
         return this.set("aria-hidden", function(value) { return value !== "true" });
     };
 
+    // I18N
+    // ----
+
+    /**
+     * Localize element value
+     * @param  {String} [value]  resource string key
+     * @param  {Object} [args]   resource string arguments
+     */
+    $Element.prototype.i18n = function(value, args) {
+        var len = arguments.length;
+
+        if (!len) return this.get("data-i18n");
+
+        if (len > 2 || typeof value !== "string" || args && typeof args !== "object") throw _makeError("i18n", this);
+
+        args = _foldl(_keys(args || {}), function(memo, key) {
+            memo["data-" + key] = args[key];
+
+            return memo;
+        }, {"data-i18n": value});
+
+        return this.set(args).set("");
+    };
+
     /**
      * Used to represent a collection of DOM elements (length >= 1)
      * @name $CompositeElement
@@ -1582,103 +1713,8 @@
 
     $CompositeElement.prototype = new $Element();
 
-    // ELEMENT COLLECTION EXTESIONS
-    // ----------------------------
-
-    (function() {
-        var makeCollectionMethod = function(fn) {
-                var code = fn.toString();
-                // extract function body
-                code = code.substring(code.indexOf("{") + 1, code.lastIndexOf("}"));
-                // use this variable unstead of a
-                code = code.replace(/a([^\w])/g, function(a, symbol) { return "this" + symbol; });
-                // compile the function
-                return Function("cb", "that", code);
-            };
-
-        _extend($Element.prototype, {
-            /**
-             * Executes callback on each element in the collection
-             * @memberOf $Element.prototype
-             * @param  {Function} callback callback function
-             * @param  {Object}   [context]  callback context
-             * @return {$Element}
-             * @function
-             */
-            each: makeCollectionMethod(_forEach),
-
-            /**
-             * Checks if the callback returns true for any element in the collection
-             * @memberOf $Element.prototype
-             * @param  {Function} callback   callback function
-             * @param  {Object}   [context]  callback context
-             * @return {Boolean} true, if any element in the collection return true
-             * @function
-             */
-            some: makeCollectionMethod(_some),
-
-            /**
-             * Checks if the callback returns true for all elements in the collection
-             * @memberOf $Element.prototype
-             * @param  {Function} callback   callback function
-             * @param  {Object}   [context]  callback context
-             * @return {Boolean} true, if all elements in the collection returns true
-             * @function
-             */
-            every: makeCollectionMethod(_every),
-
-            /**
-             * Creates an array of values by running each element in the collection through the callback
-             * @memberOf $Element.prototype
-             * @param  {Function} callback   callback function
-             * @param  {Object}   [context]  callback context
-             * @return {Array} new array of the results of each callback execution
-             * @function
-             */
-            map: makeCollectionMethod(_map),
-
-            /**
-             * Examines each element in a collection, returning an array of all elements the callback returns truthy for
-             * @memberOf $Element.prototype
-             * @param  {Function} callback   callback function
-             * @param  {Object}   [context]  callback context
-             * @return {Array} new array with elements where callback returned true
-             * @function
-             */
-            filter: makeCollectionMethod(_filter),
-
-            /**
-             * Boils down a list of values into a single value (from start to end)
-             * @memberOf $Element.prototype
-             * @param  {Function} callback callback function
-             * @param  {Object}   [memo]   initial value of the accumulator
-             * @return {Object} the accumulated value
-             * @function
-             */
-            reduce: makeCollectionMethod(_foldl),
-
-            /**
-             * Boils down a list of values into a single value (from end to start)
-             * @memberOf $Element.prototype
-             * @param  {Function} callback callback function
-             * @param  {Object}   [memo]   initial value of the accumulator
-             * @return {Object} the accumulated value
-             * @function
-             */
-            reduceRight: makeCollectionMethod(_foldr),
-
-            /**
-             * Executes code in a 'unsafe' block there the first callback argument is native DOM
-             * object. Use only when you need to communicate better-dom with third party scripts!
-             * @memberOf $Element.prototype
-             * @param  {Function} block unsafe block body (nativeNode, index)
-             */
-            legacy: makeCollectionMethod(_legacy)
-        });
-    }());
-
-    // GLOBAL API
-    // ----------
+    // GLOBAL NAMESPACE
+    // ----------------
 
     /**
      * Global object to access DOM
@@ -1687,7 +1723,7 @@
      */
     var DOM = new $Node(document);
 
-    DOM.version = "1.5.3";
+    DOM.version = "1.5.5";
 
     // CREATE ELEMENT
     // --------------
@@ -1742,7 +1778,7 @@
          * @memberOf DOM
          * @param  {String}          selector extension css selector
          * @param  {Object|Function} mixins   extension mixins/constructor function
-         * @tutorial Living extensions
+         * @see https://github.com/chemerisuk/better-dom/wiki/Living-extensions
          */
         DOM.extend = function(selector, mixins) {
             if (typeof mixins === "function") mixins = {constructor: mixins};
@@ -1755,11 +1791,12 @@
                 // extending element prototype
                 _extend($Element.prototype, mixins);
             } else {
-                var watcher = function(el) {
+                var ctr = mixins.hasOwnProperty("constructor") ? mixins.constructor : null,
+                    watcher = function(el) {
                         _extend(el, mixins);
 
-                        if (mixins.hasOwnProperty("constructor")) {
-                            mixins.constructor.apply(el);
+                        if (ctr) {
+                            ctr.call(el);
 
                             el.constructor = $Element;
                         }
@@ -1805,7 +1842,8 @@
         var operators = {"(": 1,")": 2,"^": 3,">": 4,"+": 4,"*": 5,"}": 5,"{": 6,"]": 5,"[": 6,".": 7,"#": 8,":": 9},
             reTextTag = /<\?>|<\/\?>/g,
             reAttr = /([\w\-]+)(?:=((?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^\s\]]+)))?/g,
-            reIndex = /(\$+)(?:@(-)?([0-9]+)?)?/g,
+            reIndex = /(\$+)(?:@(-)?(\d+)?)?/g,
+            reVar = /\$\w+/g,
             reHtml = /^[\s<]/,
             normalizeAttrs = function(term, name, value, a, b, simple) {
                 // always wrap attribute values with quotes if they don't exist
@@ -1839,7 +1877,7 @@
             makeIndexedTerm = function(term) {
                 return function(_, i, arr) {
                     return term.replace(reIndex, function(expr, fmt, sign, base) {
-                        var index = (sign ? arr.length - i - 1 : i) + (base ? base | 0 : 1);
+                        var index = (sign ? arr.length - i - 1 : i) + (base ? +base : 1);
                         // make zero-padding index string
                         return (fmt + index).slice(-fmt.length).split("$").join("0");
                     });
@@ -1847,23 +1885,27 @@
             },
             toString = function(term) {
                 return typeof term === "string" ? term : term.join("");
-            };
+            },
+            cache = {};
 
         /**
          * Parse emmet-like template to HTML string
          * @memberOf DOM
          * @param  {String} template emmet-like expression
+         * @param {Object} vars macroses map
          * @return {String} HTML string
+         * @see https://github.com/chemerisuk/better-dom/wiki/Microtemplating
          * @see http://docs.emmet.io/cheat-sheet/
-         * @tutorial Microtemplating
          */
-        DOM.template = function(template) {
+        DOM.template = function(template, vars) {
             var stack = [],
                 output = [],
                 term = "",
                 i, n, str, priority, skip, node;
 
             if (typeof template !== "string") throw _makeError("template", this);
+
+            if (template in cache) return cache[template];
 
             if (!template || reHtml.exec(template)) return template;
 
@@ -1957,7 +1999,7 @@
                         break;
 
                     case "*":
-                        node = _map(Array(term | 0), makeIndexedTerm(toString(node)));
+                        node = _map(Array(+term), makeIndexedTerm(toString(node)));
                         break;
 
                     default:
@@ -1978,7 +2020,11 @@
                 stack.unshift(str);
             }
 
-            return toString(stack[0]).replace(reTextTag, "");
+            output = toString(stack[0]).replace(reTextTag, "");
+
+            if (vars) output = output.replace(reVar, function(x) { return vars[x.substr(1)] || x });
+
+            return cache[template] = output;
         };
     })();
 
@@ -2051,7 +2097,7 @@
                     // do not execute callback if it was previously excluded
                     if (_some(e.detail, function(x) { return x === entry.callback })) return;
 
-                    if (entry.matcher.test(node)) {
+                    if (entry.matcher(node)) {
                         if (entry.once) {
                             if (supportsAnimations) {
                                 node.addEventListener(e.type, entry.once, false);
@@ -2111,7 +2157,8 @@
 
             watchers.push({
                 callback: callback,
-                matcher: new SelectorMatcher(selector),
+                matcher: SelectorMatcher(selector),
+                selector: selector,
                 once: once && function(e) {
                     if (supportsAnimations) {
                         if (e.animationName !== animId) return;
@@ -2125,7 +2172,7 @@
                 }
             });
 
-            if (_some(watchers, function(x) { return x.matcher.selector === selector })) {
+            if (_some(watchers, function(x) { return x.selector === selector })) {
                 DOM.importStyles(selector, styles);
             }
         };
@@ -2223,7 +2270,7 @@
      * @param {String}         pattern string pattern
      * @param {String}         [lang]  string language
      * @function
-     * @tutorial Localization
+     * @see https://github.com/chemerisuk/better-dom/wiki/Localization
      */
     DOM.importStrings = (function() {
         var rparam = /\{([a-z\-]+)\}/g,
@@ -2256,31 +2303,6 @@
     }());
 
     DOM.importStyles("[data-i18n]:before", "content:'???'attr(data-i18n)'???'");
-
-    /**
-     * Return current page title
-     * @memberOf DOM
-     * @return {String} current page title
-     */
-    DOM.getTitle = function() {
-        return document.title;
-    };
-
-    /**
-     * Change current page title
-     * @memberOf DOM
-     * @param  {String} value new title
-     * @return {DOM}
-     */
-    DOM.setTitle = function(value) {
-        if (typeof value !== "string") {
-            throw _makeError("setTitle", this);
-        }
-        
-        document.title = value;
-
-        return this;
-    };
 
     // REGISTER API
     // ------------
