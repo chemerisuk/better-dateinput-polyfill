@@ -34,22 +34,29 @@
     left: 0.5em;
     top: 0.5em;
 
-    text-decoration: none;
-    text-align: center;
-    line-height: 1.5em;
+    font-size: 1em;
+    height: 1.5em;
     width: 1.5em;
+    display: block;
 
-    border-radius: 5px;
     padding: 0;
     margin: 0;
-    background: none;
     border: 0;
-    font-size: 1em;
+    border-radius: 0.25em;
+
     outline: none;
+    background: none;
 }
 
 .better-dateinput-calendar > button:before {
-    content: "\25C0";
+    content: "";
+    display: inline-block;
+    height: 0;
+    width: 0;
+    border-style: solid;
+    border-width: 0.5em 0.75em 0.5em 0;
+    border-color: transparent;
+    border-right-color: inherit;
 }
 
 .better-dateinput-calendar > button + button {
@@ -58,7 +65,9 @@
 }
 
 .better-dateinput-calendar > button + button:before {
-    content: "\25BA"
+    border-width: 0.5em 0 0.5em 0.75em;
+    border-color: transparent;
+    border-left-color: inherit;
 }
 
 .better-dateinput-calendar-days {

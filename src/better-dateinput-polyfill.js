@@ -112,6 +112,8 @@
                 delta = 0;
 
             if (which === 13) {
+                calendar.hide(); // hide picker to submit form
+            } else if (which === 32) {
                 calendar.toggle(); // show/hide calendar on enter key
             } else if (which === 27 || which === 9) {
                 calendar.hide(); // esc or tab key hides calendar
@@ -136,9 +138,9 @@
                 }
             }
 
-            // prevent default action except if it was a TAB key
+            // prevent default action except if it was TAB or ENTER
             // so do not allow to change the value via manual input
-            return which === 9;
+            return which === 9 || which === 13;
         },
         handleDocumentClick: function() {
             var calendar = this.data(CALENDAR_KEY);
