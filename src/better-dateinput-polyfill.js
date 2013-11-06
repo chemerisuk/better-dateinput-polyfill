@@ -1,21 +1,19 @@
 (function(DOM) {
     "use strict";
 
-    var AMPM = DOM.find("html").get("lang") === "en-US",
-        COMPONENT_CLASS = "better-dateinput",
+    var COMPONENT_CLASS = "better-dateinput",
         CALENDAR_CLASS = COMPONENT_CLASS + "-calendar",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+button+button+table.$c-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS}),
-        zeropad = function(value) { return ("00" + value).slice(-2) };
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+button+button+table.$c-days>thead>tr>th*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS}),
+        zeropad = function(value) { return ("00" + value).slice(-2) },
+        ampm = function(pos, neg) { return DOM.find("html").get("lang") === "en-US" ? pos : neg };
 
     DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
         // polyfill timeinput for desktop browsers
         constructor: function() {
             var calendar = DOM.create(DATEPICKER_TEMPLATE).hide(),
                 dateinput = DOM.create("input[type=hidden]", {name: this.get("name")});
-
-            if (AMPM) calendar.find("th").before(calendar.findAll("th")[6]);
 
             this
                 // remove legacy dateinput if it exists
@@ -47,20 +45,22 @@
             return new Date(parseFloat(isoParts[0]), parseFloat(isoParts[1]) - 1, parseFloat(isoParts[2]));
         },
         setCalendarDate: function(value) {
-            // FIXME: remove DOM.mock() in future
-            var calendarCaption = this.data(CALENDAR_KEY).find("p") || DOM.mock(),
-                calendarDays = this.data(CALENDAR_KEY).findAll("td") || DOM.mock(),
+            var calendar = this.data(CALENDAR_KEY),
                 now = new Date(),
                 year = (value || now).getFullYear(),
                 month = (value || now).getMonth(),
                 date = (value || now).getDate(),
                 iterDate = new Date(year, month, 0);
             // update caption
-            calendarCaption.i18n("calendar.month." + month, {year: year});
-            // move to begin of the start week
-            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - (AMPM ? 1 : 0));
-
-            calendarDays.each(function(day) {
+            calendar.find("p").i18n("calendar.month." + month, {year: year});
+            // update weekday captions
+            calendar.findAll("th").each(function(el, index) {
+                el.i18n("calendar.weekday." + ampm(!index ? 7 : index, index + 1));
+            });
+            // move to beginning of current month week
+            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
+            // update day numbers
+            calendar.findAll("td").each(function(day) {
                 iterDate.setDate(iterDate.getDate() + 1);
 
                 var mDiff = month - iterDate.getMonth(),
@@ -81,7 +81,7 @@
             // update current date
             this.data(INPUT_KEY).set(year + "-" + zeropad(month + 1) + "-" + zeropad(date));
 
-            if (value) this.set((AMPM ? month + 1 : date) + "/" + (AMPM ? date : month + 1) + "/" + year);
+            if (value) this.set(ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
 
             return this;
         },
@@ -147,8 +147,8 @@
                 value, year, month, date;
 
             if (parts.length === 3) {
-                date = parseFloat(parts[AMPM ? 1 : 0]);
-                month = parseFloat(parts[AMPM ? 0 : 1]) - 1;
+                date = parseFloat(parts[ampm(1, 0)]);
+                month = parseFloat(parts[ampm(0, 1)]) - 1;
                 year = parseFloat(parts[2]);
 
                 value = new Date(year, month, date);

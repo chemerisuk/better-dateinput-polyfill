@@ -2,7 +2,7 @@ describe("better-dateinput-polyfill", function() {
     var calendar, dateinput;
 
     beforeEach(function() {
-        calendar = DOM.mock();
+        calendar = DOM.create("table");
         dateinput = DOM.mock("input[type=date]");
 
         spyOn(dateinput, "data").andCallFake(function(key) {
@@ -31,7 +31,7 @@ describe("better-dateinput-polyfill", function() {
     it("should prevent default action on any key except tab", function() {
         expect(dateinput.handleCalendarKeyDown(9, false)).not.toBe(false);
         expect(dateinput.handleCalendarKeyDown(111, false)).toBe(false);
-        expect(dateinput.handleCalendarKeyDown(13, false)).toBe(false);
+        expect(dateinput.handleCalendarKeyDown(13, false)).toBe(true);
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
