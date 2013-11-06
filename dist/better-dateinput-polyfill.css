@@ -1,6 +1,6 @@
 /**
  * @file better-dateinput-polyfill.css
- * @version 1.2.1 2013-11-05T19:50:36
+ * @version 1.2.2 2013-11-06T12:20:46
  * @overview input[type=date] polyfill for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -54,6 +54,7 @@
 
     outline: none;
     background: none;
+    cursor: default;
 }
 
 .better-dateinput-calendar > button:before {
@@ -62,7 +63,7 @@
     height: 0;
     width: 0;
     border-style: solid;
-    border-width: 0.5em 0.75em 0.5em 0;
+    border-width: 0.45em 0.75em 0.45em 0;
     border-color: transparent;
     border-right-color: inherit;
 }
@@ -73,7 +74,7 @@
 }
 
 .better-dateinput-calendar > button + button:before {
-    border-width: 0.5em 0 0.5em 0.75em;
+    border-width: 0.45em 0 0.45em 0.75em;
     border-color: transparent;
     border-left-color: inherit;
 }
