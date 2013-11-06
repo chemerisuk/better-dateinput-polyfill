@@ -22,9 +22,9 @@
                 .set({type: "text", name: null})
                 .addClass("better-dateinput")
                 // sync value on click
-                .on("focus", this, "handleCalendarFocus")
+                .on("focus", "handleCalendarFocus")
                 // handle arrow keys, esc etc.
-                .on("keydown", ["which", "shiftKey"], this, "handleCalendarKeyDown");
+                .on("keydown", ["which", "shiftKey"], "handleCalendarKeyDown");
 
             calendar
                 .on("click button", this, "handleCalendarNavClick")
@@ -75,7 +75,7 @@
                     (dDiff ? "calendar-day" : "current-calendar-day")
                 );
 
-                day.set(iterDate.getDate().toString());
+                day.set(iterDate.getDate().toString()).data("ts", iterDate.getTime());
             });
 
             // update current date
@@ -86,15 +86,7 @@
             return this;
         },
         handleCalendarDayClick: function(target) {
-            var calendarDate = this.getCalendarDate(),
-                currentYear = calendarDate.getFullYear(),
-                currentMonth = calendarDate.getMonth(),
-                targetDate = new Date(currentYear, currentMonth,
-                    target.parent().get("rowIndex") * 7 + target.get("cellIndex") - 5 - new Date(currentYear, currentMonth, 1).getDay()
-                );
-
-            this.setCalendarDate(targetDate);
-
+            this.setCalendarDate(new Date(target.data("ts")));
             // prevent focusing after click if the input is inside of a label
             return false;
         },
