@@ -105,14 +105,15 @@
                 currentDate = this.getCalendarDate(),
                 delta = 0;
 
-            if (which === 13) {
-                calendar.hide(); // hide picker to submit form
-            } else if (which === 32) {
-                calendar.toggle(); // show/hide calendar on enter key
-            } else if (which === 27 || which === 9) {
-                calendar.hide(); // esc or tab key hides calendar
+            // ENTER key should submit form if calendar is hidden
+            if (calendar.matches(":hidden") && which === 13) return true;
+
+            if (which === 32) {
+                calendar.toggle(); // SPACE key toggles calendar visibility
+            } else if (which === 27 || which === 9 || which === 13) {
+                calendar.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === 8 || which === 46) {
-                this.set("").handleCalendarFocus(); // backspace or delete clears the value
+                this.set("").handleCalendarFocus(); // BACKSPACE, DELETE clear value
             } else {
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
@@ -131,10 +132,9 @@
                     this.setCalendarDate(currentDate);
                 }
             }
-
-            // prevent default action except if it was TAB or ENTER
-            // so do not allow to change the value via manual input
-            return which === 9 || which === 13;
+            // prevent default action except if it was TAB so
+            // do not allow to change the value manually
+            return which === 9;
         },
         handleDocumentClick: function() {
             var calendar = this.data(CALENDAR_KEY);
