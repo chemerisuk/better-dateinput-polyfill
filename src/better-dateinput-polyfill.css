@@ -20,6 +20,22 @@
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+    opacity: 1;
+
+    -webkit-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+
+    -webkit-transform: scale(1, 1);
+    transform: scaleY(1);
+}
+
+.better-dateinput-calendar[aria-hidden=true] {
+    display: block;
+    opacity: 0;
+
+    -webkit-transform: scale(0, 0);
+    transform: scaleY(0);
 }
 
 .better-dateinput-calendar-header {

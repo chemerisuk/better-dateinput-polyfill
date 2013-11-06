@@ -1,13 +1,13 @@
 (function(DOM) {
     "use strict";
 
-    var COMPONENT_CLASS = "better-dateinput",
-        CALENDAR_CLASS = COMPONENT_CLASS + "-calendar",
+    var htmlEl = DOM.find("html"),
+        COMPONENT_CLASS = "better-dateinput",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+button+button+table.$c-days>thead>tr>th*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS}),
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+button[tabindex=-1]+button[tabindex=-1]+table.$c-days>thead>tr>th*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
         zeropad = function(value) { return ("00" + value).slice(-2) },
-        ampm = function(pos, neg) { return DOM.find("html").get("lang") === "en-US" ? pos : neg };
+        ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg };
 
     DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
         // polyfill timeinput for desktop browsers
