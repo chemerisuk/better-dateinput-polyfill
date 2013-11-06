@@ -5,7 +5,7 @@
         COMPONENT_CLASS = "better-dateinput",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+button[type=button tabindex=-1]+button[type=button  tabindex=-1]+table.$c-days>thead>tr>th*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+a+a+table.$c-days>thead>tr>th*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
         zeropad = function(value) { return ("00" + value).slice(-2) },
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg };
 
@@ -26,7 +26,7 @@
 
             // use mousedown instead of click to prevent loosing focus
             calendar
-                .on("mousedown button", this, "handleCalendarNavClick")
+                .on("mousedown a", this, "handleCalendarNavClick")
                 .on("mousedown td", this, "handleCalendarDayClick");
 
             // hide calendar when a user clicks somewhere outside
@@ -92,7 +92,7 @@
             return !this.setCalendarDate(new Date(target.data("ts")));
         },
         handleCalendarNavClick: function(target) {
-            var isNext = !target.next("button").length,
+            var isNext = !target.next("a").length,
                 calendarDate = this.getCalendarDate(),
                 targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
 
