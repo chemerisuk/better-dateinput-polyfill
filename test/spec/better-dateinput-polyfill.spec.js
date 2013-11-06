@@ -101,27 +101,11 @@ describe("better-dateinput-polyfill", function() {
 
     it("should select appropriate day on calendar click", function() {
         var now = new Date(),
-            target = DOM.mock(),
-            parent = DOM.mock(),
-            colSpy = spyOn(target, "get"),
-            rowSpy = spyOn(parent, "get"),
-            getSpy = spyOn(dateinput, "getCalendarDate"),
+            target = DOM.create("td").data("ts", now.getTime()),
             setSpy = spyOn(dateinput, "setCalendarDate");
 
-        spyOn(target, "parent").andReturn(parent);
-
-        rowSpy.andReturn(2); // the third week of current month
-        colSpy.andReturn(5); // the 5th day of the week
-        getSpy.andReturn(now);
         dateinput.handleCalendarDayClick(target);
-        expect(rowSpy).toHaveBeenCalled();
-        expect(colSpy).toHaveBeenCalled();
-        expect(getSpy).toHaveBeenCalled();
-
-        now.setDate(1);
-
-        expect(setSpy).toHaveBeenCalledWith(new Date(
-            now.getFullYear(), now.getMonth(), (2 - 1) * 7 + (5 + 2) - now.getDay()));
+        expect(setSpy).toHaveBeenCalledWith(new Date(now.getTime()));
     });
 
     it("should hide calendar on outer focus", function() {
