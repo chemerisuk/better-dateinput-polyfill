@@ -4,14 +4,17 @@
 }
 
 .better-dateinput-calendar {
-    position: absolute;
-    z-index: 9999;
+    display: inline-block !important;
+
+    position: relative;
+    z-index: 99;
+    overflow: hidden;
     cursor: default;
 
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    width: 19em;
+    vertical-align: bottom;
+    margin-left: -12.5em;
+    margin-bottom: -18.5em;
 
     color: #333;
     background: #FFF;
@@ -21,21 +24,24 @@
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
-    opacity: 1;
-
-    -webkit-transition: all 0.2s ease-out;
-    transition: all 0.2s ease-out;
+    -webkit-transition: -webkit-transform 0.2s;
+    transition: transform 0.2s;
 
     -webkit-transform: scale(1, 1);
-    transform: scaleY(1);
+    transform: scale(1, 1);
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .better-dateinput-calendar[aria-hidden=true] {
-    display: block;
-    opacity: 0;
+    left: -999em;
+    top: -999em;
 
-    -webkit-transform: scale(0, 0);
-    transform: scaleY(0);
+    -webkit-transform: scale(0, 0) translateY(-10em);
+    transform: scale(0, 0) translateY(-10em);
 }
 
 .better-dateinput-calendar-header {
@@ -46,15 +52,11 @@
 }
 
 .better-dateinput-calendar > a {
-    position: absolute;
-    left: 0.5em;
-    top: 0.5em;
-
+    float: left;
     width: 1em;
     padding: 0.25em;
-    display: block;
+    margin: 0.5em;
     text-align: center;
-
     border-radius: 0.25em;
 }
 
@@ -70,8 +72,7 @@
 }
 
 .better-dateinput-calendar > a + a {
-    left: inherit;
-    right: 0.5em;
+    float: right;
 }
 
 .better-dateinput-calendar > a + a:before {

@@ -5,7 +5,7 @@
         COMPONENT_CLASS = "better-dateinput",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+a+a+table.$c-days>thead>tr>th*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>a[unselectable=on]+a[unselectable=on]+p.$c-header+table.$c-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
         zeropad = function(value) { return ("00" + value).slice(-2) },
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg };
 
@@ -24,10 +24,7 @@
                 // handle arrow keys, esc etc.
                 .on("keydown", ["which", "shiftKey"], "handleCalendarKeyDown");
 
-            // use mousedown instead of click to prevent loosing focus
-            calendar
-                .on("mousedown a", this, "handleCalendarNavClick")
-                .on("mousedown td", this, "handleCalendarDayClick");
+            calendar.on("mousedown", this, "handleCalendarClick");
 
             // hide calendar when a user clicks somewhere outside
             DOM.on("click", this, "handleDocumentClick");
@@ -86,17 +83,21 @@
 
             return this;
         },
-        handleCalendarDayClick: function(target) {
-            this.data(CALENDAR_KEY).hide();
+        handleCalendarClick: function(target) {
+            var currentDate, targetDate;
 
-            return !this.setCalendarDate(new Date(target.data("ts")));
-        },
-        handleCalendarNavClick: function(target) {
-            var isNext = !target.next("a").length,
-                calendarDate = this.getCalendarDate(),
-                targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
+            if (target.matches("a")) {
+                currentDate = this.getCalendarDate();
+                targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + (target.next("a").length ? -1 : 1), 1);
+            } else if (target.matches("td")) {
+                this.data(CALENDAR_KEY).hide();
 
-            return !this.setCalendarDate(targetDate);
+                targetDate = new Date(target.data("ts"));
+            }
+
+            if (targetDate != null) this.setCalendarDate(targetDate);
+            // prevent input from loosing focus
+            return false;
         },
         handleCalendarKeyDown: function(which, shiftKey) {
             var calendar = this.data(CALENDAR_KEY),

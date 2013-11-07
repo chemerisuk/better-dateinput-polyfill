@@ -86,15 +86,15 @@ describe("better-dateinput-polyfill", function() {
         var now = new Date(),
             getSpy = spyOn(dateinput, "getCalendarDate").andReturn(now),
             setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput),
-            target = DOM.mock();
+            target = DOM.create("a");
 
-        dateinput.handleCalendarNavClick(target);
+        dateinput.handleCalendarClick(target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() + 1, 1));
 
         spyOn(target, "next").andReturn(dateinput);
 
-        dateinput.handleCalendarNavClick(target);
+        dateinput.handleCalendarClick(target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() - 1, 1));
     });
@@ -104,7 +104,7 @@ describe("better-dateinput-polyfill", function() {
             target = DOM.create("td").data("ts", now.getTime()),
             setSpy = spyOn(dateinput, "setCalendarDate");
 
-        dateinput.handleCalendarDayClick(target);
+        dateinput.handleCalendarClick(target);
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getTime()));
     });
 
