@@ -5,7 +5,7 @@
         COMPONENT_CLASS = "better-dateinput",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>a[unselectable=on]+a[unselectable=on]+p.$c-header+table.$c-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
+        DATEPICKER_TEMPLATE = DOM.template("div.$c>a[unselectable=on]*2+p.$c-header+table.$c-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
         zeropad = function(value) { return ("00" + value).slice(-2) },
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg };
 
@@ -19,15 +19,13 @@
                 // remove legacy dateinput if it exists
                 .set({type: "text", name: null})
                 .addClass("better-dateinput")
-                // sync value on click
-                .on("focus", "handleCalendarFocus")
                 // handle arrow keys, esc etc.
-                .on("keydown", ["which", "shiftKey"], "handleCalendarKeyDown");
+                .on("keydown", ["which", "shiftKey"], "handleCalendarKeyDown")
+                // sync picker visibility on focus/blur
+                .on("focus", "handleCalendarFocus")
+                .on("blur", "handleCalendarBlur");
 
             calendar.on("mousedown", this, "handleCalendarClick");
-
-            // hide calendar when a user clicks somewhere outside
-            DOM.on("click", this, "handleDocumentClick");
 
             this
                 .data(CALENDAR_KEY, calendar)
@@ -135,10 +133,8 @@
             // do not allow to change the value manually
             return which === 9;
         },
-        handleDocumentClick: function() {
-            var calendar = this.data(CALENDAR_KEY);
-
-            if (!this.matches(":focus")) calendar.hide();
+        handleCalendarBlur: function() {
+            this.data(CALENDAR_KEY).hide();
         },
         handleCalendarFocus: function() {
             var calendar = this.data(CALENDAR_KEY),

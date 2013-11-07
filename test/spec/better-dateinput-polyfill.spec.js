@@ -108,16 +108,10 @@ describe("better-dateinput-polyfill", function() {
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getTime()));
     });
 
-    it("should hide calendar on outer focus", function() {
-        var focusedSpy = spyOn(dateinput, "matches"),
-            hideSpy = spyOn(calendar, "hide");
+    it("should hide calendar on blur", function() {
+        var hideSpy = spyOn(calendar, "hide");
 
-        focusedSpy.andReturn(true);
-        dateinput.handleDocumentClick();
-        expect(hideSpy).not.toHaveBeenCalled();
-
-        focusedSpy.andReturn(false);
-        dateinput.handleDocumentClick();
+        dateinput.handleCalendarBlur();
         expect(hideSpy).toHaveBeenCalled();
     });
 
