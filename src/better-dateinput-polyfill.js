@@ -13,7 +13,7 @@
         // polyfill timeinput for desktop browsers
         constructor: function() {
             var calendar = DOM.create(DATEPICKER_TEMPLATE).hide(),
-                dateinput = DOM.create("input[type=hidden]", {name: this.get("name")});
+                dateinput = DOM.create("input[type=hidden]", { name: this.get("name") });
 
             this
                 // remove legacy dateinput if it exists
@@ -23,14 +23,22 @@
                 .on("keydown", ["which", "shiftKey"], "handleCalendarKeyDown")
                 // sync picker visibility on focus/blur
                 .on("focus", "handleCalendarFocus")
-                .on("blur", "handleCalendarBlur");
-
-            calendar.on("mousedown", this, "handleCalendarClick");
-
-            this
+                .on("blur", "handleCalendarBlur")
                 .data(CALENDAR_KEY, calendar)
                 .data(INPUT_KEY, dateinput)
                 .after(calendar, dateinput);
+
+            calendar.on("mousedown", this, "handleCalendarClick");
+            this.parent("form").on("reset", this, "handleFormReset");
+
+            // dunno why defaultValue syncs with value for input[type=hidden]
+            dateinput.set(this.get()).data("defaultValue", this.get());
+
+            if (this.get()) {
+                this.setCalendarDate(this.getCalendarDate());
+                // update defaultValue with formatted date
+                this.set("defaultValue", this.get());
+            }
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
@@ -71,7 +79,7 @@
                     (dDiff ? "calendar-day" : "current-calendar-day")
                 );
 
-                day.set(iterDate.getDate().toString()).data("ts", iterDate.getTime());
+                day.set(iterDate.getDate()).data("ts", iterDate.getTime());
             });
 
             // update current date
@@ -152,6 +160,9 @@
             this.setCalendarDate(value);
 
             calendar.show();
+        },
+        handleFormReset: function() {
+            this.data(INPUT_KEY).set(function() { return this.data("defaultValue") });
         }
     });
 }(window.DOM));
