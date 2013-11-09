@@ -23,6 +23,7 @@
                 .on("keydown", ["which", "shiftKey"], "handleCalendarKeyDown")
                 // sync picker visibility on focus/blur
                 .on("focus", "handleCalendarFocus")
+                .on("click", "handleCalendarFocus")
                 .on("blur", "handleCalendarBlur")
                 .data(CALENDAR_KEY, calendar)
                 .data(INPUT_KEY, dateinput)
@@ -49,11 +50,12 @@
             return new Date(parseFloat(isoParts[0]), parseFloat(isoParts[1]) - 1, parseFloat(isoParts[2]));
         },
         setCalendarDate: function(value) {
+            value = value || new Date();
+
             var calendar = this.data(CALENDAR_KEY),
-                now = new Date(),
-                year = (value || now).getFullYear(),
-                month = (value || now).getMonth(),
-                date = (value || now).getDate(),
+                year = value.getFullYear(),
+                month = value.getMonth(),
+                date = value.getDate(),
                 iterDate = new Date(year, month, 0);
             // update caption
             calendar.find("p").i18n("calendar.month." + month, {year: year});
@@ -85,7 +87,7 @@
             // update current date
             this.data(INPUT_KEY).set(year + "-" + zeropad(month + 1) + "-" + zeropad(date));
 
-            if (value) this.set(ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
+            if (arguments[0]) this.set(ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
 
             return this;
         },
