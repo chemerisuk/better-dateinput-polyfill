@@ -1,11 +1,11 @@
-(function(DOM) {
+(function(DOM, DAYS, MONTHS) {
     "use strict";
 
     var htmlEl = DOM.find("html"),
         COMPONENT_CLASS = "better-dateinput",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>a[unselectable=on]*2+p.$c-header+table.$c-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
+        DATEPICKER_TEMPLATE = DOM.template("div.${c}>a[unselectable=on]*2+p.${c}-header+table.${c}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
         zeropad = function(value) { return ("00" + value).slice(-2) },
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg };
 
@@ -20,7 +20,7 @@
                 .set({type: "text", name: null})
                 .addClass("better-dateinput")
                 // handle arrow keys, esc etc.
-                .on("keydown", ["which", "shiftKey"], "handleCalendarKeyDown")
+                .on("keydown", "handleCalendarKeyDown", ["which", "shiftKey"])
                 // sync picker visibility on focus/blur
                 .on("focus", "handleCalendarFocus")
                 .on("click", "handleCalendarFocus")
@@ -61,10 +61,10 @@
                 date = value.getDate(),
                 iterDate = new Date(year, month, 0);
             // update caption
-            calendar.find("p").i18n("calendar.month." + month, {year: year});
+            calendar.find("p").i18n(MONTHS[month], {year: year});
             // update weekday captions
             calendar.findAll("th").each(function(el, index) {
-                el.i18n("calendar.weekday." + ampm(!index ? 7 : index, index + 1));
+                el.i18n(DAYS[ampm(index ? index - 1 : 6, index)]);
             });
             // move to beginning of current month week
             iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
@@ -174,4 +174,25 @@
             this.data(INPUT_KEY).set(function() { return this.data("defaultValue") });
         }
     });
-}(window.DOM));
+}(window.DOM, [
+    "Mo",
+    "Tu",
+    "We",
+    "Th",
+    "Fr",
+    "Sa",
+    "Su"
+], [
+    "January ${year}",
+    "February ${year}",
+    "March ${year}",
+    "April ${year}",
+    "May ${year}",
+    "June ${year}",
+    "July ${year}",
+    "August ${year}",
+    "September ${year}",
+    "October ${year}",
+    "November ${year}",
+    "December ${year}"
+]));

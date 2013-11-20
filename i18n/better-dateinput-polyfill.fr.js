@@ -1,23 +1,23 @@
-DOM.importStrings({
+DOM.importStrings("fr", {
     // days of week
-    "calendar.weekday.1": "Lu",
-    "calendar.weekday.2": "Ma",
-    "calendar.weekday.3": "Me",
-    "calendar.weekday.4": "Je",
-    "calendar.weekday.5": "Ve",
-    "calendar.weekday.6": "Sa",
-    "calendar.weekday.7": "Di",
+    "Mo": "Lu",
+    "Tu": "Ma",
+    "We": "Me",
+    "Th": "Je",
+    "Fr": "Ve",
+    "Sa": "Sa",
+    "Su": "Di",
     // monthes
-    "calendar.month.0": "Janvier {year}",
-    "calendar.month.1": "Février {year}",
-    "calendar.month.2": "Mars {year}",
-    "calendar.month.3": "Avril {year}",
-    "calendar.month.4": "Mai {year}",
-    "calendar.month.5": "Juin {year}",
-    "calendar.month.6": "Juillet {year}",
-    "calendar.month.7": "Août {year}",
-    "calendar.month.8": "Septembre {year}",
-    "calendar.month.9": "Octobre {year}",
-    "calendar.month.10": "Novembre {year}",
-    "calendar.month.11": "Decembre {year}"
-}, "fr");
+    "January ${year}": "Janvier ${year}",
+    "February ${year}": "Février ${year}",
+    "March ${year}": "Mars ${year}",
+    "April ${year}": "Avril ${year}",
+    "May ${year}": "Mai ${year}",
+    "June ${year}": "Juin ${year}",
+    "July ${year}": "Juillet ${year}",
+    "August ${year}": "Août ${year}",
+    "September ${year}": "Septembre ${year}",
+    "October ${year}": "Octobre ${year}",
+    "November ${year}": "Novembre ${year}",
+    "December ${year}": "Decembre ${year}"
+});

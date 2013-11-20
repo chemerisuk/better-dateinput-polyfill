@@ -4,7 +4,7 @@
 }
 
 .better-dateinput-calendar {
-    display: inline-block !important;
+    display: inline-block;
 
     position: relative;
     z-index: 99;
@@ -37,8 +37,7 @@
 }
 
 .better-dateinput-calendar[aria-hidden=true] {
-    left: -999em;
-    top: -999em;
+    display: inline-block;
 
     -webkit-transform: scale(0, 0) translateY(-10em);
     transform: scale(0, 0) translateY(-10em);
