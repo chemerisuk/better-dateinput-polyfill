@@ -28,7 +28,6 @@ Then append the following script on your page:
     ...
     <script src="bower_components/better-dom/dist/better-dom.js"></script>
     <script src="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
-    <script src="bower_components/better-dateinput-polyfill/i18n/better-dateinput-polyfill.en.js"></script>
 </body>
 </html>
 ```
