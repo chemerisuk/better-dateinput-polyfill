@@ -47,12 +47,15 @@
         getCalendarDate: function() {
             var isoParts = (this.data(INPUT_KEY).get() || "").split("-");
 
+            if (isoParts.length < 3) return new Date();
+
             return new Date(parseFloat(isoParts[0]), parseFloat(isoParts[1]) - 1, parseFloat(isoParts[2]));
         },
         setCalendarDate: function(value) {
             value = value || new Date();
 
             var calendar = this.data(CALENDAR_KEY),
+                dateinput = this.data(INPUT_KEY),
                 year = value.getFullYear(),
                 month = value.getMonth(),
                 date = value.getDate(),
@@ -85,9 +88,13 @@
             });
 
             // update current date
-            this.data(INPUT_KEY).set(year + "-" + zeropad(month + 1) + "-" + zeropad(date));
-
-            if (arguments[0]) this.set(ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
+            if (arguments[0]) {
+                dateinput.set(year + "-" + zeropad(month + 1) + "-" + zeropad(date));
+                this.set(ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
+            } else {
+                dateinput.set("");
+                this.set("");
+            }
 
             return this;
         },
@@ -120,7 +127,7 @@
             } else if (which === 27 || which === 9 || which === 13) {
                 calendar.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === 8 || which === 46) {
-                this.set("").handleCalendarFocus(); // BACKSPACE, DELETE clear value
+                this.setCalendarDate(null); // BACKSPACE, DELETE clear value
             } else {
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
