@@ -5,15 +5,14 @@
         COMPONENT_CLASS = "better-dateinput",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.${c}>a[unselectable=on]*2+p.${c}-header+table.${c}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
         zeropad = function(value) { return ("00" + value).slice(-2) },
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg };
 
     DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
         // polyfill timeinput for desktop browsers
         constructor: function() {
-            var calendar = DOM.create(DATEPICKER_TEMPLATE).hide(),
-                dateinput = DOM.create("input[type=hidden]", { name: this.get("name") });
+            var calendar = DOM.create("div.${c}>a[unselectable=on]*2+p.${c}-header+table.${c}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
+                dateinput = DOM.create("input[type=hidden name=${name}]", {name: this.get("name")});
 
             this
                 // remove legacy dateinput if it exists
@@ -27,7 +26,7 @@
                 .on("blur", "handleCalendarBlur")
                 .data(CALENDAR_KEY, calendar)
                 .data(INPUT_KEY, dateinput)
-                .after(calendar, dateinput);
+                .after(calendar.hide(), dateinput);
 
             calendar.on("mousedown", this, "handleCalendarClick");
             this.parent("form").on("reset", this, "handleFormReset");
