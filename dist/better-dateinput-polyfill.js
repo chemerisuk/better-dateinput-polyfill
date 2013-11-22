@@ -1,50 +1,52 @@
 /**
- * @file better-dateinput-polyfill.js
- * @version 1.2.2 2013-11-06T12:20:46
+ * @file src/better-dateinput-polyfill.js
+ * @version 1.3.0-rc.1 2013-11-23T00:02:31
  * @overview input[type=date] polyfill for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
  * @see https://github.com/chemerisuk/better-dateinput-polyfill
  */
-(function(DOM) {
+(function(DOM, DAYS, MONTHS) {
     "use strict";
 
-    var AMPM = DOM.find("html").get("lang") === "en-US",
+    var htmlEl = DOM.find("html"),
         COMPONENT_CLASS = "better-dateinput",
-        CALENDAR_CLASS = COMPONENT_CLASS + "-calendar",
         INPUT_KEY = "date-input",
         CALENDAR_KEY = "date-picker",
-        DATEPICKER_TEMPLATE = DOM.template("div.$c>p.$c-header+button+button+table.$c-days>thead>tr>th[data-i18n=calendar.weekday.$]*7+tbody>tr*6>td*7", {c: CALENDAR_CLASS}),
-        zeropad = function(value) { return ("00" + value).slice(-2) };
+        zeropad = function(value) { return ("00" + value).slice(-2) },
+        ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg };
 
     DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
         // polyfill timeinput for desktop browsers
         constructor: function() {
-            var calendar = DOM.create(DATEPICKER_TEMPLATE).hide(),
-                dateinput = DOM.create("input[type=hidden]", {name: this.get("name")});
-
-            if (AMPM) calendar.find("th").before(calendar.findAll("th")[6]);
+            var calendar = DOM.create("div.${c}>a[unselectable=on]*2+p.${c}-header+table.${c}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
+                dateinput = DOM.create("input[type=hidden name=${name}]", {name: this.get("name")});
 
             this
                 // remove legacy dateinput if it exists
                 .set({type: "text", name: null})
                 .addClass("better-dateinput")
-                // sync value on click
-                .on("focus", "handleCalendarFocus")
                 // handle arrow keys, esc etc.
-                .on("keydown", ["which", "shiftKey"], "handleCalendarKeyDown");
-
-            calendar
-                .on("click button", this, "handleCalendarNavClick")
-                .on("click td", this, "handleCalendarDayClick");
-
-            // hide calendar when a user clicks somewhere outside
-            DOM.on("click", this, "handleDocumentClick");
-
-            this
+                .on("keydown", "handleCalendarKeyDown", ["which", "shiftKey"])
+                // sync picker visibility on focus/blur
+                .on("focus", "handleCalendarFocus")
+                .on("click", "handleCalendarFocus")
+                .on("blur", "handleCalendarBlur")
                 .data(CALENDAR_KEY, calendar)
                 .data(INPUT_KEY, dateinput)
-                .after(calendar, dateinput);
+                .after(calendar.hide(), dateinput);
+
+            calendar.on("mousedown", this, "handleCalendarClick");
+            this.parent("form").on("reset", this, "handleFormReset");
+
+            // dunno why defaultValue syncs with value for input[type=hidden]
+            dateinput.set(this.get()).data("defaultValue", this.get());
+
+            if (this.get()) {
+                this.setCalendarDate(this.getCalendarDate());
+                // update defaultValue with formatted date
+                this.set("defaultValue", this.get());
+            }
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
@@ -52,23 +54,29 @@
         getCalendarDate: function() {
             var isoParts = (this.data(INPUT_KEY).get() || "").split("-");
 
+            if (isoParts.length < 3) return new Date();
+
             return new Date(parseFloat(isoParts[0]), parseFloat(isoParts[1]) - 1, parseFloat(isoParts[2]));
         },
         setCalendarDate: function(value) {
-            // FIXME: remove DOM.mock() in future
-            var calendarCaption = this.data(CALENDAR_KEY).find("p") || DOM.mock(),
-                calendarDays = this.data(CALENDAR_KEY).findAll("td") || DOM.mock(),
-                now = new Date(),
-                year = (value || now).getFullYear(),
-                month = (value || now).getMonth(),
-                date = (value || now).getDate(),
+            value = value || new Date();
+
+            var calendar = this.data(CALENDAR_KEY),
+                dateinput = this.data(INPUT_KEY),
+                year = value.getFullYear(),
+                month = value.getMonth(),
+                date = value.getDate(),
                 iterDate = new Date(year, month, 0);
             // update caption
-            calendarCaption.i18n("calendar.month." + month, {year: year});
-            // move to begin of the start week
-            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - (AMPM ? 1 : 0));
-
-            calendarDays.each(function(day) {
+            calendar.find("p").i18n(MONTHS[month], {year: year});
+            // update weekday captions
+            calendar.findAll("th").each(function(el, index) {
+                el.i18n(DAYS[ampm(index ? index - 1 : 6, index)]);
+            });
+            // move to beginning of current month week
+            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
+            // update day numbers
+            calendar.findAll("td").each(function(day) {
                 iterDate.setDate(iterDate.getDate() + 1);
 
                 var mDiff = month - iterDate.getMonth(),
@@ -83,29 +91,34 @@
                     (dDiff ? "calendar-day" : "current-calendar-day")
                 );
 
-                day.set(iterDate.getDate().toString()).data("ts", iterDate.getTime());
+                day.set(iterDate.getDate()).data("ts", iterDate.getTime());
             });
 
             // update current date
-            this.data(INPUT_KEY).set(year + "-" + zeropad(month + 1) + "-" + zeropad(date));
-
-            if (value) this.set((AMPM ? month + 1 : date) + "/" + (AMPM ? date : month + 1) + "/" + year);
+            if (arguments[0]) {
+                dateinput.set(year + "-" + zeropad(month + 1) + "-" + zeropad(date));
+                this.set(ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
+            } else {
+                dateinput.set("");
+                this.set("");
+            }
 
             return this;
         },
-        handleCalendarDayClick: function(target) {
-            this.setCalendarDate(new Date(target.data("ts")));
-            // prevent focusing after click if the input is inside of a label
-            return false;
-        },
-        handleCalendarNavClick: function(target) {
-            var isNext = !target.next("button").length,
-                calendarDate = this.getCalendarDate(),
-                targetDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + (isNext ? 1 : -1), 1);
+        handleCalendarClick: function(target) {
+            var currentDate, targetDate;
 
-            this.setCalendarDate(targetDate);
-            this.fire("focus");
+            if (target.matches("a")) {
+                currentDate = this.getCalendarDate();
+                targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + (target.next("a").length ? -1 : 1), 1);
+            } else if (target.matches("td")) {
+                this.data(CALENDAR_KEY).hide();
 
+                targetDate = new Date(target.data("ts"));
+            }
+
+            if (targetDate != null) this.setCalendarDate(targetDate);
+            // prevent input from loosing focus
             return false;
         },
         handleCalendarKeyDown: function(which, shiftKey) {
@@ -113,14 +126,15 @@
                 currentDate = this.getCalendarDate(),
                 delta = 0;
 
-            if (which === 13) {
-                calendar.hide(); // hide picker to submit form
-            } else if (which === 32) {
-                calendar.toggle(); // show/hide calendar on enter key
-            } else if (which === 27 || which === 9) {
-                calendar.hide(); // esc or tab key hides calendar
+            // ENTER key should submit form if calendar is hidden
+            if (calendar.matches(":hidden") && which === 13) return true;
+
+            if (which === 32) {
+                calendar.toggle(); // SPACE key toggles calendar visibility
+            } else if (which === 27 || which === 9 || which === 13) {
+                calendar.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === 8 || which === 46) {
-                this.set("").handleCalendarFocus(); // backspace or delete clears the value
+                this.setCalendarDate(null); // BACKSPACE, DELETE clear value
             } else {
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
@@ -139,15 +153,12 @@
                     this.setCalendarDate(currentDate);
                 }
             }
-
-            // prevent default action except if it was TAB or ENTER
-            // so do not allow to change the value via manual input
-            return which === 9 || which === 13;
+            // prevent default action except if it was TAB so
+            // do not allow to change the value manually
+            return which === 9;
         },
-        handleDocumentClick: function() {
-            var calendar = this.data(CALENDAR_KEY);
-
-            if (!this.matches(":focus")) calendar.hide();
+        handleCalendarBlur: function() {
+            this.data(CALENDAR_KEY).hide();
         },
         handleCalendarFocus: function() {
             var calendar = this.data(CALENDAR_KEY),
@@ -155,8 +166,8 @@
                 value, year, month, date;
 
             if (parts.length === 3) {
-                date = parseFloat(parts[AMPM ? 1 : 0]);
-                month = parseFloat(parts[AMPM ? 0 : 1]) - 1;
+                date = parseFloat(parts[ampm(1, 0)]);
+                month = parseFloat(parts[ampm(0, 1)]) - 1;
                 year = parseFloat(parts[2]);
 
                 value = new Date(year, month, date);
@@ -165,6 +176,32 @@
             this.setCalendarDate(value);
 
             calendar.show();
+        },
+        handleFormReset: function() {
+            this.data(INPUT_KEY).set(function(value, index, el) {
+                return el.data("defaultValue");
+            });
         }
     });
-}(window.DOM));
+}(window.DOM, [
+    "Mo",
+    "Tu",
+    "We",
+    "Th",
+    "Fr",
+    "Sa",
+    "Su"
+], [
+    "January ${year}",
+    "February ${year}",
+    "March ${year}",
+    "April ${year}",
+    "May ${year}",
+    "June ${year}",
+    "July ${year}",
+    "August ${year}",
+    "September ${year}",
+    "October ${year}",
+    "November ${year}",
+    "December ${year}"
+]));
