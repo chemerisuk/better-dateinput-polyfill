@@ -170,7 +170,9 @@
             calendar.show();
         },
         handleFormReset: function() {
-            this.data(INPUT_KEY).set(function() { return this.data("defaultValue") });
+            this.data(INPUT_KEY).set(function(value, index, el) {
+                return el.data("defaultValue");
+            });
         }
     });
 }(window.DOM, [
