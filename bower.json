@@ -4,7 +4,6 @@
     "main": [
         "dist/better-dateinput-polyfill.js",
         "dist/better-dateinput-polyfill.css",
-        "i18n/better-dateinput-polyfill.en.js",
         "i18n/better-dateinput-polyfill.ru.js",
         "i18n/better-dateinput-polyfill.fr.js"
     ],
@@ -17,6 +16,6 @@
         "better-dom"
     ],
     "dependencies": {
-        "better-dom": "~1.5.5"
+        "better-dom": "~1.6.0"
     }
 }

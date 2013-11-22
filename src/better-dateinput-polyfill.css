@@ -4,14 +4,17 @@
 }
 
 .better-dateinput-calendar {
-    position: absolute;
-    z-index: 9999;
+    display: inline-block;
+
+    position: relative;
+    z-index: 99;
+    overflow: hidden;
     cursor: default;
 
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    width: 19em;
+    vertical-align: bottom;
+    margin-left: -12.5em;
+    margin-bottom: -18.5em;
 
     color: #333;
     background: #FFF;
@@ -20,6 +23,24 @@
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+    -webkit-transition: -webkit-transform 0.2s;
+    transition: transform 0.2s;
+
+    -webkit-transform: scale(1, 1);
+    transform: scale(1, 1);
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.better-dateinput-calendar[aria-hidden=true] {
+    display: inline-block;
+
+    -webkit-transform: scale(0, 0) translateY(-10em);
+    transform: scale(0, 0) translateY(-10em);
 }
 
 .better-dateinput-calendar-header {
@@ -29,27 +50,16 @@
     text-align: center;
 }
 
-.better-dateinput-calendar > button {
-    position: absolute;
-    left: 0.5em;
-    top: 0.5em;
-
-    font-size: 1em;
-    height: 1.5em;
-    width: 1.5em;
-    display: block;
-
-    padding: 0;
-    margin: 0;
-    border: 0;
+.better-dateinput-calendar > a {
+    float: left;
+    width: 1em;
+    padding: 0.25em;
+    margin: 0.5em;
+    text-align: center;
     border-radius: 0.25em;
-
-    outline: none;
-    background: none;
-    cursor: default;
 }
 
-.better-dateinput-calendar > button:before {
+.better-dateinput-calendar > a:before {
     content: "";
     display: inline-block;
     height: 0;
@@ -60,12 +70,11 @@
     border-right-color: inherit;
 }
 
-.better-dateinput-calendar > button + button {
-    left: inherit;
-    right: 0.5em;
+.better-dateinput-calendar > a + a {
+    float: right;
 }
 
-.better-dateinput-calendar > button + button:before {
+.better-dateinput-calendar > a + a:before {
     border-width: 0.45em 0 0.45em 0.75em;
     border-color: transparent;
     border-left-color: inherit;
@@ -92,7 +101,7 @@
     text-shadow: 1px 1px 0 #EEE;
 }
 
-.better-dateinput-calendar > button:hover,
+.better-dateinput-calendar > a:hover,
 .better-dateinput-calendar-days td:hover {
     background: #EEE;
 }
