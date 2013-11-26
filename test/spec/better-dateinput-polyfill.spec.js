@@ -12,7 +12,6 @@ describe("better-dateinput-polyfill", function() {
     });
 
     it("should toggle calendar visibility on space key", function() {
-        spyOn(dateinput, "getCalendarDate").andReturn(new Date());
         spyOn(dateinput, "get").andReturn("");
 
         var toggleSpy = spyOn(calendar, "toggle");
