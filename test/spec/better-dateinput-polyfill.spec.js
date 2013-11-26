@@ -17,21 +17,21 @@ describe("better-dateinput-polyfill", function() {
 
         var toggleSpy = spyOn(calendar, "toggle");
 
-        dateinput.handleCalendarKeyDown(32, false);
+        dateinput.onCalendarKeyDown(32, false);
         expect(toggleSpy).toHaveBeenCalled();
     });
 
     it("should hide calendar on escape key", function() {
         var spy = spyOn(calendar, "hide");
 
-        dateinput.handleCalendarKeyDown(27, false);
+        dateinput.onCalendarKeyDown(27, false);
         expect(spy).toHaveBeenCalled();
     });
 
     it("should prevent default action on any key except tab", function() {
-        expect(dateinput.handleCalendarKeyDown(9, false)).not.toBe(false);
-        expect(dateinput.handleCalendarKeyDown(111, false)).toBe(false);
-        expect(dateinput.handleCalendarKeyDown(13, false)).toBe(true);
+        expect(dateinput.onCalendarKeyDown(9, false)).not.toBe(false);
+        expect(dateinput.onCalendarKeyDown(111, false)).toBe(false);
+        expect(dateinput.onCalendarKeyDown(13, false)).toBe(true);
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
@@ -43,9 +43,9 @@ describe("better-dateinput-polyfill", function() {
             return dateinput;
         });
 
-        dateinput.handleCalendarKeyDown(8, false);
+        dateinput.onCalendarKeyDown(8, false);
         expect(spy).toHaveBeenCalled();
-        dateinput.handleCalendarKeyDown(46, false);
+        dateinput.onCalendarKeyDown(46, false);
         expect(spy.callCount).toBe(2);
     });
 
@@ -57,7 +57,7 @@ describe("better-dateinput-polyfill", function() {
             expectKey = function(key, altKey, expected) {
                 getSpy.andReturn(new Date(now.getTime()));
 
-                dateinput.handleCalendarKeyDown(key, altKey);
+                dateinput.onCalendarKeyDown(key, altKey);
                 expect(setSpy).toHaveBeenCalledWith(expected);
             };
 
@@ -88,13 +88,13 @@ describe("better-dateinput-polyfill", function() {
             setSpy = spyOn(dateinput, "setCalendarDate").andReturn(dateinput),
             target = DOM.mock("a");
 
-        dateinput.handleCalendarClick(target);
+        dateinput.onCalendarClick(target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() + 1, 1));
 
         spyOn(target, "next").andReturn(dateinput);
 
-        dateinput.handleCalendarClick(target);
+        dateinput.onCalendarClick(target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getFullYear(), now.getMonth() - 1, 1));
     });
@@ -104,14 +104,14 @@ describe("better-dateinput-polyfill", function() {
             target = DOM.mock("td").data("ts", now.getTime()),
             setSpy = spyOn(dateinput, "setCalendarDate");
 
-        dateinput.handleCalendarClick(target);
+        dateinput.onCalendarClick(target);
         expect(setSpy).toHaveBeenCalledWith(new Date(now.getTime()));
     });
 
     it("should hide calendar on blur", function() {
         var hideSpy = spyOn(calendar, "hide");
 
-        dateinput.handleCalendarBlur();
+        dateinput.onCalendarBlur();
         expect(hideSpy).toHaveBeenCalled();
     });
 

@@ -19,16 +19,16 @@
                 .set({type: "text", name: null})
                 .addClass("better-dateinput")
                 // handle arrow keys, esc etc.
-                .on("keydown", "handleCalendarKeyDown", ["which", "shiftKey"])
+                .on("keydown", this.onCalendarKeyDown, ["which", "shiftKey"])
                 // sync picker visibility on focus/blur
-                .on("focus", "handleCalendarFocus")
-                .on("click", "handleCalendarFocus")
-                .on("blur", "handleCalendarBlur")
+                .on("focus", this.onCalendarFocus)
+                .on("click", this.onCalendarFocus)
+                .on("blur", this.onCalendarBlur)
                 .data(CALENDAR_KEY, calendar)
                 .data(INPUT_KEY, dateinput)
                 .after(calendar.hide(), dateinput);
 
-            calendar.on("mousedown", this, "handleCalendarClick");
+            calendar.on("mousedown", this, this.onCalendarClick);
             this.parent("form").on("reset", this, "handleFormReset");
 
             // dunno why defaultValue syncs with value for input[type=hidden]
@@ -97,7 +97,7 @@
 
             return this;
         },
-        handleCalendarClick: function(target) {
+        onCalendarClick: function(target) {
             var currentDate, targetDate;
 
             if (target.matches("a")) {
@@ -113,7 +113,7 @@
             // prevent input from loosing focus
             return false;
         },
-        handleCalendarKeyDown: function(which, shiftKey) {
+        onCalendarKeyDown: function(which, shiftKey) {
             var calendar = this.data(CALENDAR_KEY),
                 currentDate = this.getCalendarDate(),
                 delta = 0;
@@ -149,10 +149,10 @@
             // do not allow to change the value manually
             return which === 9;
         },
-        handleCalendarBlur: function() {
+        onCalendarBlur: function() {
             this.data(CALENDAR_KEY).hide();
         },
-        handleCalendarFocus: function() {
+        onCalendarFocus: function() {
             var calendar = this.data(CALENDAR_KEY),
                 parts = this.get().split("/"),
                 value, year, month, date;
@@ -170,9 +170,7 @@
             calendar.show();
         },
         handleFormReset: function() {
-            this.data(INPUT_KEY).set(function(value, index, el) {
-                return el.data("defaultValue");
-            });
+            this.data(INPUT_KEY).set(function(el) { return el.data("defaultValue") });
         }
     });
 }(window.DOM, [
