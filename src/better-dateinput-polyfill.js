@@ -46,8 +46,12 @@
             this.parent("form").on("reset", this, this.onFormReset);
             // patch set method to update visible input as well
             dateinput.set = (function(el, setter) {
+                var caption = calendar.find("p"),
+                    weekdays = calendar.findAll("th"),
+                    days = calendar.findAll("td");
+
                 return function() {
-                    setter.apply(dateinput, arguments);
+                    setter.apply(this, arguments);
 
                     if (arguments.length === 1) {
                         var parts = dateparts(this.get()),
@@ -63,11 +67,10 @@
                             year = now.getFullYear();
                             month = now.getMonth();
                         }
-
                         // update caption
-                        calendar.find("p").i18n(I18N_MONTHS[month], {year: year});
+                        caption.i18n(I18N_MONTHS[month], {year: year});
                         // update weekday captions
-                        calendar.findAll("th").each(function(el, index) {
+                        weekdays.each(function(el, index) {
                             el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
                         });
 
@@ -75,7 +78,7 @@
                         // move to beginning of current month week
                         iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
                         // update day numbers
-                        calendar.findAll("td").each(function(day) {
+                        days.each(function(day) {
                             iterDate.setDate(iterDate.getDate() + 1);
 
                             var mDiff = month - iterDate.getMonth(),
@@ -88,14 +91,14 @@
                                 (dDiff ? "calendar-day" : "current-calendar-day")
                             );
 
-                            day.set(iterDate.getDate()).data("ts", iterDate.getTime());
+                            day.set(iterDate.getDate()).data("ts", +iterDate);
                         });
                     }
 
                     return this;
                 };
             }(this, dateinput.set));
-            // dunno why defaultValue syncs with value for input[type=hidden]
+            // update hidden input value and refresh all visible controls
             dateinput.set(this.get()).data("defaultValue", dateinput.get());
             // update defaultValue with formatted date
             this.set("defaultValue", this.get());
