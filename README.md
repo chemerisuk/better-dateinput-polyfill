@@ -4,6 +4,15 @@ better-dateinput-polyfill [![Build Status](https://api.travis-ci.org/chemerisuk/
 
 [VIEW DEMO](http://chemerisuk.github.io/better-dateinput-polyfill/)
 
+## Features
+* does nothing on mobile browsers and normalizes the widget for desktop browsers
+* [living extension](https://github.com/chemerisuk/better-dom/wiki/Living-extensions) - no init calls are required for a new content
+* supports US variant of date (just use `lang="en-US"` on `<html>`)
+* calendar suppors navigation via keyboard
+* allows to set value programmatically, but the string should be in ISO (yyyy-MM-dd) format
+* fully customizable via css classes
+* restores initial value on parent form reset
+
 Installing
 ----------
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
