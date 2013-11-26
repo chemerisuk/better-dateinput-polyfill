@@ -1,18 +1,16 @@
-(function(DOM, DAYS, MONTHS) {
+(function(DOM, CALENDAR_KEY, INPUT_KEY, COMPONENT_CLASS, I18N_DAYS, I18N_MONTHS) {
     "use strict";
 
+    if ("orientation" in window) return; // skip mobile/tablet browsers
+
     var htmlEl = DOM.find("html"),
-        COMPONENT_CLASS = "better-dateinput",
-        INPUT_KEY = "date-input",
-        CALENDAR_KEY = "date-picker",
         zeropad = function(value) { return ("00" + value).slice(-2) },
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg };
 
-    DOM.extend("input[type=date]", "orientation" in window ? function() { this.addClass(COMPONENT_CLASS) } : {
-        // polyfill timeinput for desktop browsers
+    DOM.extend("input[type=date]", {
         constructor: function() {
             var calendar = DOM.create("div.${c}>a[unselectable=on]*2+p.${c}-header+table.${c}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
-                dateinput = DOM.create("input[type=hidden name=${name}]", {name: this.get("name")});
+                dateinput = DOM.create("input[type=hidden name=${n}]", {n: this.get("name")});
 
             this
                 // remove legacy dateinput if it exists
@@ -29,7 +27,7 @@
                 .after(calendar.hide(), dateinput);
 
             calendar.on("mousedown", this, this.onCalendarClick);
-            this.parent("form").on("reset", this, "handleFormReset");
+            this.parent("form").on("reset", this, this.onFormReset);
 
             // dunno why defaultValue syncs with value for input[type=hidden]
             dateinput.set(this.get()).data("defaultValue", this.get());
@@ -60,10 +58,10 @@
                 date = value.getDate(),
                 iterDate = new Date(year, month, 0);
             // update caption
-            calendar.find("p").i18n(MONTHS[month], {year: year});
+            calendar.find("p").i18n(I18N_MONTHS[month], {year: year});
             // update weekday captions
             calendar.findAll("th").each(function(el, index) {
-                el.i18n(DAYS[ampm(index ? index - 1 : 6, index)]);
+                el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
             });
             // move to beginning of current month week
             iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
@@ -169,11 +167,11 @@
 
             calendar.show();
         },
-        handleFormReset: function() {
+        onFormReset: function() {
             this.data(INPUT_KEY).set(function(el) { return el.data("defaultValue") });
         }
     });
-}(window.DOM, [
+}(window.DOM, "date-picker", "date-input", "better-dateinput", [
     "Mo",
     "Tu",
     "We",

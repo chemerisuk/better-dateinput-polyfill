@@ -1,4 +1,4 @@
-.better-dateinput {
+.better-dateinput, input[type=date] {
     width: 8em;
     text-align: center;
 }
