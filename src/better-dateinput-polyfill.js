@@ -53,15 +53,19 @@
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged: function(setter, value) {
+        onValueChanged: function(setter) {
+            var dateinput = this.data(INPUT_KEY),
+                calendar = this.data(CALENDAR_KEY),
+                parts, year, month, date, now, iterDate;
+
+            setter.apply(dateinput, Array.prototype.slice.call(arguments, 1));
+
             if (arguments.length === 2) {
-                var calendar = this.data(CALENDAR_KEY),
-                    parts = dateparts(value),
-                    year = parts[0],
-                    month = parts[1],
-                    date = parts[2],
-                    now = new Date(),
-                    iterDate;
+                parts = dateparts(dateinput.get());
+                year = parts[0];
+                month = parts[1];
+                date = parts[2];
+                now = new Date();
 
                 this.set(parts.length < 3 ? "" : ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
 
@@ -97,7 +101,7 @@
                 });
             }
 
-            return setter.apply(this.data(INPUT_KEY), Array.prototype.slice.call(arguments, 1));
+            return dateinput;
         },
         onCalendarClick: function(target) {
             var calendar = this.data(CALENDAR_KEY),
