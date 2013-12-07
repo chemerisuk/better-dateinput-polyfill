@@ -97,7 +97,7 @@
                 });
             }
 
-            return setter.apply(this.data(INPUT_KEY), arguments);
+            return setter.apply(this.data(INPUT_KEY), Array.prototype.slice.call(arguments, 1));
         },
         onCalendarClick: function(target) {
             var calendar = this.data(CALENDAR_KEY),
