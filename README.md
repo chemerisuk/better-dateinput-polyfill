@@ -6,7 +6,7 @@ better-dateinput-polyfill [![Build Status](https://api.travis-ci.org/chemerisuk/
 
 ## Features
 * does nothing on mobile browsers and normalizes the widget for desktop browsers
-* [living extension](https://github.com/chemerisuk/better-dom/wiki/Living-extensions) - no init calls are required for a new content
+* [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for current and future content
 * supports US variant of date (just use `lang="en-US"` on `<html>`)
 * calendar suppors navigation via keyboard
 * allows to set value programmatically, but the string should be in ISO (yyyy-MM-dd) format
@@ -29,8 +29,8 @@ Then append the following script on your page:
     ...
     <link href="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.css" rel="stylesheet"/>
     <!--[if IE]>
-        <link href="bower_components/better-dom/dist/better-dom.htc" rel="htc" />
-        <script src="bower_components/html5shiv/dist/html5shiv.js"></script>
+        <link href="bower_components/better-dom/dist/better-dom-legacy.htc" rel="htc"/>
+        <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
     <![endif]-->
 </head>
 <body>
@@ -40,3 +40,10 @@ Then append the following script on your page:
 </body>
 </html>
 ```
+
+## Browser support
+* Chrome
+* Safari 6.0+
+* Firefox 16+
+* Opera 12.10+
+* IE8+

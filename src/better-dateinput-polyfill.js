@@ -45,65 +45,59 @@
             calendar.on("mousedown", this, this.onCalendarClick);
             this.parent("form").on("reset", this, this.onFormReset);
             // patch set method to update visible input as well
-            dateinput.set = (function(el, setter) {
-                var caption = calendar.find("p"),
-                    weekdays = calendar.findAll("th"),
-                    days = calendar.findAll("td");
-
-                return function() {
-                    setter.apply(this, arguments);
-
-                    if (arguments.length === 1) {
-                        var parts = dateparts(this.get()),
-                            year = parts[0],
-                            month = parts[1],
-                            date = parts[2],
-                            now = new Date(),
-                            iterDate;
-
-                        el.set(parts.length < 3 ? "" : ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
-
-                        if (parts.length < 3) {
-                            year = now.getFullYear();
-                            month = now.getMonth();
-                        }
-                        // update caption
-                        caption.i18n(I18N_MONTHS[month], {year: year});
-                        // update weekday captions
-                        weekdays.each(function(el, index) {
-                            el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
-                        });
-
-                        iterDate = new Date(year, month, 0);
-                        // move to beginning of current month week
-                        iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
-                        // update day numbers
-                        days.each(function(day) {
-                            iterDate.setDate(iterDate.getDate() + 1);
-
-                            var mDiff = month - iterDate.getMonth(),
-                                dDiff = date - iterDate.getDate();
-
-                            if (year !== iterDate.getFullYear()) mDiff *= -1;
-
-                            day.set("class", mDiff ?
-                                (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                                (dDiff ? "calendar-day" : "current-calendar-day")
-                            );
-
-                            day.set(iterDate.getDate()).data("ts", +iterDate);
-                        });
-                    }
-
-                    return this;
-                };
-            }(this, dateinput.set));
+            dateinput.set = this.onValueChanged.bind(this, dateinput.set);
             // update hidden input value and refresh all visible controls
             dateinput.set(this.get()).data("defaultValue", dateinput.get());
             // update defaultValue with formatted date
             this.set("defaultValue", this.get());
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
+        },
+        onValueChanged: function(setter, value) {
+            if (arguments.length === 2) {
+                var calendar = this.data(CALENDAR_KEY),
+                    parts = dateparts(value),
+                    year = parts[0],
+                    month = parts[1],
+                    date = parts[2],
+                    now = new Date(),
+                    iterDate;
+
+                this.set(parts.length < 3 ? "" : ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
+
+                if (parts.length < 3) {
+                    year = now.getFullYear();
+                    month = now.getMonth();
+                }
+                // update caption
+                calendar.find("p").i18n(I18N_MONTHS[month], {year: year});
+                // update weekday captions
+                calendar.findAll("th").each(function(el, index) {
+                    el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
+                });
+
+                iterDate = new Date(year, month, 0);
+                // move to beginning of current month week
+                iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
+                // update day numbers
+                calendar.findAll("td").each(function(day) {
+                    iterDate.setDate(iterDate.getDate() + 1);
+
+                    var mDiff = month - iterDate.getMonth(),
+                        dDiff = date - iterDate.getDate();
+
+                    if (year !== iterDate.getFullYear()) mDiff *= -1;
+
+                    day.set("class", mDiff ?
+                        (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
+                        (dDiff ? "calendar-day" : "current-calendar-day")
+                    );
+
+                    day.set(iterDate.getDate()).data("ts", +iterDate);
+                });
+            }
+
+            return setter.apply(this.data(INPUT_KEY), arguments);
         },
         onCalendarClick: function(target) {
             var calendar = this.data(CALENDAR_KEY),
