@@ -15,7 +15,7 @@ module.exports = function(grunt) {
                 tasks: ["karma:coverage:run"]
             },
             build: {
-                files: ["src/*.js"],
+                files: ["src/*.js", "legacy/*.js"],
                 tasks: ["browserify", "karma:coverage:run"]
             }
         },
@@ -107,7 +107,7 @@ module.exports = function(grunt) {
             dist: {
                 files: {
                     "dist/<%= pkg.name %>.js": ["build/<%= pkg.name %>.js"],
-                    "dist/<%= pkg.name %>.htc": ["extra/<%= pkg.name %>.htc"]
+                    "dist/<%= pkg.name %>-legacy.js": ["build/<%= pkg.name %>-legacy.js"],
                 }
             },
             readme: {
@@ -148,6 +148,30 @@ module.exports = function(grunt) {
             }
         },
         browserify: {
+            legacy: {
+                files: {
+                    "build/better-dom-legacy.js": [
+                        "legacy/*.js",
+                        "bower_components/html5shiv/src/html5shiv.js",
+                        "bower_components/es5-shim/es5-shim.js"
+                    ]
+                },
+                options: {
+                    postBundleCB: function(err, src, next) {
+                        // append copyrights header
+                        next(err, grunt.template.process(
+                            "/**\n" +
+                            " * @file <%= pkg.name %>-legacy.js\n" +
+                            " * @version <%= pkg.version %> <%= grunt.template.today('isoDateTime') %>\n" +
+                            " * @overview <%= pkg.description %>\n" +
+                            " * @copyright <%= pkg.author %> <%= grunt.template.today('yyyy') %>\n" +
+                            " * @license <%= pkg.license %>\n" +
+                            " * @see <%= pkg.repository.url %>\n" +
+                            " */\n" +
+                        src));
+                    }
+                }
+            },
             compile: {
                 files: {
                     "build/better-dom.js": ["src/*.js"]
@@ -159,7 +183,7 @@ module.exports = function(grunt) {
                         // append copyrights header
                         next(err, grunt.template.process(
                             "/**\n" +
-                            " * @file <%= pkg.name %>\n" +
+                            " * @file <%= pkg.name %>.js\n" +
                             " * @version <%= pkg.version %> <%= grunt.template.today('isoDateTime') %>\n" +
                             " * @overview <%= pkg.description %>\n" +
                             " * @copyright <%= pkg.author %> <%= grunt.template.today('yyyy') %>\n" +
@@ -203,7 +227,7 @@ module.exports = function(grunt) {
 
             json.version = version;
 
-            grunt.file.write(filename, JSON.stringify(json, null, 4));
+            grunt.file.write(filename, JSON.stringify(json, null, 2));
         });
 
         grunt.registerTask("bumpDocsBuild", function () {
