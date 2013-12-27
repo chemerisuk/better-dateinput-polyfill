@@ -36,35 +36,49 @@
             if (this.matches(":focus")) this.fire("focus");
         },
         onValueChanged: function(dateinput, setter, caption, weekdays, days) {
-            var value, iterDate;
+            var year, month, date, iterDate;
 
             setter.apply(dateinput, Array.prototype.slice.call(arguments, 5));
 
             if (arguments.length === 6) {
-                value = new Date(dateinput.get());
+                this.set(function() {
+                    var value = new Date(dateinput.get()),
+                        result;
 
-                this.set(value.getTime() ? value.toLocaleDateString() : "");
+                    if (!value.getTime()) {
+                        value = new Date();
+                        result = "";
+                    }
 
-                if (!value.getTime()) value = new Date();
+                    month = value.getMonth();
+                    date = value.getDate();
+                    year = value.getFullYear();
+
+                    if (typeof result !== "string") {
+                        result = ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year;
+                    }
+
+                    return result;
+                });
 
                 // update caption
-                caption.i18n(I18N_MONTHS[value.getMonth()], {year: value.getFullYear()});
+                caption.i18n(I18N_MONTHS[month], {year: year});
                 // update weekday captions
                 weekdays.each(function(el, index) {
                     el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
                 });
 
-                iterDate = new Date(value.getFullYear(), value.getMonth(), 0, 12);
+                iterDate = new Date(year, month, 0, 12);
                 // move to beginning of current month week
                 iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
                 // update day numbers
                 days.set("class", function(day) {
                     iterDate.setDate(iterDate.getDate() + 1);
 
-                    var mDiff = value.getMonth() - iterDate.getMonth(),
-                        dDiff = value.getDate() - iterDate.getDate();
+                    var mDiff = month - iterDate.getMonth(),
+                        dDiff = date - iterDate.getDate();
 
-                    if (value.getFullYear() !== iterDate.getFullYear()) mDiff *= -1;
+                    if (year !== iterDate.getFullYear()) mDiff *= -1;
 
                     day.data("ts", iterDate.getTime()).set(iterDate.getDate());
 

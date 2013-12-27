@@ -12,6 +12,8 @@
     cursor: default;
 
     width: 19em;
+    height: 18.5em;
+    overflow: hidden;
     vertical-align: bottom;
     margin-left: -12.5em;
     margin-bottom: -18.5em;
@@ -24,11 +26,8 @@
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
-    -webkit-transition: -webkit-transform 0.2s;
-    transition: transform 0.2s;
-
-    -webkit-transform: scale(1, 1);
-    transform: scale(1, 1);
+    -webkit-transition: all 0.2s;
+    transition: all 0.2s;
 
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -39,8 +38,13 @@
 .better-dateinput-calendar[aria-hidden=true] {
     display: inline-block;
 
-    -webkit-transform: scale(0, 0) translateY(-10em);
-    transform: scale(0, 0) translateY(-10em);
+    height: 0;
+    width: 0;
+    margin-left: -3em;
+    margin-bottom: 0;
+
+     -webkit-transition: 0;
+    transition: 0;
 }
 
 .better-dateinput-calendar-header {
