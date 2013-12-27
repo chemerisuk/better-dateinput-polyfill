@@ -1,6 +1,6 @@
 {
   "name": "better-dom",
-  "version": "1.6.2",
+  "version": "1.6.4",
   "main": [
     "dist/better-dom.js",
     "dist/better-dom-legacy.js",
@@ -20,13 +20,13 @@
     "es5-shim": "2.1.0"
   },
   "homepage": "https://github.com/chemerisuk/better-dom",
-  "_release": "1.6.2",
+  "_release": "1.6.4",
   "_resolution": {
     "type": "version",
-    "tag": "v1.6.2",
-    "commit": "66385196595897768c0cca3aea6bff56d2cef1d6"
+    "tag": "v1.6.4",
+    "commit": "75a327e97af6867f4a121b7786c9d4c364d9a9f2"
   },
   "_source": "git://github.com/chemerisuk/better-dom.git",
-  "_target": "~1.6.0",
+  "_target": "~1.6.4",
   "_originalSource": "better-dom"
 }

@@ -1,6 +1,6 @@
 {
   "name": "better-dateinput-polyfill",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "main": [
     "dist/better-dateinput-polyfill.js",
     "dist/better-dateinput-polyfill.css",
@@ -16,6 +16,6 @@
     "better-dom"
   ],
   "dependencies": {
-    "better-dom": "~1.6.0"
+    "better-dom": "~1.6.4"
   }
 }
