@@ -4,23 +4,9 @@
     if ("orientation" in window) return; // skip mobile/tablet browsers
 
     var htmlEl = DOM.find("html"),
-        zeropad = function(value) { return ("00" + value).slice(-2) },
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg },
-        dateparts = function(str) {
-            str = (str || "").split("-");
-
-            if (str.length === 3) {
-                str[0] = parseFloat(str[0]);
-                str[1] = parseFloat(str[1]) - 1;
-                str[2] = parseFloat(str[2]);
-            } else {
-                str = [];
-            }
-
-            return str;
-        },
         formatISODate = function(value) {
-            return value.getFullYear() + "-" + zeropad(value.getMonth() + 1) + "-" + zeropad(value.getDate());
+            return value.toISOString().split("T")[0];
         };
 
     DOM.extend("input[type=date]", {
@@ -35,15 +21,14 @@
                 // handle arrow keys, esc etc.
                 .on("keydown", this.onCalendarKeyDown, ["which", "shiftKey"])
                 // sync picker visibility on focus/blur
-                .on("focus", this.onCalendarFocus)
-                .on("click", this.onCalendarFocus)
+                .on(["focus", "click"], this.onCalendarFocus)
                 .on("blur", this.onCalendarBlur)
                 .data(CALENDAR_KEY, calendar)
                 .data(INPUT_KEY, dateinput)
                 .after(calendar.hide(), dateinput);
 
-            calendar.on("mousedown", this, this.onCalendarClick);
-            this.parent("form").on("reset", this, this.onFormReset);
+            calendar.on("mousedown", this.onCalendarClick.bind(this));
+            this.parent("form").on("reset", this.onFormReset.bind(this));
             // patch set method to update visible input as well
             dateinput.set = this.onValueChanged.bind(this, dateinput.set);
             // update hidden input value and refresh all visible controls
@@ -56,48 +41,42 @@
         onValueChanged: function(setter) {
             var dateinput = this.data(INPUT_KEY),
                 calendar = this.data(CALENDAR_KEY),
-                parts, year, month, date, now, iterDate;
+                value, iterDate;
 
             setter.apply(dateinput, Array.prototype.slice.call(arguments, 1));
 
             if (arguments.length === 2) {
-                parts = dateparts(dateinput.get());
-                year = parts[0];
-                month = parts[1];
-                date = parts[2];
-                now = new Date();
+                value = new Date(dateinput.get());
 
-                this.set(parts.length < 3 ? "" : ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year);
+                this.set(value.getTime() ? value.toLocaleDateString() : "");
 
-                if (parts.length < 3) {
-                    year = now.getFullYear();
-                    month = now.getMonth();
-                }
+                if (!value.getTime()) value = new Date();
+
                 // update caption
-                calendar.find("p").i18n(I18N_MONTHS[month], {year: year});
+                calendar.find("p").i18n(I18N_MONTHS[value.getMonth()], {year: value.getFullYear()});
                 // update weekday captions
                 calendar.findAll("th").each(function(el, index) {
                     el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
                 });
 
-                iterDate = new Date(year, month, 0);
+                iterDate = new Date(value.getFullYear(), value.getMonth(), 0, 12);
                 // move to beginning of current month week
                 iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
                 // update day numbers
                 calendar.findAll("td").each(function(day) {
                     iterDate.setDate(iterDate.getDate() + 1);
 
-                    var mDiff = month - iterDate.getMonth(),
-                        dDiff = date - iterDate.getDate();
+                    var mDiff = value.getMonth() - iterDate.getMonth(),
+                        dDiff = value.getDate() - iterDate.getDate();
 
-                    if (year !== iterDate.getFullYear()) mDiff *= -1;
+                    if (value.getFullYear() !== iterDate.getFullYear()) mDiff *= -1;
 
                     day.set("class", mDiff ?
                         (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
                         (dDiff ? "calendar-day" : "current-calendar-day")
                     );
 
-                    day.set(iterDate.getDate()).data("ts", +iterDate);
+                    day.set(iterDate.getDate()).data("ts", iterDate.getTime());
                 });
             }
 
@@ -106,11 +85,11 @@
         onCalendarClick: function(target) {
             var calendar = this.data(CALENDAR_KEY),
                 dateinput = this.data(INPUT_KEY),
-                parts, targetDate;
+                targetDate;
 
             if (target.matches("a")) {
-                parts = dateparts(dateinput.get());
-                targetDate = new Date(parts[0], parts[1] + (target.next("a").length ? -1 : 1), 1);
+                targetDate = new Date(dateinput.get());
+                targetDate.setMonth(targetDate.getMonth() + (target.next("a").length ? -1 : 1));
             } else if (target.matches("td")) {
                 targetDate = new Date(target.data("ts"));
                 calendar.hide();
@@ -123,7 +102,7 @@
         onCalendarKeyDown: function(which, shiftKey) {
             var calendar = this.data(CALENDAR_KEY),
                 dateinput = this.data(INPUT_KEY),
-                parts, delta, currentDate;
+                delta, currentDate;
 
             // ENTER key should submit form if calendar is hidden
             if (calendar.matches(":hidden") && which === 13) return true;
@@ -135,8 +114,8 @@
             } else if (which === 8 || which === 46) {
                 dateinput.set(""); // BACKSPACE, DELETE clear value
             } else {
-                parts = dateparts(dateinput.get());
-                currentDate = new Date(parts[0], parts[1], parts[2]);
+                currentDate = new Date(dateinput.get());
+                currentDate.setHours(20);
 
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
