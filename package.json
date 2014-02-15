@@ -16,7 +16,7 @@
     "grunt-contrib-jshint": "0.5.4",
     "grunt-contrib-watch": "0.4.3",
     "grunt-karma": "0.7.1",
-    "karma-coverage": "0.1.0",
+    "karma-coverage": "~0.1",
     "grunt-github-publish": "~0.1.1",
     "grunt-shell": "~0.6.0"
   }

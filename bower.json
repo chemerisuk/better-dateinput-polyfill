@@ -16,6 +16,6 @@
     "better-dom"
   ],
   "dependencies": {
-    "better-dom": "~1.6.4"
+    "better-dom": "~1.7.1"
   }
 }
