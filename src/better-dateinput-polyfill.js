@@ -9,7 +9,8 @@
     DOM.extend("input[type=date]", NOT_A_MOBILE_BROWSER, {
         constructor: function() {
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
-                dateinput = DOM.create("input[type=hidden name={0}]", [this.get("name")]);
+                dateinput = DOM.create("input[type=hidden name={0}]", [this.get("name")]),
+                zIndex = (parseFloat(this.style("z-index")) || 0) + 1;
 
             this
                 // remove legacy dateinput if it exists
@@ -23,7 +24,7 @@
                 .after(calendar.hide(), dateinput);
 
             calendar
-                .style({"margin-top": this.offset().height, "z-index": (this.style("z-index") || 0) + 1})
+                .style({"margin-top": this.offset().height, "z-index": zIndex})
                 .on("mousedown", this.onCalendarClick.bind(this, calendar, dateinput));
 
             this.parent("form").on("reset", this.onFormReset.bind(this, dateinput));
@@ -31,7 +32,9 @@
             dateinput.watch("undefined", this.onValueChanged.bind(this,
                 calendar.find("p"), calendar.findAll("th"), calendar.findAll("td")));
             // update hidden input value and refresh all visible controls
-            dateinput.set(this.get()).set("_defaultValue", dateinput.get());
+            dateinput
+                .set(this.get() || new Date().toISOString())
+                .set("_defaultValue", dateinput.get());
             // update defaultValue with formatted date
             this.set("defaultValue", this.get());
             // display calendar for autofocused elements

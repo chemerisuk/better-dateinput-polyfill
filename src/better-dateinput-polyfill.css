@@ -9,6 +9,7 @@
 
     width: 19em;
     margin-left: -12.5em;
+    line-height: 1;
 
     overflow: hidden;
     cursor: default;
@@ -79,6 +80,7 @@
 }
 
 .better-dateinput-calendar-days {
+    width: 100%;
     table-layout: fixed;
     border-spacing: 0;
     border-bottom: 1px solid #DDD;
