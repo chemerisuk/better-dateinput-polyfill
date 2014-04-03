@@ -1,24 +1,24 @@
 /**
  * @file src/better-dateinput-polyfill.js
- * @version 1.3.1 2013-12-27T08:01:17
+ * @version 1.4.0-beta.1 2014-04-03T16:34:35
  * @overview input[type=date] polyfill for better-dom
- * @copyright Maksim Chemerisuk 2013
+ * @copyright Maksim Chemerisuk 2014
  * @license MIT
  * @see https://github.com/chemerisuk/better-dateinput-polyfill
  */
 (function(DOM, COMPONENT_CLASS, I18N_DAYS, I18N_MONTHS) {
     "use strict";
 
-    if ("orientation" in window) return; // skip mobile/tablet browsers
-
     var htmlEl = DOM.find("html"),
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg },
-        formatISODate = function(value) { return value.toISOString().split("T")[0] };
+        formatISODate = function(value) { return value.toISOString().split("T")[0] },
+        NOT_A_MOBILE_BROWSER = !("orientation" in window); // need to skip mobile/tablet browsers
 
-    DOM.extend("input[type=date]", {
+    DOM.extend("input[type=date]", NOT_A_MOBILE_BROWSER, {
         constructor: function() {
-            var calendar = DOM.create("div.${c}>a[unselectable=on]*2+p.${c}-header+table.${c}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
-                dateinput = DOM.create("input[type=hidden name=${name}]", {name: this.get("name")});
+            var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
+                dateinput = DOM.create("input[type=hidden name={0}]", [this.get("name")]),
+                zIndex = (parseFloat(this.style("z-index")) || 0) + 1;
 
             this
                 // remove legacy dateinput if it exists
@@ -31,72 +31,69 @@
                 .on("blur", this.onCalendarBlur.bind(this, calendar))
                 .after(calendar.hide(), dateinput);
 
-            calendar.on("mousedown", this.onCalendarClick.bind(this, calendar, dateinput));
+            calendar
+                .style({"margin-top": this.offset().height, "z-index": zIndex})
+                .on("mousedown", this.onCalendarClick.bind(this, calendar, dateinput));
+
             this.parent("form").on("reset", this.onFormReset.bind(this, dateinput));
-            // patch set method to update visible input as well
-            dateinput.set = this.onValueChanged.bind(this, dateinput, dateinput.set,
-                calendar.find("p"), calendar.findAll("th"), calendar.findAll("td"));
+            // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5
+            dateinput.watch("undefined", this.onValueChanged.bind(this,
+                calendar.find("p"), calendar.findAll("th"), calendar.findAll("td")));
             // update hidden input value and refresh all visible controls
-            dateinput.set(this.get()).data("defaultValue", dateinput.get());
+            dateinput
+                .set(this.get() || new Date().toISOString())
+                .set("_defaultValue", dateinput.get());
             // update defaultValue with formatted date
             this.set("defaultValue", this.get());
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged: function(dateinput, setter, caption, weekdays, days) {
-            var year, month, date, iterDate;
+        onValueChanged: function(caption, weekdays, days, value) {
+            value = new Date(value);
 
-            setter.apply(dateinput, Array.prototype.slice.call(arguments, 5));
+            var formattedValue, year, month, date, iterDate;
 
-            if (arguments.length === 6) {
-                this.set(function() {
-                    var value = new Date(dateinput.get()),
-                        result;
-
-                    if (!value.getTime()) {
-                        value = new Date();
-                        result = "";
-                    }
-
-                    month = value.getMonth();
-                    date = value.getDate();
-                    year = value.getFullYear();
-
-                    if (typeof result !== "string") {
-                        result = ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year;
-                    }
-
-                    return result;
-                });
-
-                // update caption
-                caption.i18n(I18N_MONTHS[month], {year: year});
-                // update weekday captions
-                weekdays.each(function(el, index) {
-                    el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
-                });
-
-                iterDate = new Date(year, month, 0, 12);
-                // move to beginning of current month week
-                iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
-                // update day numbers
-                days.set("class", function(day) {
-                    iterDate.setDate(iterDate.getDate() + 1);
-
-                    var mDiff = month - iterDate.getMonth(),
-                        dDiff = date - iterDate.getDate();
-
-                    if (year !== iterDate.getFullYear()) mDiff *= -1;
-
-                    day.data("ts", iterDate.getTime()).set(iterDate.getDate());
-
-                    return mDiff ?
-                        (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                        (dDiff ? "calendar-day" : "current-calendar-day");
-                });
+            if (!value.getTime()) {
+                value = new Date();
+                formattedValue = "";
             }
 
-            return dateinput;
+            month = value.getMonth();
+            date = value.getDate();
+            year = value.getFullYear();
+
+            if (typeof formattedValue !== "string") {
+                formattedValue = ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year;
+            }
+
+            // set formatted date value for original input
+            this.set(formattedValue);
+
+            // update calendar caption
+            caption.i18n(I18N_MONTHS[month], [year]);
+            // update calendar weekday captions
+            weekdays.each(function(el, index) {
+                el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
+            });
+            // update calendar content
+            iterDate = new Date(year, month, 0, 12);
+            // move to beginning of current month week
+            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
+            // update day numbers
+            days.set("class", function(day) {
+                iterDate.setDate(iterDate.getDate() + 1);
+
+                var mDiff = month - iterDate.getMonth(),
+                    dDiff = date - iterDate.getDate();
+
+                if (year !== iterDate.getFullYear()) mDiff *= -1;
+
+                day.set("_ts", iterDate.getTime()).set(iterDate.getDate());
+
+                return mDiff ?
+                    (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
+                    (dDiff ? "calendar-day" : "current-calendar-day");
+            });
         },
         onCalendarClick: function(calendar, dateinput, target) {
             var targetDate;
@@ -105,7 +102,7 @@
                 targetDate = new Date(dateinput.get());
                 targetDate.setMonth(targetDate.getMonth() + (target.next("a").length ? -1 : 1));
             } else if (target.matches("td")) {
-                targetDate = new Date(target.data("ts"));
+                targetDate = new Date(target.get("_ts"));
                 calendar.hide();
             }
 
@@ -153,10 +150,13 @@
             calendar.hide();
         },
         onCalendarFocus: function(calendar) {
-            calendar.show();
+            calendar.show(function() {
+                // FIXME: remove after migrating to better-dom 1.7.5
+                calendar.style("pointer-events", null);
+            });
         },
         onFormReset: function(dateinput) {
-            dateinput.set(function(el) { return el.data("defaultValue") });
+            dateinput.set(function(el) { return el.get("_defaultValue") });
         }
     });
 }(window.DOM, "better-dateinput", [
@@ -168,16 +168,16 @@
     "Sa",
     "Su"
 ], [
-    "January ${year}",
-    "February ${year}",
-    "March ${year}",
-    "April ${year}",
-    "May ${year}",
-    "June ${year}",
-    "July ${year}",
-    "August ${year}",
-    "September ${year}",
-    "October ${year}",
-    "November ${year}",
-    "December ${year}"
+    "January {0}",
+    "February {0}",
+    "March {0}",
+    "April {0}",
+    "May {0}",
+    "June {0}",
+    "July {0}",
+    "August {0}",
+    "September {0}",
+    "October {0}",
+    "November {0}",
+    "December {0}"
 ]));

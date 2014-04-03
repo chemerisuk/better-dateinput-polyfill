@@ -5,6 +5,7 @@ module.exports = function(config) {
         basePath: "..",
         frameworks: ["jasmine"],
         browsers: ["PhantomJS"],
+        preprocessors: { "src/better-dateinput-polyfill.js": "coverage" },
         files: [
             "bower_components/better-dom/dist/better-dom-legacy.js",
             "bower_components/better-dom/dist/better-dom.js",

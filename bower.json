@@ -1,21 +1,27 @@
 {
   "name": "better-dateinput-polyfill",
-  "version": "1.3.1",
+  "version": "1.4.0-beta.1",
   "main": [
     "dist/better-dateinput-polyfill.js",
     "dist/better-dateinput-polyfill.css",
     "i18n/better-dateinput-polyfill.ru.js",
-    "i18n/better-dateinput-polyfill.fr.js"
+    "i18n/better-dateinput-polyfill.fr.js",
+    "i18n/better-dateinput-polyfill.de.js"
   ],
   "ignore": [
     ".*",
+    "test",
     "src",
-    "test"
+    "index.html",
+    "Gruntfile.js",
+    "package.json",
+    "bower.json",
+    "main.sublime-project"
   ],
   "keywords": [
     "better-dom"
   ],
   "dependencies": {
-    "better-dom": "~1.6.4"
+    "better-dom": "~1.7.4"
   }
 }

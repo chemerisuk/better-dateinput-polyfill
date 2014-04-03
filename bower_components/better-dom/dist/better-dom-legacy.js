@@ -1,15 +1,17 @@
 /**
  * @file better-dom-legacy.js
- * @version 1.6.4 2013-12-25T18:37:40
+ * @version 1.7.4 2014-03-25T14:05:45
  * @overview Live extension playground
- * @copyright Maksim Chemerisuk 2013
+ * @copyright 2013-2014 Maksim Chemerisuk
  * @license MIT
  * @see https://github.com/chemerisuk/better-dom
  */
-;(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Copyright 2009-2012 by contributors, MIT License
 // vim: ts=4 sts=4 sw=4 expandtab
 
+//Add semicolon to prevent IIFE from being passed as argument to concated code.
+;
 // Module systems magic dance
 (function (definition) {
     // RequireJS
@@ -32,6 +34,20 @@
  * ES5 Spec: http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf
  * Required reading: http://javascriptweblog.wordpress.com/2011/12/05/extending-javascript-natives/
  */
+
+// ES-5 15.1.2.2
+if (parseInt('08') !== 8) {
+    parseInt = (function (origParseInt) {
+        var hexRegex = /^0[xX]/;
+        return function parseIntES5(str, radix) {
+            str = String(str).trim();
+            if (!+radix) {
+                radix = hexRegex.test(str) ? 16 : 10;
+            }
+            return origParseInt(str, radix);
+        };
+    }(parseInt));
+}
 
 //
 // Function
@@ -64,7 +80,7 @@ if (!Function.prototype.bind) {
         //   15.3.4.5.2.
         // 14. Set the [[HasInstance]] internal property of F as described in
         //   15.3.4.5.3.
-        var bound = function () {
+        var binder = function () {
 
             if (this instanceof bound) {
                 // 15.3.4.5.2 [[Construct]]
@@ -120,21 +136,36 @@ if (!Function.prototype.bind) {
             }
 
         };
-        if(target.prototype) {
-            Empty.prototype = target.prototype;
-            bound.prototype = new Empty();
-            // Clean up dangling references.
-            Empty.prototype = null;
-        }
-        // XXX bound.length is never writable, so don't even try
-        //
+
         // 15. If the [[Class]] internal property of Target is "Function", then
         //     a. Let L be the length property of Target minus the length of A.
         //     b. Set the length own property of F to either 0 or L, whichever is
         //       larger.
         // 16. Else set the length own property of F to 0.
+
+        var boundLength = Math.max(0, target.length - args.length);
+
         // 17. Set the attributes of the length own property of F to the values
         //   specified in 15.3.5.1.
+        var boundArgs = [];
+        for (var i = 0; i < boundLength; i++) {
+            boundArgs.push("$" + i);
+        }
+
+        // XXX Build a dynamic function with desired amount of arguments is the only 
+        // way to set the length property of a function. 
+        // In environments where Content Security Policies enabled (Chrome extensions, 
+        // for ex.) all use of eval or Function costructor throws an exception. 
+        // However in all of these environments Function.prototype.bind exists 
+        // and so this code will never be executed.
+        var bound = Function("binder", "return function(" + boundArgs.join(",") + "){return binder.apply(this,arguments)}")(binder);
+
+        if (target.prototype) {
+            Empty.prototype = target.prototype;
+            bound.prototype = new Empty();
+            // Clean up dangling references.
+            Empty.prototype = null;
+        }
 
         // TODO
         // 18. Set the [[Extensible]] internal property of F to true.
@@ -198,8 +229,10 @@ if ((supportsAccessors = owns(prototypeOfObject, "__defineGetter__"))) {
 // IE < 9 bug: [1,2].splice(0).join("") == "" but should be "12"
 if ([1,2].splice(0).length != 2) {
     var array_splice = Array.prototype.splice;
+    var array_push = Array.prototype.push;
+    var array_unshift = Array.prototype.unshift;
 
-    if(function() { // test IE < 9 to splice bug - see issue #138
+    if (function() { // test IE < 9 to splice bug - see issue #138
         function makeArray(l) {
             var a = [];
             while (l--) {
@@ -218,7 +251,7 @@ if ([1,2].splice(0).length != 2) {
         lengthBefore = array.length; //20
         array.splice(5, 0, "XXX"); // add one element
 
-        if(lengthBefore + 1 == array.length) {
+        if (lengthBefore + 1 == array.length) {
             return true;// has right splice implementation without bugs
         }
         // else {
@@ -243,26 +276,26 @@ if ([1,2].splice(0).length != 2) {
                 , addElementsCount = args.length
             ;
 
-            if(!arguments.length) {
+            if (!arguments.length) {
                 return [];
             }
 
-            if(start === void 0) { // default
+            if (start === void 0) { // default
                 start = 0;
             }
-            if(deleteCount === void 0) { // default
+            if (deleteCount === void 0) { // default
                 deleteCount = this.length - start;
             }
 
-            if(addElementsCount > 0) {
-                if(deleteCount <= 0) {
-                    if(start == this.length) { // tiny optimisation #1
-                        this.push.apply(this, args);
+            if (addElementsCount > 0) {
+                if (deleteCount <= 0) {
+                    if (start == this.length) { // tiny optimisation #1
+                        array_push.apply(this, args);
                         return [];
                     }
 
-                    if(start == 0) { // tiny optimisation #2
-                        this.unshift.apply(this, args);
+                    if (start == 0) { // tiny optimisation #2
+                        array_unshift.apply(this, args);
                         return [];
                     }
                 }
@@ -328,8 +361,15 @@ if (!Array.isArray) {
 // and failure of `0 in boxedString` (Rhino)
 var boxedString = Object("a"),
     splitString = boxedString[0] != "a" || !(0 in boxedString);
+// Check node 0.6.21 bug where third parameter is not boxed
+var boxedForEach = true;
+if (Array.prototype.forEach) {
+    Array.prototype.forEach.call("foo", function(item, i, obj) {
+        if (typeof obj !== 'object') boxedForEach = false;
+    });
+}
 
-if (!Array.prototype.forEach) {
+if (!Array.prototype.forEach || !boxedForEach) {
     Array.prototype.forEach = function forEach(fun /*, thisp*/) {
         var object = toObject(this),
             self = splitString && _toString(this) == "[object String]" ?
@@ -704,7 +744,7 @@ if (
         year = this.getUTCFullYear();
 
         month = this.getUTCMonth();
-        // see https://github.com/kriskowal/es5-shim/issues/111
+        // see https://github.com/es-shims/es5-shim/issues/111
         year += Math.floor(month / 12);
         month = (month % 12 + 12) % 12;
 
@@ -862,6 +902,10 @@ if (!Date.parse || "Date.parse is buggy") {
             );
         }
 
+        function toUTC(t) {
+            return Number(new NativeDate(1970, 0, 1, 0, 0, 0, t));
+        }
+
         // Copy any custom methods a 3rd party library may have added
         for (var key in NativeDate) {
             Date[key] = NativeDate[key];
@@ -890,8 +934,7 @@ if (!Date.parse || "Date.parse is buggy") {
                     // When time zone is missed, local offset should be used
                     // (ES 5.1 bug)
                     // see https://bugs.ecmascript.org/show_bug.cgi?id=112
-                    offset = !match[4] || match[8] ?
-                        0 : Number(new NativeDate(1970, 0)),
+                    isLocalTime = Boolean(match[4] && !match[8]),
                     signOffset = match[9] === "-" ? 1 : -1,
                     hourOffset = Number(match[10] || 0),
                     minuteOffset = Number(match[11] || 0),
@@ -918,7 +961,10 @@ if (!Date.parse || "Date.parse is buggy") {
                     result = (
                         (result + minute + minuteOffset * signOffset) * 60 +
                         second
-                    ) * 1000 + millisecond + offset;
+                    ) * 1000 + millisecond;
+                    if (isLocalTime) {
+                        result = toUTC(result);
+                    }
                     if (-8.64e15 <= result && result <= 8.64e15) {
                         return result;
                     }
@@ -1122,7 +1168,7 @@ if (
     'ab'.split(/(?:ab)*/).length !== 2 ||
     '.'.split(/(.?)(.?)/).length !== 4 ||
     'tesst'.split(/(s)*/)[1] === "t" ||
-    ''.split(/.?/).length === 0 ||
+    ''.split(/.?/).length ||
     '.'.split(/()()/).length > 1
 ) {
     (function () {
@@ -1221,7 +1267,7 @@ if (
 // non-normative section suggesting uniform semantics and it should be
 // normalized across all browsers
 // [bugfix, IE lt 9] IE < 9 substr() with negative value not working in IE
-if("".substr && "0b".substr(-1) !== "b") {
+if ("".substr && "0b".substr(-1) !== "b") {
     var string_substr = String.prototype.substr;
     /**
      *  Get the substring of a string
@@ -1660,23 +1706,33 @@ if (!document.addEventListener) {
 }
 
 },{}],4:[function(require,module,exports){
-// input event implementation/fixes for IE8-9
+// form element event fixes for IE8-9
 
 if (document.attachEvent) {
     var capturedNode, capturedNodeValue,
-        legacyEventHandler = function() {
+        inputEventHandler = function() {
             if (capturedNode && capturedNode.value !== capturedNodeValue) {
                 capturedNodeValue = capturedNode.value;
                 // trigger special event that bubbles
                 DOM.create(capturedNode).fire("input");
             }
+        },
+        clickEventHandler = function() {
+            if (capturedNode && capturedNode.checked !== capturedNodeValue) {
+                capturedNodeValue = capturedNode.checked;
+                // trigger special event that bubbles
+                DOM.create(capturedNode).fire("change");
+            }
+        },
+        changeEventHandler = function() {
+            DOM.create(capturedNode).fire("change");
         };
 
     if (document.createElement("input").oninput === null) {
         // IE9 doesn't fire oninput when text is deleted, so use
         // legacy onselectionchange event to detect such cases
         // http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html
-        document.attachEvent("onselectionchange", legacyEventHandler);
+        document.attachEvent("onselectionchange", inputEventHandler);
     }
 
     // input event fix via propertychange
@@ -1685,27 +1741,35 @@ if (document.attachEvent) {
             type = target.type;
 
         if (capturedNode) {
-            capturedNode.detachEvent("onpropertychange", legacyEventHandler);
-            capturedNode = undefined;
+            capturedNode.detachEvent("onclick", clickEventHandler);
+            capturedNode.detachEvent("onchange", changeEventHandler);
+            capturedNode.detachEvent("onpropertychange", inputEventHandler);
+            capturedNode = null;
         }
 
-        if (type === "text" || type === "password" || type === "textarea") {
-            (capturedNode = target).attachEvent("onpropertychange", legacyEventHandler);
+        if (type === "checkbox" || type === "radio") {
+            (capturedNode = target).attachEvent("onclick", clickEventHandler);
+            capturedNodeValue = capturedNode.checked;
+        } else if (target.nodeType === 1) {
+            (capturedNode = target).attachEvent("onchange", changeEventHandler);
+
+            if (type === "text" || type === "password" || type === "textarea") {
+                capturedNode.attachEvent("onpropertychange", inputEventHandler);
+                capturedNodeValue = capturedNode.value;
+            }
         }
     });
 }
 
 },{}],5:[function(require,module,exports){
 // submit event bubbling fix for IE<9
+function handleFormEvent() {
+    var e = window.event;
 
-var handleSubmit = function() {
-    var form = window.event.srcElement;
-
-    form.detachEvent("onsubmit", handleSubmit);
-    DOM.create(form).fire("submit");
+    if (!e.cancelBubble) DOM.create(e.srcElement).fire(e.type);
 
     return false;
-};
+}
 
 if (!document.addEventListener) {
     document.attachEvent("onkeydown", function() {
@@ -1722,33 +1786,16 @@ if (!document.addEventListener) {
 
     document.attachEvent("onclick", function() {
         var target = window.event.srcElement,
-            form = target.form;
+            form = target.form,
+            type = target.type;
 
-        if (form && target.type === "submit") {
-            form.attachEvent("onsubmit", handleSubmit);
+        if (!form) return;
+
+        if (type === "submit" || type === "reset") {
+            form.detachEvent("on" + type, handleFormEvent);
+            form.attachEvent("on" + type, handleFormEvent);
         }
     });
 }
 
-},{}],6:[function(require,module,exports){
-// requestAnimationFrame implementation
-
-if (!window.requestAnimationFrame) {
-    var lastTime = 0;
-
-    window.requestAnimationFrame = function(callback) {
-        var currTime = new Date().getTime(),
-            timeToCall = Math.max(0, 16 - (currTime - lastTime));
-
-        lastTime = currTime + timeToCall;
-
-        if (timeToCall) {
-            setTimeout(callback, timeToCall);
-        } else {
-            callback(currTime + timeToCall);
-        }
-    };
-}
-
-},{}]},{},[3,4,5,6,2,1])
-;
+},{}]},{},[3,4,5,2,1]);
