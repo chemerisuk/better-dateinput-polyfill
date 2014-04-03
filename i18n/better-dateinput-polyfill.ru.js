@@ -8,16 +8,16 @@ DOM.importStrings("ru", {
     "Sa": "Сб",
     "Su": "Вс",
     // monthes
-    "January {year}": "Январь {year}",
-    "February {year}": "Февраль {year}",
-    "March {year}": "Март {year}",
-    "April {year}": "Апрель {year}",
-    "May {year}": "Май {year}",
-    "June {year}": "Июнь {year}",
-    "July {year}": "Июль {year}",
-    "August {year}": "Август {year}",
-    "September {year}": "Сентябрь {year}",
-    "October {year}": "Октябрь {year}",
-    "November {year}": "Ноябрь {year}",
-    "December {year}": "Декабрь {year}"
+    "January {0}": "Январь {0}",
+    "February {0}": "Февраль {0}",
+    "March {0}": "Март {0}",
+    "April {0}": "Апрель {0}",
+    "May {0}": "Май {0}",
+    "June {0}": "Июнь {0}",
+    "July {0}": "Июль {0}",
+    "August {0}": "Август {0}",
+    "September {0}": "Сентябрь {0}",
+    "October {0}": "Октябрь {0}",
+    "November {0}": "Ноябрь {0}",
+    "December {0}": "Декабрь {0}"
 });

@@ -9,8 +9,8 @@
 
     DOM.extend("input[type=date]", {
         constructor: function() {
-            var calendar = DOM.create("div.${c}>a[unselectable=on]*2+p.${c}-header+table.${c}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", {c: COMPONENT_CLASS + "-calendar"}),
-                dateinput = DOM.create("input[type=hidden name=${name}]", {name: this.get("name")});
+            var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
+                dateinput = DOM.create("input[type=hidden name={0}]", [this.get("name")]);
 
             this
                 // remove legacy dateinput if it exists
@@ -62,7 +62,7 @@
                 });
 
                 // update caption
-                caption.i18n(I18N_MONTHS[month], {year: year});
+                caption.i18n(I18N_MONTHS[month], [year]);
                 // update weekday captions
                 weekdays.each(function(el, index) {
                     el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
@@ -160,16 +160,16 @@
     "Sa",
     "Su"
 ], [
-    "January ${year}",
-    "February ${year}",
-    "March ${year}",
-    "April ${year}",
-    "May ${year}",
-    "June ${year}",
-    "July ${year}",
-    "August ${year}",
-    "September ${year}",
-    "October ${year}",
-    "November ${year}",
-    "December ${year}"
+    "January {0}",
+    "February {0}",
+    "March {0}",
+    "April {0}",
+    "May {0}",
+    "June {0}",
+    "July {0}",
+    "August {0}",
+    "September {0}",
+    "October {0}",
+    "November {0}",
+    "December {0}"
 ]));
