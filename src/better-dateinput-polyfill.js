@@ -1,15 +1,16 @@
 (function(DOM, COMPONENT_CLASS, I18N_DAYS, I18N_MONTHS) {
     "use strict";
 
-    if ("orientation" in window) return; // skip mobile/tablet browsers
-
     var htmlEl = DOM.find("html"),
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg },
-        formatISODate = function(value) { return value.toISOString().split("T")[0] };
+        formatISODate = function(value) { return value.toISOString().split("T")[0] },
+        NOT_A_MOBILE_BROWSER = !("orientation" in window); // need to skip mobile/tablet browsers
 
-    DOM.extend("input[type=date]", {
+    DOM.extend("input[type=date]", NOT_A_MOBILE_BROWSER, {
         constructor: function() {
-            var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
+            var offset = this.offset(),
+                zIndex = (this.style("z-index") || 0) + 1,
+                calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
                 dateinput = DOM.create("input[type=hidden name={0}]", [this.get("name")]);
 
             this
@@ -23,11 +24,14 @@
                 .on("blur", this.onCalendarBlur.bind(this, calendar))
                 .after(calendar.hide(), dateinput);
 
-            calendar.on("mousedown", this.onCalendarClick.bind(this, calendar, dateinput));
+            calendar
+                .style({"margin-left": -offset.width / 2, "margin-top": offset.height, "z-index": zIndex})
+                .on("mousedown", this.onCalendarClick.bind(this, calendar, dateinput));
+
             this.parent("form").on("reset", this.onFormReset.bind(this, dateinput));
-            // patch set method to update visible input as well
-            dateinput.set = this.onValueChanged.bind(this, dateinput, dateinput.set,
-                calendar.find("p"), calendar.findAll("th"), calendar.findAll("td"));
+            // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5
+            dateinput.watch("undefined", this.onValueChanged.bind(this, dateinput,
+                calendar.find("p"), calendar.findAll("th"), calendar.findAll("td")));
             // update hidden input value and refresh all visible controls
             dateinput.set(this.get()).data("defaultValue", dateinput.get());
             // update defaultValue with formatted date
@@ -35,60 +39,55 @@
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged: function(dateinput, setter, caption, weekdays, days) {
+        onValueChanged: function(dateinput, caption, weekdays, days, value) {
             var year, month, date, iterDate;
 
-            setter.apply(dateinput, Array.prototype.slice.call(arguments, 5));
+            this.set(function() {
+                var result;
 
-            if (arguments.length === 6) {
-                this.set(function() {
-                    var value = new Date(dateinput.get()),
-                        result;
+                value = new Date(value);
 
-                    if (!value.getTime()) {
-                        value = new Date();
-                        result = "";
-                    }
+                if (!value.getTime()) {
+                    value = new Date();
+                    result = "";
+                }
 
-                    month = value.getMonth();
-                    date = value.getDate();
-                    year = value.getFullYear();
+                month = value.getMonth();
+                date = value.getDate();
+                year = value.getFullYear();
 
-                    if (typeof result !== "string") {
-                        result = ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year;
-                    }
+                if (typeof result !== "string") {
+                    result = ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year;
+                }
 
-                    return result;
-                });
+                return result;
+            });
 
-                // update caption
-                caption.i18n(I18N_MONTHS[month], [year]);
-                // update weekday captions
-                weekdays.each(function(el, index) {
-                    el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
-                });
+            // update caption
+            caption.i18n(I18N_MONTHS[month], [year]);
+            // update weekday captions
+            weekdays.each(function(el, index) {
+                el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
+            });
 
-                iterDate = new Date(year, month, 0, 12);
-                // move to beginning of current month week
-                iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
-                // update day numbers
-                days.set("class", function(day) {
-                    iterDate.setDate(iterDate.getDate() + 1);
+            iterDate = new Date(year, month, 0, 12);
+            // move to beginning of current month week
+            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
+            // update day numbers
+            days.set("class", function(day) {
+                iterDate.setDate(iterDate.getDate() + 1);
 
-                    var mDiff = month - iterDate.getMonth(),
-                        dDiff = date - iterDate.getDate();
+                var mDiff = month - iterDate.getMonth(),
+                    dDiff = date - iterDate.getDate();
 
-                    if (year !== iterDate.getFullYear()) mDiff *= -1;
+                if (year !== iterDate.getFullYear()) mDiff *= -1;
 
-                    day.data("ts", iterDate.getTime()).set(iterDate.getDate());
+                day.data("ts", iterDate.getTime()).set(iterDate.getDate());
 
-                    return mDiff ?
-                        (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                        (dDiff ? "calendar-day" : "current-calendar-day");
-                });
-            }
-
-            return dateinput;
+                return mDiff ?
+                    (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
+                    (dDiff ? "calendar-day" : "current-calendar-day");
+            });
         },
         onCalendarClick: function(calendar, dateinput, target) {
             var targetDate;
@@ -145,7 +144,10 @@
             calendar.hide();
         },
         onCalendarFocus: function(calendar) {
-            calendar.show();
+            calendar.show(function() {
+                // FIXME: remove after migrating to better-dom 1.7.5
+                calendar.style("pointer-events", null);
+            });
         },
         onFormReset: function(dateinput) {
             dateinput.set(function(el) { return el.data("defaultValue") });
