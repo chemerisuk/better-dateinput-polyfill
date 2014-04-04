@@ -10,7 +10,8 @@
         constructor: function() {
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
                 dateinput = DOM.create("input[type=hidden name={0}]", [this.get("name")]),
-                zIndex = (parseFloat(this.style("z-index")) || 0) + 1;
+                zIndex = (parseFloat(this.style("z-index")) || 0) + 1,
+                offset = this.offset();
 
             this
                 // remove legacy dateinput if it exists
@@ -24,8 +25,12 @@
                 .after(calendar.hide(), dateinput);
 
             calendar
-                .style({"margin-top": this.offset().height, "z-index": zIndex})
-                .on("mousedown", this.onCalendarClick.bind(this, calendar, dateinput));
+                .on("mousedown", this.onCalendarClick.bind(this, calendar, dateinput))
+                .style({
+                    "margin-left": -(calendar.get("offsetWidth") + offset.width) / 2,
+                    "margin-top": offset.height,
+                    "z-index": zIndex
+                });
 
             this.parent("form").on("reset", this.onFormReset.bind(this, dateinput));
             // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5
@@ -82,9 +87,11 @@
 
                 day.set("_ts", iterDate.getTime()).set(iterDate.getDate());
 
+
+
                 return mDiff ?
-                    (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                    (dDiff ? "calendar-day" : "current-calendar-day");
+                    (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
+                    (dDiff ? "" :  COMPONENT_CLASS + "-calendar-today");
             });
         },
         onCalendarClick: function(calendar, dateinput, target) {

@@ -7,8 +7,7 @@
     position: absolute;
     display: inline-block;
 
-    width: 19em;
-    margin-left: -12.5em;
+    width: 20em;
     line-height: 1;
 
     overflow: hidden;
@@ -28,8 +27,8 @@
     -webkit-transform-origin: 50% 0;
     transform-origin: 50% 0;
 
-    -webkit-transition: -webkit-transform 0.1s ease-out;
-    transition: transform 0.1s ease-out;
+    -webkit-transition: -webkit-transform 0.1s ease-in-out;
+    transition: transform 0.1s ease-in-out;
 
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -43,8 +42,8 @@
 }
 
 .better-dateinput-calendar-header {
-    font-size: 1.25em;
-    line-height: 2em;
+    font-size: 1.5em;
+    line-height: 2;
     margin: 0 2em;
     text-align: center;
 }
@@ -52,8 +51,8 @@
 .better-dateinput-calendar > a {
     float: left;
     width: 1em;
-    padding: 0.25em;
-    margin: 0.5em;
+    padding: 0.5em;
+    margin: 0.45em;
     text-align: center;
     border-radius: 0.25em;
 }
@@ -64,7 +63,7 @@
     height: 0;
     width: 0;
     border-style: solid;
-    border-width: 0.45em 0.75em 0.45em 0;
+    border-width: 0.5em 0.75em 0.5em 0;
     border-color: transparent;
     border-right-color: inherit;
 }
@@ -74,7 +73,7 @@
 }
 
 .better-dateinput-calendar > a + a:before {
-    border-width: 0.45em 0 0.45em 0.75em;
+    border-width: 0.5em 0 0.5em 0.75em;
     border-color: transparent;
     border-left-color: inherit;
 }
@@ -88,31 +87,36 @@
 
 .better-dateinput-calendar-days td,
 .better-dateinput-calendar-days th {
-    width: 2.5em;
+    /*width: 2.5em;*/
     height: 2em;
     border: 1px solid #DDD;
-    text-indent: 0.5em;
     text-align: left;
+    text-indent: 0.5em;
 }
 
 .better-dateinput-calendar-days th {
-    font-weight: bold;
-    background: #DDD;
-    text-shadow: 1px 1px 0 #EEE;
-}
-
-.better-dateinput-calendar > a:hover,
-.better-dateinput-calendar-days td:hover {
-    background: #EEE;
-}
-
-.better-dateinput-calendar-days .current-calendar-day {
-    background: #498CE2 !important;
+    font-weight: normal;
+    background: #333;
     color: #FFF;
-    text-shadow: 1px 1px 0 #333;
 }
 
-.better-dateinput-calendar-days .prev-calendar-day,
-.better-dateinput-calendar-days .next-calendar-day {
+.better-dateinput-calendar > a:hover {
+    background: #DDD;
+}
+
+.better-dateinput-calendar-past,
+.better-dateinput-calendar-future {
+    background: #F7F7F7;
+}
+
+.better-dateinput-calendar-past,
+.better-dateinput-calendar-future {
     color: #AAA;
+}
+
+.better-dateinput-calendar-today,
+.better-dateinput-calendar-days td:hover {
+    background: #DDD !important;
+    font-weight: bold;
+    color: inherit;
 }
