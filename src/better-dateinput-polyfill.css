@@ -1,5 +1,5 @@
-.better-dateinput, input[type=date] {
-    width: 8em;
+.better-dateinput-value {
+    display: inline-block;
     text-align: center;
 }
 
@@ -21,14 +21,16 @@
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
+    opacity: 1;
+
     -webkit-transform: scale(1,1);
     transform: scale(1,1);
 
     -webkit-transform-origin: 50% 0;
     transform-origin: 50% 0;
 
-    -webkit-transition: -webkit-transform 0.1s ease-in-out;
-    transition: transform 0.1s ease-in-out;
+    -webkit-transition: all 0.15s ease-in-out;
+    transition: all 0.15s ease-in-out;
 
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -37,6 +39,8 @@
 }
 
 .better-dateinput-calendar[aria-hidden=true] {
+    opacity: 0;
+
     -webkit-transform: scale(0,0);
     transform: scale(0,0);
 }

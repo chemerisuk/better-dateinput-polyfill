@@ -1,9 +1,8 @@
 describe("better-dateinput-polyfill", function() {
-    var el, calendar, dateinput;
+    var el, calendar;
 
     beforeEach(function() {
         el = DOM.mock("input[type=date]");
-        dateinput = DOM.mock();
         calendar = DOM.mock();
     });
 
@@ -12,45 +11,45 @@ describe("better-dateinput-polyfill", function() {
 
         var toggleSpy = spyOn(calendar, "toggle");
 
-        el.onCalendarKeyDown(calendar, dateinput, 32, false);
+        el.onCalendarKeyDown(calendar, 32, false);
         expect(toggleSpy).toHaveBeenCalled();
     });
 
     it("should hide calendar on escape key", function() {
         var spy = spyOn(calendar, "hide");
 
-        el.onCalendarKeyDown(calendar, dateinput, 27, false);
+        el.onCalendarKeyDown(calendar, 27, false);
         expect(spy).toHaveBeenCalled();
     });
 
     it("should prevent default action on any key except tab", function() {
-        expect(el.onCalendarKeyDown(calendar, dateinput, 9, false)).not.toBe(false);
-        expect(el.onCalendarKeyDown(calendar, dateinput, 111, false)).toBe(false);
+        expect(el.onCalendarKeyDown(calendar, 9, false)).not.toBe(false);
+        expect(el.onCalendarKeyDown(calendar, 111, false)).toBe(false);
 
         var spy = spyOn(calendar, "matches").and.returnValue(true);
 
-        expect(el.onCalendarKeyDown(calendar, dateinput, 13, false)).toBe(true);
+        expect(el.onCalendarKeyDown(calendar, 13, false)).toBe(true);
         expect(spy).toHaveBeenCalledWith(":hidden");
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
-        var spy = spyOn(dateinput, "set");
+        var spy = spyOn(el, "set");
 
-        el.onCalendarKeyDown(calendar, dateinput, 8, false);
+        el.onCalendarKeyDown(calendar, 8, false);
         expect(spy).toHaveBeenCalledWith("");
-        el.onCalendarKeyDown(calendar, dateinput, 46, false);
+        el.onCalendarKeyDown(calendar, 46, false);
         expect(spy.calls.count()).toBe(2);
     });
 
     it("should handle arrow keys with optional shiftKey", function() {
-        var setSpy = spyOn(dateinput, "set").and.returnValue(el),
+        var setSpy = spyOn(el, "set").and.returnValue(el),
             expectKey = function(key, altKey, expected) {
-                el.onCalendarKeyDown(calendar, dateinput, key, altKey);
+                el.onCalendarKeyDown(calendar, key, altKey);
                 expect(setSpy).toHaveBeenCalledWith(expected);
                 setSpy.calls.reset();
             };
 
-        spyOn(dateinput, "get").and.returnValue("2000-01-01");
+        spyOn(el, "get").and.returnValue("2000-01-01");
 
         expectKey(74, false, "2000-01-08");
         expectKey(40, false, "2000-01-08");
@@ -69,17 +68,17 @@ describe("better-dateinput-polyfill", function() {
     });
 
     it("should change month on nav buttons click", function() {
-        var getSpy = spyOn(dateinput, "get").and.returnValue("2000-01-01"),
-            setSpy = spyOn(dateinput, "set").and.returnValue(el),
+        var getSpy = spyOn(el, "get").and.returnValue("2000-01-01"),
+            setSpy = spyOn(el, "set").and.returnValue(el),
             target = DOM.mock("a");
 
-        el.onCalendarClick(calendar, dateinput, target);
+        el.onCalendarClick(calendar, target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith("2000-02-01");
 
         spyOn(target, "next").and.returnValue(el);
 
-        el.onCalendarClick(calendar, dateinput, target);
+        el.onCalendarClick(calendar, target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith("1999-12-01");
     });
@@ -87,9 +86,9 @@ describe("better-dateinput-polyfill", function() {
     it("should select appropriate day on calendar click", function() {
         var now = new Date(2011, 6, 13, 12),
             target = DOM.mock("td").data("ts", now.getTime()),
-            setSpy = spyOn(dateinput, "set");
+            setSpy = spyOn(el, "set");
 
-        el.onCalendarClick(calendar, dateinput, target);
+        el.onCalendarClick(calendar, target);
         expect(setSpy).toHaveBeenCalledWith("2011-07-13");
     });
 
@@ -98,6 +97,27 @@ describe("better-dateinput-polyfill", function() {
 
         el.onCalendarBlur(calendar);
         expect(hideSpy).toHaveBeenCalled();
+    });
+
+    it("should use current date for calendar if value is empty", function() {
+        var now = new Date(),
+            getSpy = spyOn(el, "get").and.returnValue(""),
+            setSpy = spyOn(el, "set").and.returnValue(el),
+            target = DOM.mock("a");
+
+        now.setMonth(now.getMonth() + 1);
+
+        el.onCalendarClick(calendar, target);
+        expect(getSpy).toHaveBeenCalled();
+        expect(setSpy).toHaveBeenCalledWith(now.toISOString().split("T")[0]);
+
+        spyOn(target, "next").and.returnValue(el);
+
+        now.setMonth(now.getMonth() - 2);
+
+        el.onCalendarClick(calendar, target);
+        expect(getSpy).toHaveBeenCalled();
+        expect(setSpy).toHaveBeenCalledWith(now.toISOString().split("T")[0]);
     });
 
 });
