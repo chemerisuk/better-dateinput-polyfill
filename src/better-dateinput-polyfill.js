@@ -9,7 +9,7 @@
     DOM.extend("input[type=date]", NOT_A_MOBILE_BROWSER, {
         constructor: function() {
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
-                dateinput = DOM.create("span.{0}-value", [COMPONENT_CLASS]),
+                displayedValue = DOM.create("span.{0}-value", [COMPONENT_CLASS]),
                 zIndex = (parseFloat(this.style("z-index")) || 0) + 1,
                 offset = this.offset();
 
@@ -17,60 +17,63 @@
                 // remove legacy dateinput implementation if it exists
                 // also set value to current time to trigger watchers later
                 .set({type: "text", value: Date.now()})
-                .style("color", "transparent")
+                .style("color", this.style("background-color")) /* hide original input text */
                 .addClass(COMPONENT_CLASS)
                 // handle arrow keys, esc etc.
                 .on("keydown", this.onCalendarKeyDown.bind(this, calendar), ["which", "shiftKey"])
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this.onCalendarFocus.bind(this, calendar))
                 .on("blur", this.onCalendarBlur.bind(this, calendar))
-                .after(calendar.hide(), dateinput);
+                .after(calendar, displayedValue);
 
             calendar
                 .on("mousedown", this.onCalendarClick.bind(this, calendar))
                 .style({
-                    "margin-left": -(calendar.get("offsetWidth") + offset.width) / 2,
+                    "margin-left": -(calendar.offset().width + offset.width) / 2,
                     "margin-top": offset.height,
                     "z-index": zIndex
                 });
 
-            dateinput
+            // center displayed value using margin and line-height
+            displayedValue
                 .style({
                     "width": offset.width,
-                    "margin-left": -offset.width,
                     "font": this.style("font"),
-                    "padding": this.style("padding")
+                    "margin-left": -offset.width,
+                    "line-height": offset.height + "px"
                 });
 
             this.parent("form").on("reset", this.onFormReset.bind(this));
             // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5
-            this.watch("undefined", this.onValueChanged.bind(this, dateinput,
+            this.watch("undefined", this.onValueChanged.bind(this, displayedValue,
                 calendar.find("p"), calendar.findAll("th"), calendar.findAll("td")));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged: function(dateinput, caption, weekdays, days, value) {
+        onValueChanged: function(displayedValue, caption, weekdays, days, value) {
+            var year, month, date, iterDate;
+
             value = new Date(value);
 
-            var formattedValue, year, month, date, iterDate;
+            // display formatted date value for original input
+            if (value.getTime()) {
+                displayedValue.set(function() {
+                    var formattedValue = value.toUTCString();
+                    // remove time part
+                    return formattedValue.substr(0, formattedValue.indexOf("00:00") - 1);
+                });
+            } else {
+                displayedValue.set("");
 
-            if (!value.getTime()) {
                 value = new Date();
-                formattedValue = "";
             }
 
             month = value.getMonth();
             date = value.getDate();
             year = value.getFullYear();
 
-            if (typeof formattedValue !== "string") {
-                formattedValue = ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year;
-            }
-
-            // display formatted date value for original input
-            dateinput.set(formattedValue);
             // update calendar caption
             caption.i18n(I18N_MONTHS[month], [year]);
             // update calendar weekday captions
@@ -100,13 +103,13 @@
         onCalendarClick: function(calendar, target) {
             var targetDate;
 
-            if (target.matches("a")) {
+            if (target == "a") {
                 targetDate = new Date(this.get());
 
                 if (!targetDate.getTime()) targetDate = new Date();
 
                 targetDate.setMonth(targetDate.getMonth() + (target.next("a").length ? -1 : 1));
-            } else if (target.matches("td")) {
+            } else if (target == "td") {
                 targetDate = new Date(target.get("_ts"));
                 calendar.hide();
             }

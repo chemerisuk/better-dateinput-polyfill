@@ -1,11 +1,13 @@
 .better-dateinput-value {
     display: inline-block;
     text-align: center;
+    white-space: nowrap;
 }
 
 .better-dateinput-calendar {
     position: absolute;
     display: inline-block;
+    visibility: hidden; /* initially calendar is hidden */
 
     width: 20em;
     line-height: 1;
@@ -53,11 +55,13 @@
 }
 
 .better-dateinput-calendar > a {
-    float: left;
+    position: absolute;
+    left: 0.75em;
+    top: 0.75em;
+
     width: 1em;
-    padding: 0.5em;
-    margin: 0.45em;
-    text-align: center;
+    padding: 0.25em;
+
     border-radius: 0.25em;
 }
 
@@ -73,7 +77,8 @@
 }
 
 .better-dateinput-calendar > a + a {
-    float: right;
+    left: auto;
+    right: 0.75em;
 }
 
 .better-dateinput-calendar > a + a:before {
@@ -91,7 +96,6 @@
 
 .better-dateinput-calendar-days td,
 .better-dateinput-calendar-days th {
-    /*width: 2.5em;*/
     height: 2em;
     border: 1px solid #DDD;
     text-align: left;
@@ -100,27 +104,26 @@
 
 .better-dateinput-calendar-days th {
     font-weight: normal;
-    background: #333;
+    background-color: #333;
     color: #FFF;
 }
 
-.better-dateinput-calendar > a:hover {
-    background: #DDD;
-}
-
 .better-dateinput-calendar-past,
 .better-dateinput-calendar-future {
-    background: #F7F7F7;
-}
-
-.better-dateinput-calendar-past,
-.better-dateinput-calendar-future {
+    background-color: #F7F7F7;
     color: #AAA;
 }
 
+.better-dateinput-calendar > a,
+.better-dateinput-calendar-days td {
+    -webkit-transition: background-color 0.1s ease-out;
+    transition: background-color 0.1s ease-out;
+}
+
 .better-dateinput-calendar-today,
+.better-dateinput-calendar > a:hover,
 .better-dateinput-calendar-days td:hover {
-    background: #DDD !important;
+    background-color: #DDD;
     font-weight: bold;
     color: inherit;
 }
