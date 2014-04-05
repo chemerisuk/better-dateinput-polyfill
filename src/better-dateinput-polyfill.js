@@ -32,7 +32,8 @@
                     "margin-left": -(calendar.offset().width + offset.width) / 2,
                     "margin-top": offset.height,
                     "z-index": zIndex
-                });
+                })
+                .hide(); // hide calendar to trigger show animation properly later
 
             // center displayed value using margin and line-height
             displayedValue

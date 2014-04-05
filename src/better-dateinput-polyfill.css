@@ -1,3 +1,11 @@
+/*
+    #333    - font color
+    #FFF    - background color
+    #DDD    - border color
+    #AAA    - gray text color
+    #F6F6F6 - gray background color
+ */
+
 .better-dateinput-value {
     display: inline-block;
     text-align: center;
@@ -17,9 +25,9 @@
 
     color: #333;
     background: #FFF;
-    border: 1px solid #CCC;
+    border: 1px solid #DDD;
     border-radius: 5px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 10px #DDD;
 
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
@@ -79,6 +87,8 @@
 .better-dateinput-calendar > a + a {
     left: auto;
     right: 0.75em;
+    padding-right: 0;
+    padding-left: 0.5em;
 }
 
 .better-dateinput-calendar > a + a:before {
@@ -110,7 +120,7 @@
 
 .better-dateinput-calendar-past,
 .better-dateinput-calendar-future {
-    background-color: #F7F7F7;
+    background-color: #F6F6F6;
     color: #AAA;
 }
 
