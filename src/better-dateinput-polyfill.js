@@ -60,11 +60,13 @@
 
             // display formatted date value for original input
             if (value.getTime()) {
-                displayedValue.set(function() {
-                    var formattedValue = value.toUTCString();
-                    // remove time part
-                    return formattedValue.substr(0, formattedValue.indexOf("00:00") - 1);
-                });
+                displayedValue
+                    .set("")
+                    // build RFC 1123 Time Format
+                    .append(DOM.create("span").i18n(I18N_DAYS[ampm(value.getDay() ? value.getDay() - 1 : 6, value.getDay())]))
+                    .append(",&nbsp;" + ((value.getDate() > 9 ? "" : "0") + value.getDate()) + "&nbsp;")
+                    .append(DOM.create("span").i18n(I18N_MONTHS[value.getMonth()].substr(0, 3)))
+                    .append("&nbsp;" + value.getFullYear());
             } else {
                 displayedValue.set("");
 
@@ -76,7 +78,7 @@
             year = value.getFullYear();
 
             // update calendar caption
-            caption.i18n(I18N_MONTHS[month], [year]);
+            caption.i18n(I18N_MONTHS[month]).set("&nbsp;" + year);
             // update calendar weekday captions
             weekdays.each(function(el, index) {
                 el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
@@ -173,24 +175,7 @@
         }
     });
 }(window.DOM, "better-dateinput", [
-    "Mo",
-    "Tu",
-    "We",
-    "Th",
-    "Fr",
-    "Sa",
-    "Su"
+    "Mo","Tu","We","Th","Fr","Sa","Su"
 ], [
-    "January {0}",
-    "February {0}",
-    "March {0}",
-    "April {0}",
-    "May {0}",
-    "June {0}",
-    "July {0}",
-    "August {0}",
-    "September {0}",
-    "October {0}",
-    "November {0}",
-    "December {0}"
+    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
 ]));

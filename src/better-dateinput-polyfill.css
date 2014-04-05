@@ -17,8 +17,7 @@
     display: inline-block;
     visibility: hidden; /* initially calendar is hidden */
 
-    width: 20em;
-    line-height: 1;
+    width: 22em;
 
     overflow: hidden;
     cursor: default;
@@ -27,9 +26,8 @@
     background: #FFF;
     border: 1px solid #DDD;
     border-radius: 5px;
-    box-shadow: 0 5px 10px #DDD;
-
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    box-shadow: 0 0.25em 1em rgba(0,0,0,0.2);
+    font: 0.75em / 1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
 
     opacity: 1;
 
@@ -64,13 +62,16 @@
 
 .better-dateinput-calendar > a {
     position: absolute;
-    left: 0.75em;
-    top: 0.75em;
+    left: 0.5em;
+    top: 0.5em;
 
     width: 1em;
-    padding: 0.25em;
+    padding: 0.5em;
+    padding-left: 0.75;
 
-    border-radius: 0.25em;
+    line-height: 1;
+
+    border-radius: 5px;
 }
 
 .better-dateinput-calendar > a:before {
@@ -86,9 +87,9 @@
 
 .better-dateinput-calendar > a + a {
     left: auto;
-    right: 0.75em;
-    padding-right: 0;
-    padding-left: 0.5em;
+    right: 0.5em;
+    padding-right: 0.25em;
+    padding-left: 0.75em;
 }
 
 .better-dateinput-calendar > a + a:before {
@@ -101,7 +102,6 @@
     width: 100%;
     table-layout: fixed;
     border-spacing: 0;
-    border-bottom: 1px solid #DDD;
 }
 
 .better-dateinput-calendar-days td,
@@ -134,6 +134,9 @@
 .better-dateinput-calendar > a:hover,
 .better-dateinput-calendar-days td:hover {
     background-color: #DDD;
-    font-weight: bold;
     color: inherit;
+}
+
+.better-dateinput-calendar-today {
+    font-weight: bold;
 }
