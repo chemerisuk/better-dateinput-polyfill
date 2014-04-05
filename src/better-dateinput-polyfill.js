@@ -133,6 +133,8 @@
             } else {
                 currentDate = new Date(this.get());
 
+                if (!currentDate.getTime()) currentDate = new Date();
+
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
                 else if (which === 76 || which === 39) { delta = 1; }

@@ -1,4 +1,8 @@
 describe("better-dateinput-polyfill", function() {
+    function formatDateISO(value) {
+        return value.toISOString().split("T")[0];
+    }
+
     var el, calendar;
 
     beforeEach(function() {
@@ -42,14 +46,16 @@ describe("better-dateinput-polyfill", function() {
     });
 
     it("should handle arrow keys with optional shiftKey", function() {
-        var setSpy = spyOn(el, "set").and.returnValue(el),
+        var now = new Date(),
+            getSpy = spyOn(el, "get"),
+            setSpy = spyOn(el, "set").and.returnValue(el),
             expectKey = function(key, altKey, expected) {
                 el.onCalendarKeyDown(calendar, key, altKey);
                 expect(setSpy).toHaveBeenCalledWith(expected);
                 setSpy.calls.reset();
             };
 
-        spyOn(el, "get").and.returnValue("2000-01-01");
+        getSpy.and.returnValue("2000-01-01");
 
         expectKey(74, false, "2000-01-08");
         expectKey(40, false, "2000-01-08");
@@ -65,6 +71,27 @@ describe("better-dateinput-polyfill", function() {
         expectKey(37, true, "1999-12-01");
         expectKey(40, true, "2001-01-01");
         expectKey(38, true, "1999-01-01");
+
+        getSpy.and.returnValue("");
+
+        now.setDate(now.getDate() + 1);
+
+        expectKey(76, false, formatDateISO(now));
+        expectKey(39, false, formatDateISO(now));
+
+        now.setDate(now.getDate() + 6);
+
+        expectKey(74, false, formatDateISO(now));
+        expectKey(40, false, formatDateISO(now));
+
+        now.setDate(now.getDate() - 7);
+        now.setFullYear(now.getFullYear() + 1);
+
+        expectKey(40, true, formatDateISO(now));
+
+        now.setFullYear(now.getFullYear() - 2);
+
+        expectKey(38, true, formatDateISO(now));
     });
 
     it("should change month on nav buttons click", function() {
@@ -109,7 +136,7 @@ describe("better-dateinput-polyfill", function() {
 
         el.onCalendarClick(calendar, target);
         expect(getSpy).toHaveBeenCalled();
-        expect(setSpy).toHaveBeenCalledWith(now.toISOString().split("T")[0]);
+        expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
 
         spyOn(target, "next").and.returnValue(el);
 
@@ -117,7 +144,7 @@ describe("better-dateinput-polyfill", function() {
 
         el.onCalendarClick(calendar, target);
         expect(getSpy).toHaveBeenCalled();
-        expect(setSpy).toHaveBeenCalledWith(now.toISOString().split("T")[0]);
+        expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
     });
 
 });
