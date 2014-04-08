@@ -25,25 +25,20 @@
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this.onCalendarFocus.bind(this, calendar))
                 .on("blur", this.onCalendarBlur.bind(this, calendar))
-                .after(calendar, displayedValue);
+                .before(calendar, displayedValue);
 
             calendar
                 .on("mousedown", this.onCalendarClick.bind(this, calendar))
                 .style({
-                    "margin-left": -(calendar.offset().width + offset.width) / 2,
+                    "margin-left": (offset.width - calendar.offset().width) / 2,
                     "margin-top": offset.height,
                     "z-index": 1 + (this.style("z-index") | 0)
                 })
                 .hide(); // hide calendar to trigger show animation properly later
 
-            // center displayed value using margin and line-height
-            displayedValue
-                .style({
-                    "width": offset.width,
-                    "font": this.style("font"),
-                    "margin-left": -offset.width,
-                    "line-height": offset.height + "px"
-                });
+            // copy input CSS
+            displayedValue.style(this.style(
+                ["width", "height", "font", "padding", "text-align", "border-width", "box-sizing"]));
 
             this.parent("form").on("reset", this.onFormReset.bind(this));
             // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5

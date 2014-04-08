@@ -7,17 +7,18 @@
  */
 
 .better-dateinput-value {
+    position: absolute;
     display: inline-block;
-    text-align: center;
     white-space: nowrap;
+
+    border-style: solid;
+    border-color: transparent;
 }
 
 .better-dateinput-calendar {
     position: absolute;
     display: inline-block;
     visibility: hidden; /* initially calendar is hidden */
-
-    width: 22em;
 
     overflow: hidden;
     cursor: default;
@@ -99,9 +100,10 @@
 }
 
 .better-dateinput-calendar-days {
-    width: 100%;
+    width: 22em;
     table-layout: fixed;
     border-spacing: 0;
+    border-collapse: collapse;
 }
 
 .better-dateinput-calendar-days td,
@@ -126,11 +128,10 @@
 
 .better-dateinput-calendar > a,
 .better-dateinput-calendar-days td {
-    -webkit-transition: background-color 0.1s ease-out;
-    transition: background-color 0.1s ease-out;
+    -webkit-transition: background-color 0.15s ease-out;
+    transition: background-color 0.15s ease-out;
 }
 
-.better-dateinput-calendar-today,
 .better-dateinput-calendar > a:hover,
 .better-dateinput-calendar-days td:hover {
     background-color: #DDD;
@@ -139,4 +140,10 @@
 
 .better-dateinput-calendar-today {
     font-weight: bold;
+    background-color: #DDD;
+}
+
+/* fix firefox issue with color:transparent */
+.better-dateinput-value + input::-moz-placeholder {
+    color: initial;
 }
