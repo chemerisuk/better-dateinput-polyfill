@@ -36,9 +36,10 @@
                 })
                 .hide(); // hide calendar to trigger show animation properly later
 
-            // copy input CSS
-            displayedValue.style(this.style(
-                ["width", "height", "font", "padding", "text-align", "border-width", "box-sizing"]));
+            displayedValue
+                // copy input CSS
+                .style(this.style(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]))
+                .style("line-height", offset.height + "px");
 
             this.parent("form").on("reset", this.onFormReset.bind(this));
             // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5

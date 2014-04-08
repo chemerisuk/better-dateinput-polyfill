@@ -11,7 +11,7 @@
     display: inline-block;
     white-space: nowrap;
 
-    border-style: solid;
+    border-style: none solid;
     border-color: transparent;
 }
 
