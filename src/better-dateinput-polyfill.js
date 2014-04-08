@@ -52,20 +52,18 @@
         onValueChanged: function(displayedValue, caption, weekdays, days, value) {
             var year, month, date, iterDate;
 
+            displayedValue.set("");
             value = new Date(value);
 
             // display formatted date value for original input
             if (value.getTime()) {
                 displayedValue
-                    .set("")
                     // build RFC 1123 Time Format
-                    .append(DOM.create("span").i18n(I18N_DAYS[ampm(value.getDay() ? value.getDay() - 1 : 6, value.getDay())]))
+                    .append(DOM.create("span").i18n(I18N_DAYS[value.getDay() ? value.getDay() - 1 : 6]))
                     .append(",&nbsp;" + ((value.getDate() > 9 ? "" : "0") + value.getDate()) + "&nbsp;")
                     .append(DOM.create("span").i18n(I18N_MONTHS[value.getMonth()].substr(0, 3)))
                     .append("&nbsp;" + value.getFullYear());
             } else {
-                displayedValue.set("");
-
                 value = new Date();
             }
 
