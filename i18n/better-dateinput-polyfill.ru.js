@@ -7,7 +7,7 @@ DOM.importStrings("ru", {
     "Fr": "Пт",
     "Sa": "Сб",
     "Su": "Вс",
-    // monthes
+    // months
     "January": "Январь",
     "February": "Февраль",
     "March": "Март",

@@ -7,7 +7,7 @@ DOM.importStrings("de", {
     "Fr": "Fr",
     "Sa": "Sa",
     "Su": "So",
-    // monthes
+    // months
     "January": "Januar",
     "February": "Februar",
     "March": "März",

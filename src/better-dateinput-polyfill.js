@@ -10,15 +10,16 @@
         constructor: function() {
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
                 displayedValue = DOM.create("span.{0}-value", [COMPONENT_CLASS]),
-                zIndex = (parseFloat(this.style("z-index")) || 0) + 1,
+                // IE8 doesn't suport color:transparent - use background-color instead
+                transparentText = document.addEventListener ? "transparent" : this.style("background-color"),
                 offset = this.offset();
 
             this
                 // remove legacy dateinput implementation if it exists
                 // also set value to current time to trigger watchers later
                 .set({type: "text", value: Date.now()})
-                .style("color", this.style("background-color")) /* hide original input text */
-                .addClass(COMPONENT_CLASS)
+                // hide original input text
+                .style("color", transparentText)
                 // handle arrow keys, esc etc.
                 .on("keydown", this.onCalendarKeyDown.bind(this, calendar), ["which", "shiftKey"])
                 // sync picker visibility on focus/blur
@@ -31,7 +32,7 @@
                 .style({
                     "margin-left": -(calendar.offset().width + offset.width) / 2,
                     "margin-top": offset.height,
-                    "z-index": zIndex
+                    "z-index": 1 + (this.style("z-index") | 0)
                 })
                 .hide(); // hide calendar to trigger show animation properly later
 
@@ -78,7 +79,7 @@
             year = value.getFullYear();
 
             // update calendar caption
-            caption.i18n(I18N_MONTHS[month]).set("&nbsp;" + year);
+            caption.i18n(I18N_MONTHS[month]).set("textContent", " " + year);
             // update calendar weekday captions
             weekdays.each(function(el, index) {
                 el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
@@ -96,7 +97,7 @@
 
                 if (year !== iterDate.getFullYear()) mDiff *= -1;
 
-                day.set("_ts", iterDate.getTime()).set(iterDate.getDate());
+                day.set("_ts", iterDate.getTime()).set("textContent", iterDate.getDate());
 
                 return mDiff ?
                     (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
@@ -163,6 +164,23 @@
             calendar.hide();
         },
         onCalendarFocus: function(calendar) {
+            this.legacy(function(node) {
+                // use the trick below to reset text selection on focus
+                setTimeout(function() {
+                    if ("selectionStart" in node) {
+                        node.selectionStart = 0;
+                        node.selectionEnd = 0;
+                    } else {
+                        var inputRange = node.createTextRange();
+
+                        inputRange.moveStart("character", 0);
+                        inputRange.collapse();
+                        inputRange.moveEnd("character", 0);
+                        inputRange.select();
+                    }
+                }, 0);
+            });
+
             calendar.show(function() {
                 // FIXME: remove after migrating to better-dom 1.7.5
                 calendar.style("pointer-events", null);
