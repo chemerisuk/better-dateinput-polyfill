@@ -9,60 +9,77 @@
     DOM.extend("input[type=date]", NOT_A_MOBILE_BROWSER, {
         constructor: function() {
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
-                dateinput = DOM.create("input[type=hidden name={0}]", [this.get("name")]),
-                zIndex = (parseFloat(this.style("z-index")) || 0) + 1;
+                displayedValue = DOM.create("span.{0}-value", [COMPONENT_CLASS]),
+                // IE8 doesn't suport color:transparent - use background-color instead
+                transparentText = document.addEventListener ? "transparent" : this.style("background-color"),
+                offset = this.offset();
 
             this
-                // remove legacy dateinput if it exists
-                .set({type: "text", name: null})
-                .addClass(COMPONENT_CLASS)
+                // remove legacy dateinput implementation if it exists
+                // also set value to current time to trigger watchers later
+                .set({type: "text", value: Date.now()})
+                // hide original input text
+                .style("color", transparentText)
                 // handle arrow keys, esc etc.
-                .on("keydown", this.onCalendarKeyDown.bind(this, calendar, dateinput), ["which", "shiftKey"])
+                .on("keydown", this.onCalendarKeyDown.bind(this, calendar), ["which", "shiftKey"])
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this.onCalendarFocus.bind(this, calendar))
                 .on("blur", this.onCalendarBlur.bind(this, calendar))
-                .after(calendar.hide(), dateinput);
+                .after(calendar, displayedValue);
 
             calendar
-                .style({"margin-top": this.offset().height, "z-index": zIndex})
-                .on("mousedown", this.onCalendarClick.bind(this, calendar, dateinput));
+                .on("mousedown", this.onCalendarClick.bind(this, calendar))
+                .style({
+                    "margin-left": -(calendar.offset().width + offset.width) / 2,
+                    "margin-top": offset.height,
+                    "z-index": 1 + (this.style("z-index") | 0)
+                })
+                .hide(); // hide calendar to trigger show animation properly later
 
-            this.parent("form").on("reset", this.onFormReset.bind(this, dateinput));
+            // center displayed value using margin and line-height
+            displayedValue
+                .style({
+                    "width": offset.width,
+                    "font": this.style("font"),
+                    "margin-left": -offset.width,
+                    "line-height": offset.height + "px"
+                });
+
+            this.parent("form").on("reset", this.onFormReset.bind(this));
             // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5
-            dateinput.watch("undefined", this.onValueChanged.bind(this,
+            this.watch("undefined", this.onValueChanged.bind(this, displayedValue,
                 calendar.find("p"), calendar.findAll("th"), calendar.findAll("td")));
-            // update hidden input value and refresh all visible controls
-            dateinput
-                .set(this.get() || new Date().toISOString())
-                .set("_defaultValue", dateinput.get());
-            // update defaultValue with formatted date
-            this.set("defaultValue", this.get());
+            // trigger watchers to build the calendar
+            this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged: function(caption, weekdays, days, value) {
+        onValueChanged: function(displayedValue, caption, weekdays, days, value) {
+            var year, month, date, iterDate;
+
             value = new Date(value);
 
-            var formattedValue, year, month, date, iterDate;
+            // display formatted date value for original input
+            if (value.getTime()) {
+                displayedValue
+                    .set("")
+                    // build RFC 1123 Time Format
+                    .append(DOM.create("span").i18n(I18N_DAYS[ampm(value.getDay() ? value.getDay() - 1 : 6, value.getDay())]))
+                    .append(",&nbsp;" + ((value.getDate() > 9 ? "" : "0") + value.getDate()) + "&nbsp;")
+                    .append(DOM.create("span").i18n(I18N_MONTHS[value.getMonth()].substr(0, 3)))
+                    .append("&nbsp;" + value.getFullYear());
+            } else {
+                displayedValue.set("");
 
-            if (!value.getTime()) {
                 value = new Date();
-                formattedValue = "";
             }
 
             month = value.getMonth();
             date = value.getDate();
             year = value.getFullYear();
 
-            if (typeof formattedValue !== "string") {
-                formattedValue = ampm(month + 1, date) + "/" + ampm(date, month + 1) + "/" + year;
-            }
-
-            // set formatted date value for original input
-            this.set(formattedValue);
-
             // update calendar caption
-            caption.i18n(I18N_MONTHS[month], [year]);
+            caption.i18n(I18N_MONTHS[month]).set("textContent", " " + year);
             // update calendar weekday captions
             weekdays.each(function(el, index) {
                 el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
@@ -80,29 +97,32 @@
 
                 if (year !== iterDate.getFullYear()) mDiff *= -1;
 
-                day.set("_ts", iterDate.getTime()).set(iterDate.getDate());
+                day.set("_ts", iterDate.getTime()).set("textContent", iterDate.getDate());
 
                 return mDiff ?
-                    (mDiff > 0 ? "prev-calendar-day" : "next-calendar-day") :
-                    (dDiff ? "calendar-day" : "current-calendar-day");
+                    (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
+                    (dDiff ? "" :  COMPONENT_CLASS + "-calendar-today");
             });
         },
-        onCalendarClick: function(calendar, dateinput, target) {
+        onCalendarClick: function(calendar, target) {
             var targetDate;
 
-            if (target.matches("a")) {
-                targetDate = new Date(dateinput.get());
+            if (target == "a") {
+                targetDate = new Date(this.get());
+
+                if (!targetDate.getTime()) targetDate = new Date();
+
                 targetDate.setMonth(targetDate.getMonth() + (target.next("a").length ? -1 : 1));
-            } else if (target.matches("td")) {
+            } else if (target == "td") {
                 targetDate = new Date(target.get("_ts"));
                 calendar.hide();
             }
 
-            if (targetDate != null) dateinput.set(formatISODate(targetDate));
+            if (targetDate != null) this.set(formatISODate(targetDate));
             // prevent input from loosing focus
             return false;
         },
-        onCalendarKeyDown: function(calendar, dateinput, which, shiftKey) {
+        onCalendarKeyDown: function(calendar, which, shiftKey) {
             var delta, currentDate;
 
             // ENTER key should submit form if calendar is hidden
@@ -113,9 +133,11 @@
             } else if (which === 27 || which === 9 || which === 13) {
                 calendar.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === 8 || which === 46) {
-                dateinput.set(""); // BACKSPACE, DELETE clear value
+                this.set(""); // BACKSPACE, DELETE clear value
             } else {
-                currentDate = new Date(dateinput.get());
+                currentDate = new Date(this.get());
+
+                if (!currentDate.getTime()) currentDate = new Date();
 
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
@@ -131,7 +153,7 @@
                         currentDate.setDate(currentDate.getDate() + delta);
                     }
 
-                    dateinput.set(formatISODate(currentDate));
+                    this.set(formatISODate(currentDate));
                 }
             }
             // prevent default action except if it was TAB so
@@ -142,34 +164,36 @@
             calendar.hide();
         },
         onCalendarFocus: function(calendar) {
+            this.legacy(function(node) {
+                // use the trick below to reset text selection on focus
+                setTimeout(function() {
+                    if ("selectionStart" in node) {
+                        node.selectionStart = 0;
+                        node.selectionEnd = 0;
+                    } else {
+                        var inputRange = node.createTextRange();
+
+                        inputRange.moveStart("character", 0);
+                        inputRange.collapse();
+                        inputRange.moveEnd("character", 0);
+                        inputRange.select();
+                    }
+                }, 0);
+            });
+
             calendar.show(function() {
                 // FIXME: remove after migrating to better-dom 1.7.5
                 calendar.style("pointer-events", null);
             });
         },
-        onFormReset: function(dateinput) {
-            dateinput.set(function(el) { return el.get("_defaultValue") });
+        onFormReset: function() {
+            // TODO: will be removed in future implementation of the
+            // watch method, for now need to trigger watchers manually
+            this.set(this.get("defaultValue"));
         }
     });
 }(window.DOM, "better-dateinput", [
-    "Mo",
-    "Tu",
-    "We",
-    "Th",
-    "Fr",
-    "Sa",
-    "Su"
+    "Mo","Tu","We","Th","Fr","Sa","Su"
 ], [
-    "January {0}",
-    "February {0}",
-    "March {0}",
-    "April {0}",
-    "May {0}",
-    "June {0}",
-    "July {0}",
-    "August {0}",
-    "September {0}",
-    "October {0}",
-    "November {0}",
-    "December {0}"
+    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
 ]));

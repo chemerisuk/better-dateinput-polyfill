@@ -9,9 +9,21 @@
         <link href="bower_components/better-dom/dist/better-dom-legacy.htc" rel="htc"/>
         <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
     <![endif]-->
+    <style>
+    .test-form {
+        margin: 3em;
+        font: 14px / 1  Arial;
+    }
+
+    .test-form input[name=start],
+    .test-form input[name=end] {
+        width: 10em;
+        text-align: center;
+    }
+    </style>
 </head>
 <body>
-    <form action="" style="margin: 2em">
+    <form class="test-form">
         <p>
             <label>
             Your name
@@ -21,7 +33,13 @@
         <p>
             <label>
             Your birthdate
-            <input type="date" name="birthdate" required value="2000-01-01">
+            <input type="date" name="start" required value="2000-01-01" placeholder="dd/MM/yyyy">
+            </label>
+        </p>
+        <p>
+            <label>
+            Start date
+            <input type="date" name="end" placeholder="dd/MM/yyyy">
             </label>
         </p>
         <p>
