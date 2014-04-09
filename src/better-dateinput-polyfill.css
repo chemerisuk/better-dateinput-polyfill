@@ -8,8 +8,9 @@
 
 .better-dateinput-value {
     position: absolute;
-    display: inline-block;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     border-style: none solid;
     border-color: transparent;

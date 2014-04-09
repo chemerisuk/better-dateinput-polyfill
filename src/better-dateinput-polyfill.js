@@ -3,15 +3,13 @@
 
     var htmlEl = DOM.find("html"),
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg },
-        formatISODate = function(value) { return value.toISOString().split("T")[0] },
-        NOT_A_MOBILE_BROWSER = !("orientation" in window); // need to skip mobile/tablet browsers
+        formatISODate = function(value) { return value.toISOString().split("T")[0] };
 
-    DOM.extend("input[type=date]", NOT_A_MOBILE_BROWSER, {
+    // need to skip mobile/tablet browsers
+    DOM.extend("input[type=date]", !("orientation" in window), {
         constructor: function() {
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
                 displayedValue = DOM.create("span.{0}-value", [COMPONENT_CLASS]),
-                // IE8 doesn't suport color:transparent - use background-color instead
-                transparentText = document.addEventListener ? "transparent" : this.style("background-color"),
                 offset = this.offset();
 
             this
@@ -19,7 +17,8 @@
                 // also set value to current time to trigger watchers later
                 .set({type: "text", value: Date.now()})
                 // hide original input text
-                .style("color", transparentText)
+                // IE8 doesn't suport color:transparent - use background-color instead
+                .style("color", document.addEventListener ? "transparent" : this.style("background-color"))
                 // handle arrow keys, esc etc.
                 .on("keydown", this.onCalendarKeyDown.bind(this, calendar), ["which", "shiftKey"])
                 // sync picker visibility on focus/blur
