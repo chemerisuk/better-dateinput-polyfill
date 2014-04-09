@@ -3,15 +3,14 @@
 
     var htmlEl = DOM.find("html"),
         ampm = function(pos, neg) { return htmlEl.get("lang") === "en-US" ? pos : neg },
-        formatISODate = function(value) { return value.toISOString().split("T")[0] },
-        NOT_A_MOBILE_BROWSER = !("orientation" in window); // need to skip mobile/tablet browsers
+        formatISODate = function(value) { return value.toISOString().split("T")[0] };
 
-    DOM.extend("input[type=date]", NOT_A_MOBILE_BROWSER, {
+    // need to skip mobile/tablet browsers
+    DOM.extend("input[type=date]", !("orientation" in window), {
         constructor: function() {
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
                 displayedValue = DOM.create("span.{0}-value", [COMPONENT_CLASS]),
-                // IE8 doesn't suport color:transparent - use background-color instead
-                transparentText = document.addEventListener ? "transparent" : this.style("background-color"),
+                color = this.style("color"),
                 offset = this.offset();
 
             this
@@ -19,31 +18,29 @@
                 // also set value to current time to trigger watchers later
                 .set({type: "text", value: Date.now()})
                 // hide original input text
-                .style("color", transparentText)
+                // IE8 doesn't suport color:transparent - use background-color instead
+                .style("color", document.addEventListener ? "transparent" : this.style("background-color"))
                 // handle arrow keys, esc etc.
                 .on("keydown", this.onCalendarKeyDown.bind(this, calendar), ["which", "shiftKey"])
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this.onCalendarFocus.bind(this, calendar))
                 .on("blur", this.onCalendarBlur.bind(this, calendar))
-                .after(calendar, displayedValue);
+                .before(calendar, displayedValue);
 
             calendar
                 .on("mousedown", this.onCalendarClick.bind(this, calendar))
                 .style({
-                    "margin-left": -(calendar.offset().width + offset.width) / 2,
+                    "margin-left": (offset.width - calendar.offset().width) / 2,
                     "margin-top": offset.height,
                     "z-index": 1 + (this.style("z-index") | 0)
                 })
                 .hide(); // hide calendar to trigger show animation properly later
 
-            // center displayed value using margin and line-height
             displayedValue
-                .style({
-                    "width": offset.width,
-                    "font": this.style("font"),
-                    "margin-left": -offset.width,
-                    "line-height": offset.height + "px"
-                });
+                .on("click", this.onCalendarFocus.bind(this, calendar))
+                // copy input CSS
+                .style(this.style(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]))
+                .style({"color": color, "line-height": offset.height + "px"});
 
             this.parent("form").on("reset", this.onFormReset.bind(this));
             // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5
@@ -57,20 +54,18 @@
         onValueChanged: function(displayedValue, caption, weekdays, days, value) {
             var year, month, date, iterDate;
 
+            displayedValue.set("");
             value = new Date(value);
 
             // display formatted date value for original input
             if (value.getTime()) {
                 displayedValue
-                    .set("")
                     // build RFC 1123 Time Format
-                    .append(DOM.create("span").i18n(I18N_DAYS[ampm(value.getDay() ? value.getDay() - 1 : 6, value.getDay())]))
+                    .append(DOM.create("span").i18n(I18N_DAYS[value.getDay() ? value.getDay() - 1 : 6]))
                     .append(",&nbsp;" + ((value.getDate() > 9 ? "" : "0") + value.getDate()) + "&nbsp;")
                     .append(DOM.create("span").i18n(I18N_MONTHS[value.getMonth()].substr(0, 3)))
                     .append("&nbsp;" + value.getFullYear());
             } else {
-                displayedValue.set("");
-
                 value = new Date();
             }
 

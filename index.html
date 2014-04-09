@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>better-dateinput-polyfill demo</title>
     <link href="src/better-dateinput-polyfill.css" rel="stylesheet"/>
     <!--[if IE]>
@@ -10,14 +11,30 @@
         <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
     <![endif]-->
     <style>
+    body {
+        font-size: 100%;
+        line-height: 1.5;
+    }
+
     .test-form {
         margin: 3em;
         font: 14px / 1  Arial;
     }
 
+    .test-form input[type=text],
+    .test-form input[type=date] {
+        padding: 0.5em;
+        border: 2px solid #555;
+        font: 14px / 1  Arial;
+        /*height: 2em;*/
+    }
+
     .test-form input[name=start],
     .test-form input[name=end] {
         width: 10em;
+    }
+
+    .test-form input[name=end] {
         text-align: center;
     }
     </style>
@@ -27,19 +44,19 @@
         <p>
             <label>
             Your name
-            <input type="text" required name="name">
-            </label>
-        </p>
-        <p>
-            <label>
-            Your birthdate
-            <input type="date" name="start" required value="2000-01-01" placeholder="dd/MM/yyyy">
+            <input type="text" required name="name" placeholder="Dart Vaider">
             </label>
         </p>
         <p>
             <label>
             Start date
-            <input type="date" name="end" placeholder="dd/MM/yyyy">
+            <input type="date" name="start" required value="2000-01-01" placeholder="Party begins">
+            </label>
+        </p>
+        <p>
+            <label>
+            End date
+            <input type="date" name="end" placeholder="Party ends">
             </label>
         </p>
         <p>

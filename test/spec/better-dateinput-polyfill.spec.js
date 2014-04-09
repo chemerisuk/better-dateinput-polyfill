@@ -48,11 +48,11 @@ describe("better-dateinput-polyfill", function() {
     it("should handle arrow keys with optional shiftKey", function() {
         var now = new Date(),
             getSpy = spyOn(el, "get"),
-            setSpy = spyOn(el, "set").and.returnValue(el),
+            setSpy = spyOn(el, "set"),
             expectKey = function(key, altKey, expected) {
                 el.onCalendarKeyDown(calendar, key, altKey);
+
                 expect(setSpy).toHaveBeenCalledWith(expected);
-                setSpy.calls.reset();
             };
 
         getSpy.and.returnValue("2000-01-01");
@@ -94,9 +94,19 @@ describe("better-dateinput-polyfill", function() {
         expectKey(38, true, formatDateISO(now));
     });
 
+    it("should render calendar with the value attribute", function() {
+        el = DOM.mock("input[type=date value=`2013-04-09`]");
+
+        var setSpy = spyOn(el, "set"),
+            target = DOM.mock("a");
+
+        el.onCalendarClick(calendar, target);
+        expect(setSpy).toHaveBeenCalledWith("2013-05-09");
+    });
+
     it("should change month on nav buttons click", function() {
         var getSpy = spyOn(el, "get").and.returnValue("2000-01-01"),
-            setSpy = spyOn(el, "set").and.returnValue(el),
+            setSpy = spyOn(el, "set"),
             target = DOM.mock("a");
 
         el.onCalendarClick(calendar, target);
@@ -129,7 +139,7 @@ describe("better-dateinput-polyfill", function() {
     it("should use current date for calendar if value is empty", function() {
         var now = new Date(),
             getSpy = spyOn(el, "get").and.returnValue(""),
-            setSpy = spyOn(el, "set").and.returnValue(el),
+            setSpy = spyOn(el, "set"),
             target = DOM.mock("a");
 
         now.setMonth(now.getMonth() + 1);
