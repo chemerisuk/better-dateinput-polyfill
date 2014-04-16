@@ -1,16 +1,25 @@
 # better-dateinput-polyfill [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
 > `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
 
+Why another date picker? The problem is that most of existing solutions do not follow standards regarding to `value` property format, that should have:
+> A valid full-date as defined in [RFC 3339] 
+
+In other words representation of date can vary, but value should be in `yyyy-MM-dd` format. This helps a lot with handling such dates on server-side.
+
 [VIEW DEMO](http://chemerisuk.github.io/better-dateinput-polyfill/)
 
 ## Features
-* does nothing on mobile browsers and normalizes the widget for desktop browsers
+
+* normalizes `input[type=date]` representation on desktop browsers
+* submitted value of the input has RFC 3339 `yyyy-MM-dd` format
 * [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for current and future content
-* supports US variant of date (just use `lang="en-US"` on `<html>`)
-* calendar suppors navigation via keyboard
-* allows to set value programmatically, but the string should be in ISO (yyyy-MM-dd) format
-* fully customizable via css classes
+* fully customizable date picker via CSS classes
+* date picker has keyboard support
+* allows to set value programmatically, but the string should be in `yyyy-MM-dd` format
+* US variant of days of week supported (just use `<html lang="en-US">`)
+* does nothing on mobile browsers, they have good UI widget and have correct `value` format 
 * restores initial value on parent form reset
+* full i18n support (if your language is missed - just translate strings from `i18n` folder and include a new file in your project)
 
 Installing
 ----------

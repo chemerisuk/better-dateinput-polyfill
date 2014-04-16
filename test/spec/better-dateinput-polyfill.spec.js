@@ -157,4 +157,20 @@ describe("better-dateinput-polyfill", function() {
         expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
     });
 
+    it("should display calendar on focus", function() {
+        var spy = spyOn(calendar, "show");
+
+        el.onCalendarFocus(calendar);
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it("should restore initial value on form reset", function() {
+        el.set("defaultValue", "2000-10-20");
+        el.set("value", "2000-10-2");
+
+        el.onFormReset();
+
+        expect(el.get()).toBe("2000-10-20");
+    });
+
 });
