@@ -1,6 +1,6 @@
 /**
  * @file src/better-dateinput-polyfill.js
- * @version 1.4.0-beta.3 2014-04-09T16:05:38
+ * @version 1.4.0-rc.1 2014-04-16T14:52:53
  * @overview input[type=date] polyfill for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -51,8 +51,7 @@
                 .style({"color": color, "line-height": offset.height + "px"});
 
             this.parent("form").on("reset", this.onFormReset.bind(this));
-            // FIXME: "undefined" -> "value" after migrating to better-dom 1.7.5
-            this.watch("undefined", this.onValueChanged.bind(this, displayedValue,
+            this.watch("value", this.onValueChanged.bind(this, displayedValue,
                 calendar.find("p"), calendar.findAll("th"), calendar.findAll("td")));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
@@ -184,10 +183,7 @@
                 }, 0);
             });
 
-            calendar.show(function() {
-                // FIXME: remove after migrating to better-dom 1.7.5
-                calendar.style("pointer-events", null);
-            });
+            calendar.show();
         },
         onFormReset: function() {
             // TODO: will be removed in future implementation of the
