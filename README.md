@@ -1,7 +1,7 @@
 # better-dateinput-polyfill [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
 > `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
 
-Why another date picker? The problem is that most of existing solutions do not follow standards regarding to `value` property format, that should have "a valid full-date as defined in [RFC 3339]". In other words representation of the date can vary, but value should be in `yyyy-MM-dd` format. This helps a lot to handle forms on server-side.
+Why another date picker? The problem is that most of existing solutions do not follow standards regarding to `value` property format, that should have "a valid full-date as defined in [RFC 3339]". In other words representation of the date can vary, but value should be in `yyyy-MM-dd` format. This helps a lot to work with such values consistently regarding on current language.
 
 [VIEW DEMO](http://chemerisuk.github.io/better-dateinput-polyfill/)
 
