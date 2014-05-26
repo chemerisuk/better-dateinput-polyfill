@@ -1,6 +1,6 @@
 /**
  * @file src/better-dateinput-polyfill.js
- * @version 1.4.0-rc.1 2014-04-16T14:52:53
+ * @version 1.4.0-rc.2 2014-05-26T14:02:46
  * @overview input[type=date] polyfill for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -19,7 +19,8 @@
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
                 displayedValue = DOM.create("span.{0}-value", [COMPONENT_CLASS]),
                 color = this.style("color"),
-                offset = this.offset();
+                offset = this.offset(),
+                calOffset;
 
             this
                 // remove legacy dateinput implementation if it exists
@@ -35,20 +36,32 @@
                 .on("blur", this.onCalendarBlur.bind(this, calendar))
                 .before(calendar, displayedValue);
 
+            calOffset = calendar.offset();
+
             calendar
                 .on("mousedown", this.onCalendarClick.bind(this, calendar))
                 .style({
-                    "margin-left": (offset.width - calendar.offset().width) / 2,
-                    "margin-top": offset.height,
+                    "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
+                    "margin-top": offset.bottom - calOffset.top,
                     "z-index": 1 + (this.style("z-index") | 0)
                 })
                 .hide(); // hide calendar to trigger show animation properly later
+
+            // move calendar to the top when passing cross browser window bounds
+            if (DOM.find("html").get("clientHeight") < offset.bottom + calOffset.height) {
+                calendar.style("margin-top", calOffset.top - offset.bottom - calOffset.height);
+            }
 
             displayedValue
                 .on("click", this.onCalendarFocus.bind(this, calendar))
                 // copy input CSS
                 .style(this.style(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]))
-                .style({"color": color, "line-height": offset.height + "px"});
+                .style({
+                    "color": color,
+                    "line-height": offset.height + "px",
+                    "margin-left": offset.left - calOffset.left,
+                    "margin-top": offset.top - calOffset.top,
+                });
 
             this.parent("form").on("reset", this.onFormReset.bind(this));
             this.watch("value", this.onValueChanged.bind(this, displayedValue,
@@ -105,6 +118,8 @@
                     (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
                     (dDiff ? "" :  COMPONENT_CLASS + "-calendar-today");
             });
+            // trigger event manually to notify about changes
+            this.fire("change");
         },
         onCalendarClick: function(calendar, target) {
             var targetDate;
