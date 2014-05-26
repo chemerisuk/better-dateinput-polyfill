@@ -105,6 +105,8 @@
                     (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
                     (dDiff ? "" :  COMPONENT_CLASS + "-calendar-today");
             });
+            // trigger event manually to notify about changes
+            this.fire("change");
         },
         onCalendarClick: function(calendar, target) {
             var targetDate;
