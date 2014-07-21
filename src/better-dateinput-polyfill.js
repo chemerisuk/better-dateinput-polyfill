@@ -67,7 +67,7 @@
             var year, month, date, iterDate;
 
             displayedValue.set("");
-            value = new Date(value);
+            value = new Date(Date.parse(value));
 
             // display formatted date value for original input
             if (value.getTime()) {
