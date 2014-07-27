@@ -74,6 +74,12 @@
     line-height: 1;
 
     border-radius: 5px;
+
+    display: none;
+}
+
+.better-dateinput-calendar:hover > a {
+    display: block;
 }
 
 .better-dateinput-calendar > a:before {
