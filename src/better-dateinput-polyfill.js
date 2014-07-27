@@ -72,7 +72,7 @@
             // display formatted date value for original input
             if (value.getTime()) {
                 displayedValue
-                    // build RFC 1123 Time Format
+                    // build RFC 1123 string based on the lang attribute
                     .append(DOM.create("span").i18n(I18N_DAYS[value.getDay() ? value.getDay() - 1 : 6]))
                     .append(",&nbsp;" + ((value.getDate() > 9 ? "" : "0") + value.getDate()) + "&nbsp;")
                     .append(DOM.create("span").i18n(I18N_MONTHS[value.getMonth()].substr(0, 3)))
@@ -86,7 +86,9 @@
             year = value.getFullYear();
 
             // update calendar caption
-            caption.i18n(I18N_MONTHS[month]).set("textContent", " " + year);
+            caption
+                .set("&nbsp;" + year)
+                .prepend(DOM.create("span").i18n(I18N_MONTHS[month]));
             // update calendar weekday captions
             weekdays.each(function(el, index) {
                 el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
@@ -104,7 +106,7 @@
 
                 if (year !== iterDate.getFullYear()) mDiff *= -1;
 
-                day.set("_ts", iterDate.getTime()).set("textContent", iterDate.getDate());
+                day.set("-ts", iterDate.getTime()).set(iterDate.getDate());
 
                 return mDiff ?
                     (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
@@ -123,7 +125,7 @@
 
                 targetDate.setMonth(targetDate.getMonth() + (target.next("a").length ? -1 : 1));
             } else if (target == "td") {
-                targetDate = new Date(target.get("_ts"));
+                targetDate = new Date(target.get("-ts"));
                 calendar.hide();
             }
 
