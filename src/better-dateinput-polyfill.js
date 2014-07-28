@@ -8,7 +8,7 @@
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
         constructor: function() {
-            var calendar = DOM.create("div.{0}>a[unselectable=on]*2+p.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
+            var calendar = DOM.create("div.{0}>a[unselectable=on]*2+span.{0}-header+table.{0}-days>thead>tr>th[unselectable=on]*7+tbody>tr*6>td*7", [COMPONENT_CLASS + "-calendar"]),
                 displayedValue = DOM.create("span.{0}-value", [COMPONENT_CLASS]),
                 color = this.style("color"),
                 offset = this.offset(),
@@ -57,7 +57,7 @@
 
             this.parent("form").on("reset", this.onFormReset.bind(this));
             this.watch("value", this.onValueChanged.bind(this, displayedValue,
-                calendar.find("p"), calendar.findAll("th"), calendar.findAll("td")));
+                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calendar.findAll("th"), calendar.findAll("td")));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
