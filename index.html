@@ -11,22 +11,21 @@
         <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
     <![endif]-->
     <style>
-    body {
-        font-size: 100%;
-        line-height: 1.5;
+    body, input {
+        font: 14px / 1  Arial;
     }
 
     .test-form {
         margin: 3em;
-        font: 14px / 1  Arial;
+        width: 20em;
     }
 
     .test-form input[type=text],
     .test-form input[type=date] {
         padding: 0.5em;
         border: 2px solid #555;
-        font: 14px / 1  Arial;
-        /*height: 2em;*/
+        margin: 0;
+        vertical-align: baseline;
     }
 
     .test-form input[name=start],
@@ -36,6 +35,7 @@
 
     .test-form input[name=end] {
         text-align: center;
+        float: right;
     }
     </style>
 </head>

@@ -1,6 +1,6 @@
 /**
  * @file src/better-dateinput-polyfill.css
- * @version 1.4.0 2014-08-02T12:58:58
+ * @version 1.4.1 2014-08-29T19:17:56
  * @overview input[type=date] polyfill for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -18,6 +18,7 @@
 
 .better-dateinput-value {
     position: absolute;
+    display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -28,7 +29,6 @@
 
 .better-dateinput-calendar {
     position: absolute;
-    display: inline-block;
     visibility: hidden; /* initially calendar is hidden */
 
     overflow: hidden;

@@ -10,6 +10,7 @@
 
 .better-dateinput-value {
     position: absolute;
+    display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -20,7 +21,6 @@
 
 .better-dateinput-calendar {
     position: absolute;
-    display: inline-block;
     visibility: hidden; /* initially calendar is hidden */
 
     overflow: hidden;
