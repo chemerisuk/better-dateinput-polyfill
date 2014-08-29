@@ -67,23 +67,23 @@
             var year, month, date, iterDate;
 
             displayedValue.set("");
-            value = new Date(Date.parse(value));
+            value = new Date(value);
 
             // display formatted date value for original input
             if (value.getTime()) {
                 displayedValue
                     // build RFC 1123 string based on the lang attribute
-                    .append(DOM.create("span").i18n(I18N_DAYS[value.getDay() ? value.getDay() - 1 : 6]))
-                    .append(",&nbsp;" + ((value.getDate() > 9 ? "" : "0") + value.getDate()) + "&nbsp;")
-                    .append(DOM.create("span").i18n(I18N_MONTHS[value.getMonth()].substr(0, 3)))
-                    .append("&nbsp;" + value.getFullYear());
+                    .append(DOM.create("span").i18n(I18N_DAYS[value.getUTCDay() ? value.getUTCDay() - 1 : 6]))
+                    .append(",&nbsp;" + ((value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate()) + "&nbsp;")
+                    .append(DOM.create("span").i18n(I18N_MONTHS[value.getUTCMonth()].substr(0, 3)))
+                    .append("&nbsp;" + value.getUTCFullYear());
             } else {
                 value = new Date();
             }
 
-            month = value.getMonth();
-            date = value.getDate();
-            year = value.getFullYear();
+            month = value.getUTCMonth();
+            date = value.getUTCDate();
+            year = value.getUTCFullYear();
 
             // update calendar caption
             caption
@@ -94,19 +94,19 @@
                 el.i18n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
             });
             // update calendar content
-            iterDate = new Date(year, month, 0, 12);
+            iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
-            iterDate.setDate(iterDate.getDate() - iterDate.getDay() - ampm(1, 0));
+            iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
             // update day numbers
             days.set("class", function(day) {
-                iterDate.setDate(iterDate.getDate() + 1);
+                iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
-                var mDiff = month - iterDate.getMonth(),
-                    dDiff = date - iterDate.getDate();
+                var mDiff = month - iterDate.getUTCMonth(),
+                    dDiff = date - iterDate.getUTCDate();
 
-                if (year !== iterDate.getFullYear()) mDiff *= -1;
+                if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
-                day.set("-ts", iterDate.getTime()).set(iterDate.getDate());
+                day.set("-ts", iterDate.getTime()).set(iterDate.getUTCDate());
 
                 return mDiff ?
                     (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
@@ -123,7 +123,7 @@
 
                 if (!targetDate.getTime()) targetDate = new Date();
 
-                targetDate.setMonth(targetDate.getMonth() + (target.next("a").length ? -1 : 1));
+                targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a").length ? -1 : 1));
             } else if (target == "td") {
                 targetDate = new Date(target.get("-ts"));
                 calendar.hide();
@@ -157,11 +157,11 @@
 
                 if (delta) {
                     if (shiftKey && (which === 40 || which === 38)) {
-                        currentDate.setFullYear(currentDate.getFullYear() + (delta > 0 ? 1 : -1));
+                        currentDate.setUTCFullYear(currentDate.getUTCFullYear() + (delta > 0 ? 1 : -1));
                     } else if (shiftKey && (which === 37 || which === 39)) {
-                        currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 1 : -1));
+                        currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 1 : -1));
                     } else {
-                        currentDate.setDate(currentDate.getDate() + delta);
+                        currentDate.setUTCDate(currentDate.getUTCDate() + delta);
                     }
 
                     this.set(formatISODate(currentDate));
