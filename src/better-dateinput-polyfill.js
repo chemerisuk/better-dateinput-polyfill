@@ -75,7 +75,7 @@
                     // build RFC 1123 string based on the lang attribute
                     .append(DOM.create("span").i18n(I18N_DAYS[value.getUTCDay() ? value.getUTCDay() - 1 : 6]))
                     .append(",&nbsp;" + ((value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate()) + "&nbsp;")
-                    .append(DOM.create("span").i18n(I18N_MONTHS[value.getUTCMonth()].substr(0, 3)))
+                    .append(DOM.create("span").i18n(I18N_MONTHS[value.getUTCMonth()].substr(0, 3) + "."))
                     .append("&nbsp;" + value.getUTCFullYear());
             } else {
                 value = new Date();
