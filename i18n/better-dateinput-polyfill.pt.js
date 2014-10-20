@@ -1,0 +1,36 @@
+DOM.importStrings("pt", {
+    // days of week
+    "Mo": "Seg",
+    "Tu": "Ter",
+    "We": "Qua",
+    "Th": "Qui",
+    "Fr": "Sex",
+    "Sa": "Sáb",
+    "Su": "Dom",
+    // months
+    "January": "Janeiro",
+    "February": "Fevereiro",
+    "March": "Março",
+    "April": "Abril",
+    "May": "Maio",
+    "June": "Junho",
+    "July": "Julho",
+    "August": "Agosto",
+    "September": "Setembro",
+    "October": "Outubro",
+    "November": "Novembro",
+    "December": "Dezembro",
+    // compact months
+    "Jan.": "Jan.",
+    "Feb.": "Fev.",
+    "Mar.": "Mar.",
+    "Apr.": "Abr.",
+    "May.": "Mai.",
+    "Jun.": "Jun.",
+    "Jul.": "Jul.",
+    "Aug.": "Ago.",
+    "Sep.": "Set.",
+    "Oct.": "Out.",
+    "Nov.": "Nov.",
+    "Dec.": "Dez."
+});
