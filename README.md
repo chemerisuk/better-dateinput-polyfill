@@ -47,6 +47,29 @@ Then append the following script on your page:
 </html>
 ```
 
+i18n
+----
+Add the `lang` attribute to your `<html>` tag and include the corresponding strings file from `i18n` folder:
+
+```html
+<html lang="ru">
+<head>
+    ...
+    <link href="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.css" rel="stylesheet"/>
+    <!--[if IE]>
+        <link href="bower_components/better-dom/dist/better-dom-legacy.htc" rel="htc"/>
+        <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
+    <![endif]-->
+</head>
+<body>
+    ...
+    <script src="bower_components/better-dom/dist/better-dom.js"></script>
+    <script src="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
+    <script src="bower_components/better-dateinput-polyfill/i18n/better-dateinput-polyfill.ru.js"></script>
+</body>
+</html>
+```
+
 ## Browser support
 #### Desktop
 * Chrome
