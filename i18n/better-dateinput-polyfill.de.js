@@ -21,15 +21,16 @@ DOM.importStrings("de", {
     "November": "November",
     "December": "Dezember",
     // compact months
-    "Jan": "Jan.",
-    "Feb": "Feb.",
-    "Mar": "März",
-    "Apr": "Apr.",
-    "Jun": "Juni",
-    "Jul": "Juli",
-    "Aug": "Aug.",
-    "Sep": "Sept.",
-    "Oct": "Okt.",
-    "Nov": "Nov.",
-    "Dec": "Dez."
+    "Jan.": "Jan.",
+    "Feb.": "Feb.",
+    "Mar.": "März",
+    "Apr.": "Apr.",
+    "May.": "Mai",
+    "Jun.": "Juni",
+    "Jul.": "Juli",
+    "Aug.": "Aug.",
+    "Sep.": "Sept.",
+    "Oct.": "Okt.",
+    "Nov.": "Nov.",
+    "Dec.": "Dez."
 });
