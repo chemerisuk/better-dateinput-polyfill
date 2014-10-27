@@ -122,7 +122,7 @@ describe("better-dateinput-polyfill", function() {
 
     it("should select appropriate day on calendar click", function() {
         var now = new Date(2011, 6, 13, 12),
-            target = DOM.mock("td").data("ts", now.getTime()),
+            target = DOM.mock("td").set("_ts", now.getTime()),
             setSpy = spyOn(el, "set");
 
         el.onCalendarClick(calendar, target);

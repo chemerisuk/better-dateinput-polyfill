@@ -1,12 +1,12 @@
 (function(DOM, COMPONENT_CLASS, I18N_DAYS, I18N_MONTHS) {
     "use strict";
 
-    var ampm = function(pos, neg) { return DOM.get("lang") === "en-US" ? pos : neg },
-        formatISODate = function(value) { return value.toISOString().split("T")[0] };
+    var ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
+        formatISODate = (value) => value.toISOString().split("T")[0];
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
-        constructor: function() {
+        constructor() {
             var calendar = DOM.create("div.{0}>a[unselectable=on]*2+span[aria-hidden=true].{0}-header+table[aria-hidden=true].{0}-days>thead>(tr>th[unselectable=on]*7)+(tbody>tr*6>td*7)", [COMPONENT_CLASS + "-calendar"]),
                 displayedValue = DOM.create("span[aria-hidden=true].{0}-value", [COMPONENT_CLASS]),
                 color = this.css("color"),
@@ -21,16 +21,17 @@
                 // IE8 doesn't suport color:transparent - use background-color instead
                 .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
                 // handle arrow keys, esc etc.
-                .on("keydown", ["which", "shiftKey"], this.onCalendarKeyDown.bind(this, calendar))
+                .on("keydown", [calendar, "which", "shiftKey"], this.onCalendarKeyDown)
                 // sync picker visibility on focus/blur
-                .on(["focus", "click"], this.onCalendarFocus.bind(this, calendar))
-                .on("blur", this.onCalendarBlur.bind(this, calendar))
-                .before(calendar, displayedValue);
+                .on(["focus", "click"], [calendar], this.onCalendarFocus)
+                .on("blur", [calendar], this.onCalendarBlur)
+                .before(calendar)
+                .before(displayedValue);
 
             calOffset = calendar.offset();
 
             calendar
-                .on("mousedown", ["target"], this.onCalendarClick.bind(this, calendar))
+                .on("mousedown", [calendar, "target"], this.onCalendarClick)
                 .css({
                     "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
                     "margin-top": offset.bottom - calOffset.top,
@@ -44,7 +45,7 @@
             }
 
             displayedValue
-                .on("click", this.onCalendarFocus.bind(this, calendar))
+                .on("click", [calendar], this.onCalendarFocus)
                 // copy input CSS
                 .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]))
                 .css({
@@ -54,7 +55,7 @@
                     "margin-top": offset.top - calOffset.top,
                 });
 
-            this.closest("form").on("reset", this.onFormReset.bind(this));
+            this.closest("form").on("reset", this.onFormReset);
             this.watch("value", this.onValueChanged.bind(this, displayedValue,
                 calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calendar.findAll("th"), calendar.findAll("td")));
             // trigger watchers to build the calendar
@@ -62,7 +63,7 @@
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged: function(displayedValue, caption, weekdays, days, value) {
+        onValueChanged(displayedValue, caption, weekdays, days, value) {
             var year, month, date, iterDate;
 
             displayedValue.set("");
@@ -113,7 +114,7 @@
             // trigger event manually to notify about changes
             this.fire("change");
         },
-        onCalendarClick: function(calendar, target) {
+        onCalendarClick(calendar, target) {
             var targetDate;
 
             if (target.matches("a")) {
@@ -121,7 +122,7 @@
 
                 if (!targetDate.getTime()) targetDate = new Date();
 
-                targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a").length ? -1 : 1));
+                targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a")[0] ? -1 : 1));
             } else if (target.matches("td")) {
                 targetDate = new Date(target.get("_ts"));
                 calendar.hide();
@@ -131,7 +132,7 @@
             // prevent input from loosing focus
             return false;
         },
-        onCalendarKeyDown: function(calendar, which, shiftKey) {
+        onCalendarKeyDown(calendar, which, shiftKey) {
             var delta, currentDate;
 
             // ENTER key should submit form if calendar is hidden
@@ -169,14 +170,13 @@
             // do not allow to change the value manually
             return which === 9;
         },
-        onCalendarBlur: function(calendar) {
+        onCalendarBlur(calendar) {
             calendar.hide();
         },
-        onCalendarFocus: function(calendar) {
+        onCalendarFocus(calendar) {
             var node = this[0];
-
             // use the trick below to reset text selection on focus
-            setTimeout(function() {
+            setTimeout(() => {
                 if ("selectionStart" in node) {
                     node.selectionStart = 0;
                     node.selectionEnd = 0;
@@ -192,7 +192,7 @@
 
             calendar.show();
         },
-        onFormReset: function() {
+        onFormReset() {
             // TODO: will be removed in future implementation of the
             // watch method, for now need to trigger watchers manually
             this.set(this.get("defaultValue"));
