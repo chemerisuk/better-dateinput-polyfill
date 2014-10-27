@@ -3,25 +3,25 @@
   "version": "1.4.2",
   "main": [
     "dist/better-dateinput-polyfill.js",
-    "dist/better-dateinput-polyfill.css",
     "i18n/better-dateinput-polyfill.ru.js",
     "i18n/better-dateinput-polyfill.fr.js",
-    "i18n/better-dateinput-polyfill.de.js"
+    "i18n/better-dateinput-polyfill.de.js",
+    "i18n/better-dateinput-polyfill.es.js",
+    "i18n/better-dateinput-polyfill.pt.js"
   ],
   "ignore": [
     ".*",
     "test",
     "src",
     "index.html",
-    "Gruntfile.js",
     "package.json",
-    "bower.json",
-    "main.sublime-project"
+    "bower.json"
   ],
   "keywords": [
     "better-dom"
   ],
   "dependencies": {
-    "better-dom": "^1.7.7"
+    "better-dom": "~2.0.0",
+    "better-i18n-plugin": "~1.0.1"
   }
 }

@@ -4,25 +4,22 @@
   "version": "1.4.2",
   "author": "Maksim Chemerisuk",
   "license": "MIT",
+  "homepage": "https://github.com/chemerisuk/better-dateinput-polyfill",
   "repository": {
     "type": "git",
     "url": "https://github.com/chemerisuk/better-dateinput-polyfill"
   },
   "devDependencies": {
-    "grunt": "0.4.1",
-    "grunt-contrib-jshint": "0.5.4",
-    "grunt-contrib-watch": "0.4.3",
-    "grunt-karma": "0.8.2",
-    "karma": "0.12.0",
-    "karma-jasmine": "^0.2",
-    "karma-coverage": "^0.1",
-    "karma-phantomjs-launcher": "^0.1",
-    "grunt-github-publish": "~0.1.5",
-    "grunt-shell": "~0.6.0",
-    "coveralls": "^2.8.0"
+    "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"
   },
   "scripts": {
-    "test": "grunt test",
-    "coveralls": "cat ./coverage/PhantomJS*/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
-  }
+    "test": "gulp test --gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd .",
+    "start": "gulp dev --gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd .",
+    "gh-pages": "gulp gh-pages --gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd ."
+  },
+  "karmaFiles": [
+    "bower_components/better-dom/dist/better-dom.js",
+    "bower_components/better-dom/dist/better-dom-legacy.js",
+    "bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"
+  ]
 }
