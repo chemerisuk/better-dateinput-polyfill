@@ -40,12 +40,12 @@
                 .hide(); // hide calendar to trigger show animation properly later
 
             // move calendar to the top when passing cross browser window bounds
-            if (DOM.find("html").get("clientHeight") < offset.bottom + calOffset.height) {
+            if (DOM.get("clientHeight") < offset.bottom + calOffset.height) {
                 calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
             }
 
             displayedValue
-                .on("click", [calendar], this.onCalendarFocus)
+                .on("click", () => { this.fire("focus") })
                 // copy input CSS
                 .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]))
                 .css({

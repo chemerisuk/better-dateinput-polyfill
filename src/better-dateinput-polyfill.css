@@ -18,6 +18,7 @@
 
     color: #FFF;
     background: #2DA4D6;
+    user-select: none;
 
     border: 1px solid #DDD;
     border-radius: 3px;
@@ -26,26 +27,13 @@
     text-align: center;
 
     opacity: 1;
-
-    -webkit-transform: scale(1,1);
     transform: scale(1,1);
-
-    -webkit-transform-origin: 50% 0;
     transform-origin: 50% 0;
-
-    -webkit-transition: 0.15s ease-in-out;
     transition: 0.15s ease-in-out;
-
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
 }
 
 .better-dateinput-calendar[aria-hidden=true] {
     opacity: 0;
-
-    -webkit-transform: scale(0,0);
     transform: scale(0,0);
 }
 
@@ -111,8 +99,6 @@
 
 .better-dateinput-calendar-days td {
     border: 1px solid #DDD;
-
-    -webkit-transition: background-color 0.1s ease-out;
     transition: background-color 0.1s ease-out;
 }
 

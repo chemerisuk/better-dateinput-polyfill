@@ -17,13 +17,13 @@ Why another date picker? The problem is that most of existing solutions do not f
 * does nothing on mobile browsers, they have good UI widget and correct `value` format 
 * `placeholder` attribute works as expected in browsers that support it
 * restores initial value on form reset
-* full [i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions) (if your language is missed - just translate strings from `i18n` folder and include a new file in your project)
+* [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions) (if your language is missed - just translate strings from `i18n` folder and include a new file in your project)
 
 ## Installation
 The simplest way is to use [bower](http://bower.io/):
 
 ```sh
-bower install better-dateinput-polyfill
+$ bower install better-dateinput-polyfill
 ```
 
 This will clone the latest version of the __better-dateinput-polyfill__ with dependencies into the `bower_components` directory at the root of your project.
@@ -54,7 +54,7 @@ Then append the following script on your page:
 * Safari 6.0+
 * Firefox 16+
 * Opera 12.10+
-* IE8+
+* Internet Explorer 8+ (see [notes](https://github.com/chemerisuk/better-dom#notes-about-old-ies))
 
 #### Mobile
 * iOS Safari 6+
