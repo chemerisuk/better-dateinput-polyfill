@@ -1,3 +1,14 @@
+:root {
+    --font-color: #555;
+    --bkg-header: #2DA4D6;
+    --bkg-active: #207FB1;
+    --color-border: #DDD;
+    --color-graytext: #BBB;
+    --bkg-graytext: #F3F3F3;
+    --bkg-normal: #FFF;
+    --border-normal: 1px solid;
+}
+
 .better-dateinput-value {
     position: absolute;
     display: block;
@@ -15,12 +26,12 @@
 
     overflow: hidden;
     cursor: default;
-
-    color: #FFF;
-    background: #2DA4D6;
     user-select: none;
 
-    border: 1px solid #DDD;
+    color: var(--bkg-normal);
+    background: var(--bkg-header);
+
+    border: var(--border-normal) var(--color-border);
     border-radius: 3px;
     box-shadow: 0 0.25em 0.5em rgba(0,0,0,0.2);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -80,8 +91,8 @@
     border-spacing: 0;
     border-collapse: collapse;
 
-    color: #555;
-    background: #FFF;
+    color: var(--font-color);
+    background: var(--bkg-normal);
 }
 
 .better-dateinput-calendar-days td,
@@ -93,33 +104,33 @@
 
 .better-dateinput-calendar-days th {
     font-size: 0.75em;
-    background-color: #DDD;
+    background-color: var(--color-border);
     font-weight: bold;
 }
 
 .better-dateinput-calendar-days td {
-    border: 1px solid #DDD;
+    border: var(--border-normal) var(--color-border);
     transition: background-color 0.1s ease-out;
 }
 
 .better-dateinput-calendar-past,
 .better-dateinput-calendar-future {
-    color: #BBB;
+    color: var(--color-graytext);
 }
 
 .better-dateinput-calendar-today {
-    color: #FFF;
-    background-color: #2DA4D6;
+    color: var(--bkg-normal);
+    background-color: var(--bkg-header);
     font-weight: bold;
 }
 
 .better-dateinput-calendar-days td:hover {
-    background-color: #F3F3F3;
+    background-color: var(--bkg-graytext);
 }
 
 .better-dateinput-calendar > a:hover,
 td.better-dateinput-calendar-today:hover {
-    background-color: #207FB1;
+    background-color: var(--bkg-active);
 }
 
 /* fix firefox issue with color:transparent */
