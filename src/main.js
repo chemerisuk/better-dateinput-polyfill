@@ -57,13 +57,13 @@
 
             this.closest("form").on("reset", this.onFormReset);
             this.watch("value", this.onValueChanged.bind(this, displayedValue,
-                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calendar.findAll("th"), calendar.findAll("td")));
+                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calendar.findAll("th"), calendar));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged(displayedValue, caption, weekdays, days, value) {
+        onValueChanged(displayedValue, caption, weekdays, calendar, value, prevValue) {
             var year, month, date, iterDate;
 
             displayedValue.set("");
@@ -98,7 +98,15 @@
             // move to beginning of current month week
             iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
             // update day numbers
-            days.forEach((day) => {
+            prevValue = new Date(prevValue);
+
+            var tbody = calendar.find("tbody");
+            var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
+            var clone = delta ? tbody.hide().clone() : tbody.show();
+            // make sure only one body exists
+            tbody.nextAll("tbody").forEach((el) => { el.remove() });
+
+            clone.findAll("td").forEach((day) => {
                 iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                 var mDiff = month - iterDate.getUTCMonth(),
@@ -111,6 +119,11 @@
                     (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
                     (dDiff ? "" :  COMPONENT_CLASS + "-calendar-today"));
             });
+
+            if (delta) {
+                tbody[delta > 0 ? "after" : "before"](clone);
+                clone.show(() => { tbody.remove() });
+            }
             // trigger event manually to notify about changes
             this.fire("change");
         },
