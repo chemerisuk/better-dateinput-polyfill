@@ -1,4 +1,4 @@
-(function(DOM, COMPONENT_CLASS, I18N_DAYS, I18N_MONTHS) {
+(function(DOM, COMPONENT_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, I18N_DAYS, I18N_MONTHS) {
     "use strict";
 
     var ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
@@ -136,13 +136,13 @@
             var delta, currentDate;
 
             // ENTER key should submit form if calendar is hidden
-            if (calendar.matches(":hidden") && which === 13) return true;
+            if (calendar.matches(":hidden") && which === VK_ENTER) return true;
 
-            if (which === 32) {
+            if (which === VK_SPACE) {
                 calendar.toggle(); // SPACE key toggles calendar visibility
-            } else if (which === 27 || which === 9 || which === 13) {
+            } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
                 calendar.hide(); // ESC, TAB or ENTER keys hide calendar
-            } else if (which === 8 || which === 46) {
+            } else if (which === VK_BACKSPACE || which === VK_DELETE) {
                 this.set(""); // BACKSPACE, DELETE clear value
             } else {
                 currentDate = new Date(this.get());
@@ -168,7 +168,7 @@
             }
             // prevent default action except if it was TAB so
             // do not allow to change the value manually
-            return which === 9;
+            return which === VK_TAB;
         },
         onCalendarBlur(calendar) {
             calendar.hide();
@@ -193,12 +193,10 @@
             calendar.show();
         },
         onFormReset() {
-            // TODO: will be removed in future implementation of the
-            // watch method, for now need to trigger watchers manually
             this.set(this.get("defaultValue"));
         }
     });
-}(window.DOM, "better-dateinput", [
+}(window.DOM, "better-dateinput", 32, 9, 13, 27, 8, 46, [
     "Mo","Tu","We","Th","Fr","Sa","Su"
 ], [
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
