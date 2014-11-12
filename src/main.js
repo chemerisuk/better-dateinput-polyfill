@@ -7,7 +7,7 @@
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
         constructor() {
-            var calendar = DOM.create("div.{0}>a[unselectable=on]*2+span[aria-hidden=true].{0}-header+table[aria-hidden=true].{0}-days>thead>(tr>th[unselectable=on]*7)+(tbody>tr*6>td*7)", [COMPONENT_CLASS + "-calendar"]),
+            var calendar = DOM.create("div.{0}>a[unselectable=on]*2+span[aria-hidden=true].{0}-header+table[aria-hidden=true].{0}-days>thead>(tr>th[unselectable=on]*7)^(tbody*2>tr*6>td*7)", [COMPONENT_CLASS + "-calendar"]),
                 displayedValue = DOM.create("span[aria-hidden=true].{0}-value", [COMPONENT_CLASS]),
                 color = this.css("color"),
                 offset = this.offset(),
@@ -55,15 +55,19 @@
                     "margin-top": offset.top - calOffset.top,
                 });
 
+            var tbodies = calendar.findAll("tbody");
+
+            tbodies[1].hide().remove();
+
             this.closest("form").on("reset", this.onFormReset);
             this.watch("value", this.onValueChanged.bind(this, displayedValue,
-                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calendar.findAll("th"), calendar));
+                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calendar.findAll("th"), tbodies, calendar));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged(displayedValue, caption, weekdays, calendar, value, prevValue) {
+        onValueChanged(displayedValue, caption, weekdays, tbodies, calendar, value, prevValue) {
             var year, month, date, iterDate;
 
             displayedValue.set("");
@@ -100,13 +104,11 @@
             // update day numbers
             prevValue = new Date(prevValue);
 
-            var tbody = calendar.find("tbody");
             var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
-            var clone = delta ? tbody.hide().clone() : tbody.show();
-            // make sure only one body exists
-            tbody.nextAll("tbody").forEach((el) => { el.remove() });
+            var currentBody = tbodies[calendar.contains(tbodies[0]) ? 0 : 1];
+            var targetBody = delta ? tbodies[tbodies[0] === currentBody ? 1 : 0] : currentBody;
 
-            clone.findAll("td").forEach((day) => {
+            targetBody.findAll("td").forEach((day) => {
                 iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                 var mDiff = month - iterDate.getUTCMonth(),
@@ -121,9 +123,11 @@
             });
 
             if (delta) {
-                tbody[delta > 0 ? "after" : "before"](clone);
-                clone.show(() => { tbody.remove() });
+                currentBody[delta > 0 ? "after" : "before"](targetBody);
+                currentBody.hide(() => { currentBody.remove() });
+                targetBody.show();
             }
+
             // trigger event manually to notify about changes
             this.fire("change");
         },
