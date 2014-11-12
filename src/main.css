@@ -50,6 +50,7 @@
 .better-dateinput-calendar-header {
     font-weight: bold;
     line-height: 2.5;
+    text-shadow: 0 1px 0 var(--font-color);
 }
 
 .better-dateinput-calendar > a {
@@ -97,7 +98,7 @@
 
 .better-dateinput-calendar-days > tbody {
     transform: translateX(0);
-    transition: transform 0.1s ease-in-out;
+    transition: transform 0.15s linear;
 }
 
 .better-dateinput-calendar-days > tbody[aria-hidden=true] {
@@ -127,7 +128,7 @@
 }
 
 .better-dateinput-calendar-days td {
-    transition: transform 0.05s ease-out;
+    transition: background-color 0.05s ease-out;
 }
 
 .better-dateinput-calendar-past,
@@ -138,8 +139,8 @@
 .better-dateinput-calendar-today {
     color: var(--bkg-normal);
     background-color: var(--bkg-header);
-    transform: scale(1.1);
-    /*font-weight: bold;*/
+    text-shadow: 0 1px 0 var(--font-color);
+    font-weight: bold;
 }
 
 .better-dateinput-calendar-days td:hover {
