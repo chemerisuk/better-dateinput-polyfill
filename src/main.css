@@ -30,7 +30,7 @@
     color: var(--bkg-normal);
 
     border: var(--border-normal) var(--color-border);
-    border-radius: 3px;
+    border-radius: 2px;
     box-shadow: 0 0.25em 0.5em rgba(0,0,0,0.2);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     text-align: center;
@@ -47,20 +47,20 @@
 }
 
 .better-dateinput-calendar-caption {
+    position: relative;
     margin: 0;
     line-height: 2.5;
+    font-weight: bold;
 
     background: var(--bkg-header);
     text-shadow: 0 1px 0 var(--font-color);
-}
 
-.better-dateinput-calendar-header {
-    font-weight: bold;
+    border-bottom: 1px solid var(--bkg-active);
 }
 
 .better-dateinput-calendar-caption > a {
-    width: 2em;
-    text-align: center;
+    width: 2.5em;
+    height: 100%;
 
     display: inline-block;
 
@@ -96,6 +96,17 @@
     background: var(--bkg-normal);
 }
 
+.better-dateinput-calendar-days > thead {
+    border-top: 1px solid #EEE;
+    border-bottom: 1px solid #CCC;
+
+    font-size: 0.75em;
+    background: var(--color-border);
+    font-weight: bold;
+
+    text-shadow: 0 1px 0 var(--bkg-graytext);
+}
+
 .better-dateinput-calendar-days > tbody {
     transform: translateX(0);
     transition: transform 0.15s linear;
@@ -119,16 +130,6 @@
     width: 2em;
     height: 2em;
     line-height: 2;
-}
-
-.better-dateinput-calendar-days th {
-    font-size: 0.75em;
-    background-color: var(--color-border);
-    font-weight: bold;
-}
-
-.better-dateinput-calendar-days td {
-    transition: background-color 0.05s ease-out;
 }
 
 .better-dateinput-calendar-past,
