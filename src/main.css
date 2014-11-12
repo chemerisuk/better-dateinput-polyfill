@@ -39,6 +39,10 @@
     transform: scale(1,1);
     transform-origin: 50% 0;
     transition: 0.15s ease-out;
+
+    /* improve font on OSX */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .better-dateinput-calendar[aria-hidden=true] {

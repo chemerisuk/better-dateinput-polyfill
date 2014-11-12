@@ -1,4 +1,4 @@
-(function(DOM, COMPONENT_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, I18N_DAYS, I18N_MONTHS) {
+(function(DOM, __, COMPONENT_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, I18N_DAYS, I18N_MONTHS) {
     "use strict";
 
     var ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
@@ -25,6 +25,7 @@
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], [calendar], this.onCalendarFocus)
                 .on("blur", [calendar], this.onCalendarBlur)
+                .on("change", [displayedValue], this.doFormatValue)
                 .before(calendar)
                 .before(displayedValue);
 
@@ -70,18 +71,9 @@
         onValueChanged(displayedValue, caption, weekdays, tbodies, calendar, value, prevValue) {
             var year, month, date, iterDate;
 
-            displayedValue.set("");
             value = new Date(value);
 
-            // display formatted date value for original input
-            if (value.getTime()) {
-                displayedValue
-                    // build RFC 1123 string based on the lang attribute
-                    .append(DOM.create("span").l10n(I18N_DAYS[value.getUTCDay() ? value.getUTCDay() - 1 : 6]))
-                    .append(",&nbsp;" + ((value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate()) + "&nbsp;")
-                    .append(DOM.create("span").l10n(I18N_MONTHS[value.getUTCMonth()].substr(0, 3) + "."))
-                    .append("&nbsp;" + value.getUTCFullYear());
-            } else {
+            if (!value.getTime()) {
                 value = new Date();
             }
 
@@ -130,6 +122,25 @@
 
             // trigger event manually to notify about changes
             this.fire("change");
+        },
+        doFormatValue(displayedValue) {
+            var value = new Date(this.get()),
+                formattedValue = "";
+
+            if (value.getTime()) {
+                // TODO: read formatString value from data-format attribute
+                var formatString = "E, dd MMM yyyy".replace(/\w+/g, "{$&}");
+
+                formattedValue = DOM.format(formatString, {
+                    E: __(I18N_DAYS[value.getUTCDay() ? value.getUTCDay() - 1 : 6]).toHTMLString(),
+                    dd: (value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate(),
+                    MMM: __(I18N_MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
+                    yyyy: value.getUTCFullYear()
+                });
+            }
+
+            // display formatted date value instead of real one
+            displayedValue.set(formattedValue);
         },
         onCalendarClick(calendar, target) {
             var targetDate;
@@ -213,7 +224,7 @@
             this.set(this.get("defaultValue"));
         }
     });
-}(window.DOM, "better-dateinput", 32, 9, 13, 27, 8, 46, [
+}(window.DOM, window.DOM.__, "better-dateinput", 32, 9, 13, 27, 8, 46, [
     "Mo","Tu","We","Th","Fr","Sa","Su"
 ], [
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
