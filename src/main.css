@@ -54,25 +54,25 @@
 }
 
 .better-dateinput-calendar > a {
+    width: 2em;
+    line-height: 2.5;
+    text-align: center;
+
+    display: inline-block;
+
     position: absolute;
     left: 0;
     top: 0;
 
-    width: 3em;
-    line-height: 3.25;
-    font-size: 0.75em;
+    text-shadow: 0 1px 0 var(--font-color);
 }
 
 .better-dateinput-calendar > a:before {
-    content: "";
-    display: inline-block;
-    height: 0;
-    width: 0;
-    border-style: solid;
-    border-width: 0.5em 0.75em 0.5em 0;
-    border-color: transparent;
-    border-right-color: inherit;
-    vertical-align: middle;
+    content: '\25C4';
+}
+
+.better-dateinput-calendar > a::before {
+    font-size: 0.85em;
 }
 
 .better-dateinput-calendar > a + a {
@@ -81,9 +81,7 @@
 }
 
 .better-dateinput-calendar > a + a:before {
-    border-width: 0.5em 0 0.5em 0.75em;
-    border-color: transparent;
-    border-left-color: inherit;
+    content: '\25BA';
 }
 
 .better-dateinput-calendar-days {

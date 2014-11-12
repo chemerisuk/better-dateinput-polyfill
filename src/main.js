@@ -57,7 +57,7 @@
 
             var tbodies = calendar.findAll("tbody");
 
-            tbodies[1].hide().remove();
+            tbodies[1].hide();
 
             this.closest("form").on("reset", this.onFormReset);
             this.watch("value", this.onValueChanged.bind(this, displayedValue,
