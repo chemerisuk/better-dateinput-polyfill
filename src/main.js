@@ -7,7 +7,7 @@
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
         constructor() {
-            var calendar = DOM.create("div.{0}>a[unselectable=on]*2+span[aria-hidden=true].{0}-header+table[aria-hidden=true].{0}-days>thead>(tr>th[unselectable=on]*7)^(tbody*2>tr*6>td*7)", [COMPONENT_CLASS + "-calendar"]),
+            var calendar = DOM.create("div.{0}>p.{0}-caption>a[unselectable=on]*2+span[aria-hidden=true unselectable=on].{0}-header^table[aria-hidden=true].{0}-days>thead>(tr>th[unselectable=on]*7)^(tbody*2>tr*6>td*7)", [COMPONENT_CLASS + "-calendar"]),
                 displayedValue = DOM.create("span[aria-hidden=true].{0}-value", [COMPONENT_CLASS]),
                 color = this.css("color"),
                 offset = this.offset(),
@@ -57,7 +57,7 @@
 
             var tbodies = calendar.findAll("tbody");
 
-            tbodies[1].hide();
+            tbodies[1].hide().remove();
 
             this.closest("form").on("reset", this.onFormReset);
             this.watch("value", this.onValueChanged.bind(this, displayedValue,
