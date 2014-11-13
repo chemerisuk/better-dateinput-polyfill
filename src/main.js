@@ -1,7 +1,8 @@
-(function(DOM, __, COMPONENT_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, I18N_DAYS, I18N_MONTHS) {
+(function(DOM, COMPONENT_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, I18N_DAYS, I18N_MONTHS) {
     "use strict";
 
-    var ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
+    var __ = DOM.__,
+        ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0];
 
     // need to skip mobile/tablet browsers
@@ -61,14 +62,14 @@
             tbodies[1].hide().remove();
 
             this.closest("form").on("reset", this.onFormReset);
-            this.watch("value", this.onValueChanged.bind(this, displayedValue,
-                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calendar.findAll("th"), tbodies, calendar));
+            this.watch("value", this.onValueChanged.bind(this,
+                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), tbodies, calendar));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged(displayedValue, caption, weekdays, tbodies, calendar, value, prevValue) {
+        onValueChanged(caption, tbodies, calendar, value, prevValue) {
             var year, month, date, iterDate;
 
             value = new Date(value);
@@ -82,13 +83,7 @@
             year = value.getUTCFullYear();
 
             // update calendar caption
-            caption
-                .set("&nbsp;" + year)
-                .prepend(DOM.create("span").l10n(I18N_MONTHS[month]));
-            // update calendar weekday captions
-            weekdays.forEach(function(el, index) {
-                el.l10n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
-            });
+            caption.set(__(I18N_MONTHS[month]).toHTMLString() + "&nbsp;" + year);
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
@@ -218,13 +213,18 @@
                 }
             }, 0);
 
+            // update calendar weekday captions
+            calendar.findAll("th").forEach((el, index) => {
+                el.l10n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
+            });
+
             calendar.show();
         },
         onFormReset() {
             this.set(this.get("defaultValue"));
         }
     });
-}(window.DOM, window.DOM.__, "better-dateinput", 32, 9, 13, 27, 8, 46, [
+}(window.DOM, "better-dateinput", 32, 9, 13, 27, 8, 46, [
     "Mo","Tu","We","Th","Fr","Sa","Su"
 ], [
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
