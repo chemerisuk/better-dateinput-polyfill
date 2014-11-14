@@ -146,6 +146,11 @@
     color: var(--color-border);
 }
 
+.better-dateinput-calendar-out {
+    color: var(--bkg-normal);
+    background-color: inherit !important;
+}
+
 .better-dateinput-calendar-today {
     color: var(--bkg-normal);
     background-color: var(--bkg-header);

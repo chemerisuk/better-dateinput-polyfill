@@ -95,21 +95,33 @@
             var currentBody = tbodies[calendar.contains(tbodies[0]) ? 0 : 1];
             var targetBody = delta ? tbodies[tbodies[0] === currentBody ? 1 : 0] : currentBody;
 
+            var min = new Date(this.get("min"));
+            var max = new Date(this.get("max"));
+
             // update days
             targetBody.findAll("td").forEach((day) => {
                 iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                 var mDiff = month - iterDate.getUTCMonth(),
-                    dDiff = date - iterDate.getUTCDate();
+                    dDiff = date - iterDate.getUTCDate(),
+                    className = "";
 
                 if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
+
+                if (iterDate < min || iterDate > max) {
+                    className = COMPONENT_CLASS + "-calendar-out";
+                } else if (mDiff > 0) {
+                    className = COMPONENT_CLASS + "-calendar-past";
+                } else if (mDiff < 0) {
+                    className = COMPONENT_CLASS + "-calendar-future";
+                } else if (!dDiff) {
+                    className = COMPONENT_CLASS + "-calendar-today";
+                }
 
                 day
                     .set(iterDate.getUTCDate())
                     .set("_ts", iterDate.getTime())
-                    .set("class", mDiff ?
-                        (COMPONENT_CLASS + (mDiff > 0 ? "-calendar-past" : "-calendar-future")) :
-                        (dDiff ? "" :  COMPONENT_CLASS + "-calendar-today"));
+                    .set("class", className);
             });
 
             if (delta) {
@@ -150,12 +162,27 @@
                 if (!targetDate.getTime()) targetDate = new Date();
 
                 targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a")[0] ? -1 : 1));
+
+                var min = new Date(this.get("min"));
+                var max = new Date(this.get("max"));
+
+                if (targetDate < min) {
+                    targetDate = min;
+                } else if (targetDate > max) {
+                    targetDate = max;
+                }
             } else if (target.matches("td")) {
-                targetDate = new Date(target.get("_ts"));
-                calendar.hide();
+                targetDate = target.get("_ts");
+
+                if (targetDate) {
+                    targetDate = new Date(targetDate);
+                    calendar.hide();
+                }
             }
 
-            if (targetDate != null) this.set(formatISODate(targetDate));
+            if (targetDate != null) {
+                this.set(formatISODate(targetDate));
+            }
             // prevent input from loosing focus
             return false;
         },
@@ -190,6 +217,13 @@
                         currentDate.setUTCDate(currentDate.getUTCDate() + delta);
                     }
 
+                    var min = new Date(this.get("min"));
+                    var max = new Date(this.get("max"));
+
+                    if (currentDate < min || currentDate > max) {
+                        return false;
+                    }
+
                     this.set(formatISODate(currentDate));
                 }
             }
@@ -219,7 +253,7 @@
 
             // update calendar weekday captions
             calendar.findAll("th").forEach((el, index) => {
-                el.l10n(I18N_DAYS[ampm(index, index < 6 ? index + 1 : 0)]);
+                el.l10n(I18N_DAYS[ampm(index, ++index % 7)]);
             });
 
             calendar.show();
