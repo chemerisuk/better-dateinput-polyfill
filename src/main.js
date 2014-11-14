@@ -103,25 +103,25 @@
                 iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                 var mDiff = month - iterDate.getUTCMonth(),
-                    dDiff = date - iterDate.getUTCDate(),
-                    className = "";
+                    className = COMPONENT_CLASS + "-calendar-";
 
                 if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
                 if (iterDate < min || iterDate > max) {
-                    className = COMPONENT_CLASS + "-calendar-out";
+                    className += "out";
                 } else if (mDiff > 0) {
-                    className = COMPONENT_CLASS + "-calendar-past";
+                    className += "past";
                 } else if (mDiff < 0) {
-                    className = COMPONENT_CLASS + "-calendar-future";
-                } else if (!dDiff) {
-                    className = COMPONENT_CLASS + "-calendar-today";
+                    className += "future";
+                } else if (date === iterDate.getUTCDate()) {
+                    className += "today";
+                } else {
+                    className = "";
                 }
 
                 day
                     .set(iterDate.getUTCDate())
-                    .set("_ts", iterDate.getTime())
-                    .set("class", className);
+                    .set({_ts: iterDate.getTime(), className: className});
             });
 
             if (delta) {
@@ -260,7 +260,7 @@
             this.set(this.get("defaultValue"));
         }
     });
-}(window.DOM, "better-dateinput", 32, 9, 13, 27, 8, 46, [
+}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, [
     "Su", "Mo","Tu","We","Th","Fr","Sa"
 ], [
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"

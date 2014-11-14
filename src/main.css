@@ -3,12 +3,16 @@
     --bkg-header: #2DA4D6;
     --bkg-active: #207FB1;
     --color-border: #DDD;
+    --color-graytext: #CCC;
     --bkg-graytext: #F3F3F3;
     --bkg-normal: #FFF;
     --border-normal: 1px solid;
+    --border-radius: 3px;
+    --height-header: 2.5em;
+    --shadow-text: 0 1px 0;
 }
 
-.better-dateinput-value {
+.btr-dateinput-value {
     position: absolute;
     display: block;
     white-space: nowrap;
@@ -19,7 +23,7 @@
     border-color: transparent;
 }
 
-.better-dateinput-calendar {
+.btr-dateinput-calendar {
     position: absolute;
     visibility: hidden; /* initially calendar is hidden */
 
@@ -27,9 +31,10 @@
     user-select: none;
 
     color: var(--bkg-normal);
-    border: var(--border-normal) #CCC;
-    border-top: 0;
+    border-bottom: var(--border-normal) var(--color-graytext);
+    overflow: hidden;
 
+    border-radius: var(--border-radius);
     box-shadow: 0 0.25em 0.5em rgba(0,0,0,0.2);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     text-align: center;
@@ -39,135 +44,133 @@
     transform-origin: 50% 0;
     transition: 0.15s ease-out;
 
+    width: 15em;
+
     /* improve font on OSX */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-.better-dateinput-calendar[aria-hidden=true] {
+.btr-dateinput-calendar[aria-hidden=true] {
     opacity: 0;
     transform: scale(0,0);
 }
 
-.better-dateinput-calendar-caption {
+.btr-dateinput-calendar-caption {
     position: relative;
-    left: -1px;
-
-    width: 100%;
     margin: 0;
-    padding: 0 1px;
 
-    line-height: 2.5;
+    line-height: var(--height-header);
     font-weight: bold;
 
     background: var(--bkg-header);
-    text-shadow: 0 1px 0 var(--font-color);
+    text-shadow: var(--shadow-text) var(--font-color);
     border-bottom: var(--border-normal) var(--bkg-active);
 }
 
-.better-dateinput-calendar-caption > a {
-    width: 2.5em;
-    height: 100%;
-
-    display: inline-block;
+.btr-dateinput-calendar-caption > a {
+    width: var(--height-header);
+    height: var(--height-header);
 
     position: absolute;
     left: 0;
     top: 0;
 }
 
-.better-dateinput-calendar-caption > a:before {
+.btr-dateinput-calendar-caption > a:before {
     content: '\25C4';
 }
 
-.better-dateinput-calendar-caption > a::before {
+.btr-dateinput-calendar-caption > a::before {
     font-size: 0.85em;
 }
 
-.better-dateinput-calendar-caption > a + a {
+.btr-dateinput-calendar-caption > a + a {
     left: auto;
     right: 0;
 }
 
-.better-dateinput-calendar-caption > a + a:before {
+.btr-dateinput-calendar-caption > a + a:before {
     content: '\25BA';
 }
 
-.better-dateinput-calendar-days {
+.btr-dateinput-calendar-days {
     table-layout: fixed;
     border-spacing: 0;
     border-collapse: collapse;
-    position: relative;
 
     color: var(--font-color);
     background: var(--bkg-normal);
 
-    overflow: hidden;
+    border-radius: var(--border-radius);
+    border: var(--border-normal) var(--color-graytext);
+    border-bottom: 0;
 }
 
-.better-dateinput-calendar-days > thead {
+.btr-dateinput-calendar-days > thead {
     border-top: var(--border-normal) #EEE;
-    border-bottom: var(--border-normal) #CCC;
+    border-bottom: var(--border-normal) var(--color-graytext);
 
     font-size: 0.75em;
     background: var(--color-border);
     font-weight: bold;
 
-    text-shadow: 0 1px 0 var(--bkg-graytext);
+    text-shadow: var(--shadow-text) var(--bkg-graytext);
 }
 
-.better-dateinput-calendar-days > tbody {
-    transform: translate(0, 1px);
+.btr-dateinput-calendar-days > tbody {
+    transform: translate(0);
     transition: transform 0.15s linear;
 }
 
-.better-dateinput-calendar-days > tbody[aria-hidden=true] {
-    transform: translate(-100%, 1px);
+.btr-dateinput-calendar-days > tbody[aria-hidden=true] {
+    transform: translate(-100%);
 }
 
-.better-dateinput-calendar-days > tbody + tbody {
+.btr-dateinput-calendar-days > tbody + tbody {
     position: absolute;
     bottom: 0;
 }
 
-.better-dateinput-calendar-days > tbody + tbody[aria-hidden=true] {
-    transform: translate(100%, 1px);
+.btr-dateinput-calendar-days > tbody + tbody[aria-hidden=true] {
+    transform: translate(100%);
 }
 
-.better-dateinput-calendar-days td,
-.better-dateinput-calendar-days th {
+.btr-dateinput-calendar-days td,
+.btr-dateinput-calendar-days th {
     width: 2em;
     height: 2em;
     line-height: 2;
 }
 
-.better-dateinput-calendar-past,
-.better-dateinput-calendar-future {
+.btr-dateinput-calendar-past,
+.btr-dateinput-calendar-future {
     color: var(--color-border);
 }
 
-.better-dateinput-calendar-out {
-    color: var(--bkg-normal);
-    background-color: inherit !important;
+.btr-dateinput-calendar-out {
+    color: var(--color-graytext);
 }
 
-.better-dateinput-calendar-today {
+.btr-dateinput-calendar-today {
     color: var(--bkg-normal);
     background-color: var(--bkg-header);
-    text-shadow: 0 1px 0 var(--font-color);
+    text-shadow: var(--shadow-text) var(--font-color);
     font-weight: bold;
 }
 
-.better-dateinput-calendar-days td:hover {
+.btr-dateinput-calendar-out,
+.btr-dateinput-calendar-days td:hover {
     background-color: var(--bkg-graytext);
+    background-color: rgba(0,0,0,0.05);
 }
 
-.better-dateinput-calendar-caption > a:hover,
-td.better-dateinput-calendar-today:hover {
+.btr-dateinput-calendar-caption > a:hover,
+td.btr-dateinput-calendar-today:hover {
     background-color: var(--bkg-active);
 }
 
 /* fix firefox issue with color:transparent */
-.better-dateinput-value + input::-moz-placeholder {
+.btr-dateinput-value + input::-moz-placeholder {
     color: initial;
 }
