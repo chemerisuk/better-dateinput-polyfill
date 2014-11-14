@@ -88,13 +88,14 @@
             iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
             iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
-            // update day numbers
+
             prevValue = new Date(prevValue);
 
             var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
             var currentBody = tbodies[calendar.contains(tbodies[0]) ? 0 : 1];
             var targetBody = delta ? tbodies[tbodies[0] === currentBody ? 1 : 0] : currentBody;
 
+            // update days
             targetBody.findAll("td").forEach((day) => {
                 iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
@@ -103,13 +104,16 @@
 
                 if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
-                day.set("_ts", iterDate.getTime()).set(iterDate.getUTCDate());
-                day.set("class", mDiff ?
-                    (mDiff > 0 ? COMPONENT_CLASS + "-calendar-past" : COMPONENT_CLASS + "-calendar-future") :
-                    (dDiff ? "" :  COMPONENT_CLASS + "-calendar-today"));
+                day
+                    .set(iterDate.getUTCDate())
+                    .set("_ts", iterDate.getTime())
+                    .set("class", mDiff ?
+                        (COMPONENT_CLASS + (mDiff > 0 ? "-calendar-past" : "-calendar-future")) :
+                        (dDiff ? "" :  COMPONENT_CLASS + "-calendar-today"));
             });
 
             if (delta) {
+                currentBody.find("." + COMPONENT_CLASS + "-calendar-today").set("class", "");
                 currentBody[delta > 0 ? "after" : "before"](targetBody);
                 currentBody.hide(() => { currentBody.remove() });
                 targetBody.show();
@@ -127,7 +131,7 @@
                 var formatString = "E, dd MMM yyyy".replace(/\w+/g, "{$&}");
 
                 formattedValue = DOM.format(formatString, {
-                    E: __(I18N_DAYS[value.getUTCDay() ? value.getUTCDay() - 1 : 6]).toHTMLString(),
+                    E: __(I18N_DAYS[value.getUTCDay()]).toHTMLString(),
                     dd: (value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate(),
                     MMM: __(I18N_MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
                     yyyy: value.getUTCFullYear()
@@ -215,7 +219,7 @@
 
             // update calendar weekday captions
             calendar.findAll("th").forEach((el, index) => {
-                el.l10n(I18N_DAYS[ampm(index ? index - 1 : 6, index)]);
+                el.l10n(I18N_DAYS[ampm(index, index < 6 ? index + 1 : 0)]);
             });
 
             calendar.show();
@@ -225,7 +229,7 @@
         }
     });
 }(window.DOM, "better-dateinput", 32, 9, 13, 27, 8, 46, [
-    "Mo","Tu","We","Th","Fr","Sa","Su"
+    "Su", "Mo","Tu","We","Th","Fr","Sa"
 ], [
     "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
 ]));
