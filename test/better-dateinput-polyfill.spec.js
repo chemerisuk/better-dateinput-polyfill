@@ -46,16 +46,13 @@ describe("better-dateinput-polyfill", function() {
     });
 
     it("should handle arrow keys with optional shiftKey", function() {
-        var now = new Date(),
-            getSpy = spyOn(el, "get"),
-            setSpy = spyOn(el, "set"),
-            expectKey = function(key, altKey, expected) {
-                el.onCalendarKeyDown(calendar, key, altKey);
+        function expectKey(key, altKey, expected) {
+            el.onCalendarKeyDown(calendar, key, altKey);
+            expect(el.get()).toBe(expected);
+            el.set("2000-01-01");
+        }
 
-                expect(setSpy).toHaveBeenCalledWith(expected);
-            };
-
-        getSpy.and.returnValue("2000-01-01");
+        el.set("2000-01-01");
 
         expectKey(74, false, "2000-01-08");
         expectKey(40, false, "2000-01-08");
@@ -71,53 +68,18 @@ describe("better-dateinput-polyfill", function() {
         expectKey(37, true, "1999-12-01");
         expectKey(40, true, "2001-01-01");
         expectKey(38, true, "1999-01-01");
-
-        getSpy.and.returnValue("");
-
-        now.setDate(now.getDate() + 1);
-
-        expectKey(76, false, formatDateISO(now));
-        expectKey(39, false, formatDateISO(now));
-
-        now.setDate(now.getDate() + 6);
-
-        expectKey(74, false, formatDateISO(now));
-        expectKey(40, false, formatDateISO(now));
-
-        now.setDate(now.getDate() - 7);
-        now.setFullYear(now.getFullYear() + 1);
-
-        expectKey(40, true, formatDateISO(now));
-
-        now.setFullYear(now.getFullYear() - 2);
-
-        expectKey(38, true, formatDateISO(now));
-    });
-
-    it("should render calendar with the value attribute", function() {
-        el = DOM.mock("input[type=date value=`2013-04-09`]");
-
-        var setSpy = spyOn(el, "set"),
-            target = DOM.mock("a");
-
-        el.onCalendarClick(calendar, target);
-        expect(setSpy).toHaveBeenCalledWith("2013-05-09");
     });
 
     it("should change month on nav buttons click", function() {
-        var getSpy = spyOn(el, "get").and.returnValue("2000-01-01"),
-            setSpy = spyOn(el, "set"),
-            target = DOM.mock("a");
+        var target = DOM.mock("a");
 
+        el.set("2000-01-01");
         el.onCalendarClick(calendar, target);
-        expect(getSpy).toHaveBeenCalled();
-        expect(setSpy).toHaveBeenCalledWith("2000-02-01");
+        expect(el.get()).toBe("2000-02-01");
 
         spyOn(target, "next").and.returnValue(el);
-
         el.onCalendarClick(calendar, target);
-        expect(getSpy).toHaveBeenCalled();
-        expect(setSpy).toHaveBeenCalledWith("1999-12-01");
+        expect(el.get()).toBe("2000-01-01");
     });
 
     it("should select appropriate day on calendar click", function() {

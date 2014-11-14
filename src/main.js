@@ -220,11 +220,9 @@
                     var min = new Date(this.get("min"));
                     var max = new Date(this.get("max"));
 
-                    if (currentDate < min || currentDate > max) {
-                        return false;
+                    if (!(currentDate < min || currentDate > max)) {
+                        this.set(formatISODate(currentDate));
                     }
-
-                    this.set(formatISODate(currentDate));
                 }
             }
             // prevent default action except if it was TAB so
