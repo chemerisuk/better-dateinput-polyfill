@@ -62,6 +62,7 @@
 
     line-height: var(--height-header);
     font-weight: bold;
+    white-space: nowrap;
 
     background: var(--bkg-header);
     text-shadow: var(--shadow-text) var(--font-color);

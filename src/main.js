@@ -1,4 +1,4 @@
-(function(DOM, COMPONENT_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
+(function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
     "use strict";
 
     var __ = DOM.__,
@@ -6,13 +6,13 @@
         formatISODate = (value) => value.toISOString().split("T")[0],
         DAYS = "Su Mo Tu We Th Fr Sa".split(" "),
         MONTHS = "January February March April May June July August September October November December".split(" "),
-        TEMPLATE = DOM.emmet("div.{0}>p.{0}-caption>a[unselectable=on]*2+span[aria-hidden=true unselectable=on].{0}-header^table[aria-hidden=true].{0}-days>thead>(tr>th[unselectable=on]*7)^(tbody.{0}-body*2>tr*6>td*7)", [COMPONENT_CLASS + "-calendar"]);
+        TEMPLATE = DOM.emmet("div.{0}>p.{0}-caption>a[{1}]*2+span[{2} {1}].{0}-header^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]);
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
         constructor() {
             var calendar = DOM.create(TEMPLATE),
-                displayedValue = DOM.create("span[aria-hidden=true].{0}-value", [COMPONENT_CLASS]),
+                displayedValue = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
                 color = this.css("color"),
                 offset = this.offset(),
                 calOffset;
@@ -60,13 +60,13 @@
                     "margin-top": offset.top - calOffset.top,
                 });
 
-            var calenderDays = calendar.findAll(".btr-dateinput-calendar-body");
+            var calenderDays = calendar.findAll(`.${BASE_CLASS}-calendar-body`);
 
             calenderDays[1].hide().remove();
 
             this.closest("form").on("reset", this.onFormReset);
             this.watch("value", this.onValueChanged.bind(this,
-                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calenderDays, calendar));
+                calendar.find(`.${BASE_CLASS}-calendar-header`), calenderDays, calendar));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
@@ -86,7 +86,7 @@
             year = value.getUTCFullYear();
 
             // update calendar caption
-            caption.set(__(MONTHS[month]).toHTMLString() + "&nbsp;" + year);
+            caption.set(__(MONTHS[month]).toHTMLString() + " " + year);
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
@@ -106,7 +106,7 @@
                 iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                 var mDiff = month - iterDate.getUTCMonth(),
-                    className = COMPONENT_CLASS + "-calendar-";
+                    className = `${BASE_CLASS}-calendar-`;
 
                 if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
