@@ -118,21 +118,21 @@
     text-shadow: var(--shadow-text) var(--bkg-graytext);
 }
 
-.btr-dateinput-calendar-days > tbody {
+.btr-dateinput-calendar-body {
     transform: translate(0);
     transition: transform 0.15s linear;
 }
 
-.btr-dateinput-calendar-days > tbody[aria-hidden=true] {
+.btr-dateinput-calendar-body[aria-hidden=true] {
     transform: translate(-100%);
 }
 
-.btr-dateinput-calendar-days > tbody + tbody {
+.btr-dateinput-calendar-body + .btr-dateinput-calendar-body {
     position: absolute;
     bottom: 0;
 }
 
-.btr-dateinput-calendar-days > tbody + tbody[aria-hidden=true] {
+.btr-dateinput-calendar-body + .btr-dateinput-calendar-body[aria-hidden=true] {
     transform: translate(100%);
 }
 

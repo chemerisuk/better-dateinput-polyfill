@@ -1,14 +1,17 @@
-(function(DOM, COMPONENT_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, I18N_DAYS, I18N_MONTHS) {
+(function(DOM, COMPONENT_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
     "use strict";
 
     var __ = DOM.__,
         ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
-        formatISODate = (value) => value.toISOString().split("T")[0];
+        formatISODate = (value) => value.toISOString().split("T")[0],
+        DAYS = "Su Mo Tu We Th Fr Sa".split(" "),
+        MONTHS = "January February March April May June July August September October November December".split(" "),
+        TEMPLATE = DOM.emmet("div.{0}>p.{0}-caption>a[unselectable=on]*2+span[aria-hidden=true unselectable=on].{0}-header^table[aria-hidden=true].{0}-days>thead>(tr>th[unselectable=on]*7)^(tbody.{0}-body*2>tr*6>td*7)", [COMPONENT_CLASS + "-calendar"]);
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
         constructor() {
-            var calendar = DOM.create("div.{0}>p.{0}-caption>a[unselectable=on]*2+span[aria-hidden=true unselectable=on].{0}-header^table[aria-hidden=true].{0}-days>thead>(tr>th[unselectable=on]*7)^(tbody*2>tr*6>td*7)", [COMPONENT_CLASS + "-calendar"]),
+            var calendar = DOM.create(TEMPLATE),
                 displayedValue = DOM.create("span[aria-hidden=true].{0}-value", [COMPONENT_CLASS]),
                 color = this.css("color"),
                 offset = this.offset(),
@@ -57,19 +60,19 @@
                     "margin-top": offset.top - calOffset.top,
                 });
 
-            var tbodies = calendar.findAll("tbody");
+            var calenderDays = calendar.findAll(".btr-dateinput-calendar-body");
 
-            tbodies[1].hide().remove();
+            calenderDays[1].hide().remove();
 
             this.closest("form").on("reset", this.onFormReset);
             this.watch("value", this.onValueChanged.bind(this,
-                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), tbodies, calendar));
+                calendar.find("." + COMPONENT_CLASS + "-calendar-header"), calenderDays, calendar));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged(caption, tbodies, calendar, value, prevValue) {
+        onValueChanged(caption, calenderDays, calendar, value, prevValue) {
             var year, month, date, iterDate;
 
             value = new Date(value);
@@ -83,7 +86,7 @@
             year = value.getUTCFullYear();
 
             // update calendar caption
-            caption.set(__(I18N_MONTHS[month]).toHTMLString() + "&nbsp;" + year);
+            caption.set(__(MONTHS[month]).toHTMLString() + "&nbsp;" + year);
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
@@ -92,14 +95,14 @@
             prevValue = new Date(prevValue);
 
             var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
-            var currentBody = tbodies[calendar.contains(tbodies[0]) ? 0 : 1];
-            var targetBody = delta ? tbodies[tbodies[0] === currentBody ? 1 : 0] : currentBody;
+            var currenDays = calenderDays[calendar.contains(calenderDays[0]) ? 0 : 1];
+            var targetDays = delta ? calenderDays[calenderDays[0] === currenDays ? 1 : 0] : currenDays;
 
             var min = new Date(this.get("min"));
             var max = new Date(this.get("max"));
 
             // update days
-            targetBody.findAll("td").forEach((day) => {
+            targetDays.findAll("td").forEach((day) => {
                 iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                 var mDiff = month - iterDate.getUTCMonth(),
@@ -119,16 +122,17 @@
                     className = "";
                 }
 
-                day
-                    .set(iterDate.getUTCDate())
-                    .set({_ts: iterDate.getTime(), className: className});
+                day.set({
+                    _ts: iterDate.getTime(),
+                    className: className,
+                    textContent: iterDate.getUTCDate()
+                });
             });
 
             if (delta) {
-                currentBody.find("." + COMPONENT_CLASS + "-calendar-today").set("class", "");
-                currentBody[delta > 0 ? "after" : "before"](targetBody);
-                currentBody.hide(() => { currentBody.remove() });
-                targetBody.show();
+                currenDays[delta > 0 ? "after" : "before"](targetDays);
+                currenDays.hide(() => { currenDays.remove() });
+                targetDays.show();
             }
 
             // trigger event manually to notify about changes
@@ -143,9 +147,9 @@
                 var formatString = "E, dd MMM yyyy".replace(/\w+/g, "{$&}");
 
                 formattedValue = DOM.format(formatString, {
-                    E: __(I18N_DAYS[value.getUTCDay()]).toHTMLString(),
+                    E: __(DAYS[value.getUTCDay()]).toHTMLString(),
                     dd: (value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate(),
-                    MMM: __(I18N_MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
+                    MMM: __(MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
                     yyyy: value.getUTCFullYear()
                 });
             }
@@ -251,7 +255,7 @@
 
             // update calendar weekday captions
             calendar.findAll("th").forEach((el, index) => {
-                el.l10n(I18N_DAYS[ampm(index, ++index % 7)]);
+                el.l10n(DAYS[ampm(index, ++index % 7)]);
             });
 
             calendar.show();
@@ -260,8 +264,4 @@
             this.set(this.get("defaultValue"));
         }
     });
-}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, [
-    "Su", "Mo","Tu","We","Th","Fr","Sa"
-], [
-    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
-]));
+}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46));
