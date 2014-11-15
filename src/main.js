@@ -6,13 +6,15 @@
         formatISODate = (value) => value.toISOString().split("T")[0],
         DAYS = "Su Mo Tu We Th Fr Sa".split(" "),
         MONTHS = "January February March April May June July August September October November December".split(" "),
-        TEMPLATE = DOM.emmet("div.{0}>p.{0}-caption>a[{1}]*2+span[{2} {1}].{0}-header^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]);
+        PICKER_TMP = DOM.create("div.{0}>p.{0}-caption>a[{1}]*2+span[{2} {1}].{0}-header^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
+        LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
+        readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
         constructor() {
-            var calendar = DOM.create(TEMPLATE),
-                displayedValue = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
+            var calendar = PICKER_TMP.clone(true),
+                label = LABEL_TMP.clone(true),
                 color = this.css("color"),
                 offset = this.offset(),
                 calOffset;
@@ -29,9 +31,9 @@
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], [calendar], this.onCalendarFocus)
                 .on("blur", [calendar], this.onCalendarBlur)
-                .on("change", [displayedValue], this.doFormatValue)
+                .on("change", [label], this.doFormatValue)
                 .before(calendar)
-                .before(displayedValue);
+                .before(label);
 
             calOffset = calendar.offset();
 
@@ -49,7 +51,7 @@
                 calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
             }
 
-            displayedValue
+            label
                 .on("click", () => { this.fire("focus") })
                 // copy input CSS
                 .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]))
@@ -97,9 +99,7 @@
             var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
             var currenDays = calenderDays[calendar.contains(calenderDays[0]) ? 0 : 1];
             var targetDays = delta ? calenderDays[calenderDays[0] === currenDays ? 1 : 0] : currenDays;
-
-            var min = new Date(this.get("min"));
-            var max = new Date(this.get("max"));
+            var range = readDateRange(this);
 
             // update days
             targetDays.findAll("td").forEach((day) => {
@@ -110,7 +110,7 @@
 
                 if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
-                if (iterDate < min || iterDate > max) {
+                if (iterDate < range[0] || iterDate > range[1]) {
                     className += "out";
                 } else if (mDiff > 0) {
                     className += "past";
@@ -138,7 +138,7 @@
             // trigger event manually to notify about changes
             this.fire("change");
         },
-        doFormatValue(displayedValue) {
+        doFormatValue(label) {
             var value = new Date(this.get()),
                 formattedValue = "";
 
@@ -155,7 +155,7 @@
             }
 
             // display formatted date value instead of real one
-            displayedValue.set(formattedValue);
+            label.set(formattedValue);
         },
         onCalendarClick(calendar, target) {
             var targetDate;
@@ -167,13 +167,12 @@
 
                 targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a")[0] ? -1 : 1));
 
-                var min = new Date(this.get("min"));
-                var max = new Date(this.get("max"));
+                var range = readDateRange(this);
 
-                if (targetDate < min) {
-                    targetDate = min;
-                } else if (targetDate > max) {
-                    targetDate = max;
+                if (targetDate < range[0]) {
+                    targetDate = range[0];
+                } else if (targetDate > range[1]) {
+                    targetDate = range[1];
                 }
             } else if (target.matches("td")) {
                 targetDate = target.get("_ts");
@@ -221,10 +220,9 @@
                         currentDate.setUTCDate(currentDate.getUTCDate() + delta);
                     }
 
-                    var min = new Date(this.get("min"));
-                    var max = new Date(this.get("max"));
+                    var range = readDateRange(this);
 
-                    if (!(currentDate < min || currentDate > max)) {
+                    if (!(currentDate < range[0] || currentDate > range[1])) {
                         this.set(formatISODate(currentDate));
                     }
                 }
