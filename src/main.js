@@ -6,7 +6,7 @@
         formatISODate = (value) => value.toISOString().split("T")[0],
         DAYS = "Su Mo Tu We Th Fr Sa".split(" "),
         MONTHS = "January February March April May June July August September October November December".split(" "),
-        PICKER_TMP = DOM.create("div.{0}>p.{0}-caption>a[{1}]*2+span[{2} {1}].{0}-header^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
+        PICKER_TMP = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
         LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
@@ -68,7 +68,7 @@
 
             this.closest("form").on("reset", this.onFormReset);
             this.watch("value", this.onValueChanged.bind(this,
-                calendar.find(`.${BASE_CLASS}-calendar-header`), calenderDays, calendar));
+                calendar.find(`.${BASE_CLASS}-calendar-caption`), calenderDays, calendar));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
