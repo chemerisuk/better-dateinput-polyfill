@@ -1,6 +1,6 @@
 {
   "name": "better-dom",
-  "version": "1.7.7",
+  "version": "2.0.3",
   "main": [
     "dist/better-dom.js",
     "dist/better-dom-legacy.js",
@@ -10,17 +10,14 @@
     ".*",
     "test",
     "src",
-    "extra",
-    "legacy",
-    "Gruntfile.js",
-    "package.json",
-    "bower.json",
-    "main.sublime-project"
+    "conf",
+    "task",
+    "gulpfile.js",
+    "package.json"
   ],
   "devDependencies": {
     "jquery": "latest",
-    "jasmine": "~2.0.0",
-    "html5shiv": "3.6.2",
-    "es5-shim": "2.3.0"
+    "html5shiv": "latest",
+    "es5-shim": "latest"
   }
 }

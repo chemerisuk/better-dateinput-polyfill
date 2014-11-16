@@ -1,4 +1,4 @@
-# better-dateinput-polyfill [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
+# better-dateinput-polyfill<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 > `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
 
 Why another date picker? The problem is that most of existing solutions do not follow standards regarding to `value` property format, that should have “a valid full-date as defined in [RFC 3339]”. In other words representation of date can vary, but the string value should have `yyyy-MM-dd` format. It helps to work with such values consistently regarding on the current language.
@@ -13,19 +13,20 @@ Why another date picker? The problem is that most of existing solutions do not f
 * fully customizable date picker via CSS classes
 * date picker has keyboard and accessibility support
 * allows to set value programmatically, but the string should have `yyyy-MM-dd` format
-* US variant for days of week is supported (just use `<html lang="en-US">`)
+* US variant for days of week is supported (use `<html lang="en-US">`)
 * does nothing on mobile browsers, they have good UI widget and correct `value` format 
 * `placeholder` attribute works as expected in browsers that support it
 * restores initial value on form reset
-* full i18n support (if your language is missed - just translate strings from `i18n` folder and include a new file in your project)
+* [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions) (if your language is missed - just translate strings from `i18n` folder and include a new file in your project)
 
-Installing
-----------
-Use [bower](http://bower.io/) to download this extension with all required dependencies.
+## Installation
+The simplest way is to use [bower](http://bower.io/):
 
-    bower install better-dateinput-polyfill
+```sh
+$ bower install better-dateinput-polyfill
+```
 
-This will clone the latest version of the __better-dateinput-polyfill__ into the `bower_components` directory at the root of your project.
+This will clone the latest version of the __better-dateinput-polyfill__ with dependencies into the `bower_components` directory at the root of your project.
 
 Then append the following script on your page:
 
@@ -47,36 +48,13 @@ Then append the following script on your page:
 </html>
 ```
 
-i18n
-----
-Add the `lang` attribute to your `<html>` tag and include the corresponding strings file from `i18n` folder:
-
-```html
-<html lang="ru">
-<head>
-    ...
-    <link href="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.css" rel="stylesheet"/>
-    <!--[if IE]>
-        <link href="bower_components/better-dom/dist/better-dom-legacy.htc" rel="htc"/>
-        <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
-    <![endif]-->
-</head>
-<body>
-    ...
-    <script src="bower_components/better-dom/dist/better-dom.js"></script>
-    <script src="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
-    <script src="bower_components/better-dateinput-polyfill/i18n/better-dateinput-polyfill.ru.js"></script>
-</body>
-</html>
-```
-
 ## Browser support
 #### Desktop
 * Chrome
 * Safari 6.0+
 * Firefox 16+
 * Opera 12.10+
-* IE8+
+* Internet Explorer 8+ (see [notes](https://github.com/chemerisuk/better-dom#notes-about-old-ies))
 
 #### Mobile
 * iOS Safari 6+
@@ -84,7 +62,10 @@ Add the `lang` attribute to your `<html>` tag and include the corresponding stri
 * Chrome for Android
 
 [travis-url]: http://travis-ci.org/chemerisuk/better-dateinput-polyfill
-[travis-image]: https://api.travis-ci.org/chemerisuk/better-dateinput-polyfill.png?branch=master
+[travis-image]: http://img.shields.io/travis/chemerisuk/better-dateinput-polyfill/master.svg
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-dateinput-polyfill
-[coveralls-image]: https://coveralls.io/repos/chemerisuk/better-dateinput-polyfill/badge.png?branch=master
+[coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-dateinput-polyfill/master.svg
+
+[bower-url]: https://github.com/chemerisuk/better-dateinput-polyfill
+[bower-image]: http://img.shields.io/bower/v/better-dateinput-polyfill.svg

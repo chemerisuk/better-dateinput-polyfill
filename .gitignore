@@ -1,6 +1,0 @@
-.DS_Store
-*.sublime-workspace
-node_modules
-build
-coverage
-test
