@@ -40,7 +40,7 @@
     text-align: center;
 
     opacity: 1;
-    transform: scale(1,1);
+    transform: scale(1,1) translateZ(0);
     transform-origin: 50% 0;
     transition: 0.1s ease-out;
 
@@ -53,7 +53,7 @@
 
 .btr-dateinput-calendar[aria-hidden=true] {
     opacity: 0;
-    transform: scale(0.75,0.75);
+    transform: scale(0.75,0.75) translateZ(0);
 }
 
 .btr-dateinput-calendar-header {
@@ -175,4 +175,8 @@ td.btr-dateinput-calendar-today:hover {
 /* fix firefox issue with color:transparent */
 .btr-dateinput-value + input::-moz-placeholder {
     color: initial;
+}
+
+::-webkit-inner-spin-button {
+    display: none; /* remove extra margin of the datepicker in Chrome */
 }

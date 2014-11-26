@@ -235,9 +235,17 @@
             calendar.hide();
         },
         onCalendarFocus(calendar) {
-            var node = this[0];
+            // update calendar weekday captions
+            calendar.findAll("th").forEach((el, index) => {
+                el.l10n(DAYS[ampm(index, ++index % 7)]);
+            });
+
+            calendar.show();
+
             // use the trick below to reset text selection on focus
             setTimeout(() => {
+                var node = this[0];
+
                 if ("selectionStart" in node) {
                     node.selectionStart = 0;
                     node.selectionEnd = 0;
@@ -250,13 +258,6 @@
                     inputRange.select();
                 }
             }, 0);
-
-            // update calendar weekday captions
-            calendar.findAll("th").forEach((el, index) => {
-                el.l10n(DAYS[ampm(index, ++index % 7)]);
-            });
-
-            calendar.show();
         },
         onFormReset() {
             this.set(this.get("defaultValue"));
