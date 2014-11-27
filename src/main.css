@@ -44,7 +44,7 @@
     transform-origin: 50% 0;
     transition: 0.1s ease-out;
 
-    width: 15em;
+    width: 14em;
 
     /* improve font on OSX */
     -webkit-font-smoothing: antialiased;
@@ -76,6 +76,8 @@
     position: absolute;
     left: 0;
     top: 0;
+        
+    color: inherit;
 }
 
 .btr-dateinput-calendar-header > a:before {
@@ -142,6 +144,8 @@
     width: 2em;
     height: 2em;
     line-height: 2;
+    padding: 0;
+    text-align: center;
 }
 
 .btr-dateinput-calendar-past,
@@ -170,6 +174,7 @@
 .btr-dateinput-calendar-header > a:hover,
 td.btr-dateinput-calendar-today:hover {
     background-color: var(--bkg-active);
+    text-decoration: none;
 }
 
 /* fix firefox issue with color:transparent */
