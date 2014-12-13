@@ -3,11 +3,12 @@ describe("better-dateinput-polyfill", function() {
         return value.toISOString().split("T")[0];
     }
 
-    var el, calendar;
+    var el, calendar, label;
 
     beforeEach(function() {
         el = DOM.mock("input[type=date]");
         calendar = DOM.mock();
+        label = DOM.mock("span");
     });
 
     it("should toggle calendar visibility on space key", function() {
@@ -135,4 +136,29 @@ describe("better-dateinput-polyfill", function() {
         expect(el.get()).toBe("2000-10-20");
     });
 
+    it("should format date with default format", function() {
+        el.set("value", "2014-11-02");
+
+        el.doFormatValue(label);
+
+        expect(label.get("textContent")).toBe("Su, 02 Nov. 2014");
+    });
+
+    it("should format date with custom formats", function() {
+        el.set("value", "2014-12-03");
+        el.set("data-format", "MM/dd/yyyy");
+
+        el.doFormatValue(label);
+
+        expect(label.get("textContent")).toBe("12/03/2014");
+    });
+
+    it("should keep literals on custom formats", function() {
+        el.set("value", "2014-12-03");
+        el.set("data-format", "EE, MMMM d'th' yy");
+
+        el.doFormatValue(label);
+
+        expect(label.get("textContent")).toBe("Wednesday, December 3th 14");
+    });
 });

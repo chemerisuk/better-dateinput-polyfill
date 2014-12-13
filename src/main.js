@@ -5,10 +5,12 @@
         ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         DAYS = "Su Mo Tu We Th Fr Sa".split(" "),
+        LONG_DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
         MONTHS = "January February March April May June July August September October November December".split(" "),
         PICKER_TMP = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
         LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
-        readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
+        readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
+        pad = (number) => (number > 9 ? "" : "0") + number;
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
@@ -143,13 +145,21 @@
                 formattedValue = "";
 
             if (value.getTime()) {
-                // TODO: read formatString value from data-format attribute
-                var formatString = "E, dd MMM yyyy".replace(/\w+/g, "{$&}");
+                var formatString = this.get("data-format");
+                if (!formatString) {
+                    formatString = "E, dd MMM yyyy";
+                }
+                formatString = formatString.replace(/'([^']+)'/g, "->$1<-").replace(/\w+/g, "{$&}").replace(/->{|}<-/g, '');
 
                 formattedValue = DOM.format(formatString, {
                     E: __(DAYS[value.getUTCDay()]).toHTMLString(),
-                    dd: (value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate(),
+                    EE: __(LONG_DAYS[value.getUTCDay()]).toHTMLString(),
+                    d: value.getUTCDate(),
+                    dd: pad(value.getUTCDate()),
+                    MM: pad(value.getUTCMonth() + 1),
                     MMM: __(MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
+                    MMMM: __(MONTHS[value.getUTCMonth()]).toHTMLString(),
+                    yy: value.getUTCFullYear().toString().substring(2),
                     yyyy: value.getUTCFullYear()
                 });
             }
