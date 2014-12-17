@@ -10,7 +10,34 @@
         PICKER_TMP = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
         LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
-        pad = (number) => (number > 9 ? "" : "0") + number;
+        pad = (number) => (number > 9 ? "" : "0") + number,
+        pad3 = (number) => (number > 9 ? (number > 99 ? "" : "0") : "00") + number;
+
+    function getWeekInYear(d) {
+        d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+        // set to nearest thursday: current date + 4 - current day number
+        // make sunday's day number 7
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+        // calculate full weeks to nearest thursday
+        var weekNo = Math.ceil((1 + (d - yearStart) / 86400000) / 7);
+        return weekNo;
+    }
+
+    function getWeekInMonth(d) {
+        var month = d.getUTCMonth();
+        var year = d.getUTCFullYear();
+        var firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
+        var offsetDate = d.getUTCDate() + firstWeekday - 1;
+        return 1 + Math.floor(offsetDate / 7);
+    }
+
+    function getDayInYear(d) {
+        var year = d.getUTCFullYear();
+        var beginOfYear = Date.UTC(year, 0, 1);
+        var millisBetween = d.getTime() - beginOfYear;
+        return Math.floor(1 + millisBetween / 86400000);
+    }
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
@@ -149,18 +176,34 @@
                 if (!formatString) {
                     formatString = "E, dd MMM yyyy";
                 }
-                formatString = formatString.replace(/'([^']+)'/g, "->$1<-").replace(/\w+/g, "{$&}").replace(/->{|}<-/g, '');
+                formatString = formatString
+                        .replace(/'([^']+)'/g, "->$1<-")
+                        .replace(/\w+/g, "{$&}")
+                        .replace(/->{(.*?)}<-/g, function(string, group) {
+                            return group.replace(/}|{/g, "");
+                        });
 
                 formattedValue = DOM.format(formatString, {
+                    // TODO F
                     E: __(DAYS[value.getUTCDay()]).toHTMLString(),
                     EE: __(LONG_DAYS[value.getUTCDay()]).toHTMLString(),
                     d: value.getUTCDate(),
                     dd: pad(value.getUTCDate()),
+                    D: getDayInYear(value),
+                    DD: pad(getDayInYear(value)),
+                    DDD: pad3(getDayInYear(value)),
+                    w: getWeekInYear(value),
+                    ww: pad(getWeekInYear(value)),
+                    W: getWeekInMonth(value),
+                    WW: pad(getWeekInMonth(value)),
+                    M: value.getUTCMonth() + 1,
                     MM: pad(value.getUTCMonth() + 1),
                     MMM: __(MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
                     MMMM: __(MONTHS[value.getUTCMonth()]).toHTMLString(),
-                    yy: value.getUTCFullYear().toString().substring(2),
-                    yyyy: value.getUTCFullYear()
+                    y: value.getUTCFullYear() % 100,
+                    yy: pad(value.getUTCFullYear() % 100),
+                    yyyy: value.getUTCFullYear(),
+                    u: value.getUTCDay() || 7
                 });
             }
 
