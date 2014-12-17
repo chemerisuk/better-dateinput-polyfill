@@ -13,31 +13,31 @@
         pad = (number) => (number > 9 ? "" : "0") + number,
         pad3 = (number) => (number > 9 ? (number > 99 ? "" : "0") : "00") + number;
 
-    function getWeekInYear(d) {
-        d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-        // set to nearest thursday: current date + 4 - current day number
-        // make sunday's day number 7
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
-        // calculate full weeks to nearest thursday
-        var weekNo = Math.ceil((1 + (d - yearStart) / 86400000) / 7);
-        return weekNo;
-    }
-
-    function getWeekInMonth(d) {
-        var month = d.getUTCMonth();
-        var year = d.getUTCFullYear();
-        var firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
-        var offsetDate = d.getUTCDate() + firstWeekday - 1;
-        return 1 + Math.floor(offsetDate / 7);
-    }
-
-    function getDayInYear(d) {
-        var year = d.getUTCFullYear();
-        var beginOfYear = Date.UTC(year, 0, 1);
-        var millisBetween = d.getTime() - beginOfYear;
-        return Math.floor(1 + millisBetween / 86400000);
-    }
+    var DateUtils = {
+        getWeekInYear: function(d) {
+            d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+            // set to nearest thursday: current date + 4 - current day number
+            // make sunday's day number 7
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+            // calculate full weeks to nearest thursday
+            var weekNo = Math.ceil((1 + (d - yearStart) / 86400000) / 7);
+            return weekNo;
+        },
+        getWeekInMonth: function(d) {
+            var month = d.getUTCMonth();
+            var year = d.getUTCFullYear();
+            var firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
+            var offsetDate = d.getUTCDate() + firstWeekday - 1;
+            return 1 + Math.floor(offsetDate / 7);
+        },
+        getDayInYear: function(d) {
+            var year = d.getUTCFullYear();
+            var beginOfYear = Date.UTC(year, 0, 1);
+            var millisBetween = d.getTime() - beginOfYear;
+            return Math.floor(1 + millisBetween / 86400000);
+        }
+    };
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
@@ -189,13 +189,13 @@
                     EE: __(LONG_DAYS[value.getUTCDay()]).toHTMLString(),
                     d: value.getUTCDate(),
                     dd: pad(value.getUTCDate()),
-                    D: getDayInYear(value),
-                    DD: pad(getDayInYear(value)),
-                    DDD: pad3(getDayInYear(value)),
-                    w: getWeekInYear(value),
-                    ww: pad(getWeekInYear(value)),
-                    W: getWeekInMonth(value),
-                    WW: pad(getWeekInMonth(value)),
+                    D: DateUtils.getDayInYear(value),
+                    DD: pad(DateUtils.getDayInYear(value)),
+                    DDD: pad3(DateUtils.getDayInYear(value)),
+                    w: DateUtils.getWeekInYear(value),
+                    ww: pad(DateUtils.getWeekInYear(value)),
+                    W: DateUtils.getWeekInMonth(value),
+                    WW: pad(DateUtils.getWeekInMonth(value)),
                     M: value.getUTCMonth() + 1,
                     MM: pad(value.getUTCMonth() + 1),
                     MMM: __(MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
