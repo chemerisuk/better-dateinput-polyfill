@@ -31,6 +31,9 @@
             var offsetDate = d.getUTCDate() + firstWeekday - 1;
             return 1 + Math.floor(offsetDate / 7);
         },
+        getWeekCountInMonth: function(d) {
+            return Math.ceil(d.getUTCDate() / 7);
+        },
         getDayInYear: function(d) {
             var year = d.getUTCFullYear();
             var beginOfYear = Date.UTC(year, 0, 1);
@@ -184,7 +187,6 @@
                         });
 
                 formattedValue = DOM.format(formatString, {
-                    // TODO F
                     E: __(DAYS[value.getUTCDay()]).toHTMLString(),
                     EE: __(LONG_DAYS[value.getUTCDay()]).toHTMLString(),
                     d: value.getUTCDate(),
@@ -195,7 +197,6 @@
                     w: DateUtils.getWeekInYear(value),
                     ww: pad(DateUtils.getWeekInYear(value)),
                     W: DateUtils.getWeekInMonth(value),
-                    WW: pad(DateUtils.getWeekInMonth(value)),
                     M: value.getUTCMonth() + 1,
                     MM: pad(value.getUTCMonth() + 1),
                     MMM: __(MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
@@ -203,7 +204,8 @@
                     y: value.getUTCFullYear() % 100,
                     yy: pad(value.getUTCFullYear() % 100),
                     yyyy: value.getUTCFullYear(),
-                    u: value.getUTCDay() || 7
+                    u: value.getUTCDay() || 7,
+                    F: DateUtils.getWeekCountInMonth(value)
                 });
             }
 

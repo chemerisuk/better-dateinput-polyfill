@@ -145,7 +145,6 @@ describe("better-dateinput-polyfill", function() {
     });
 
     it("should format date with custom formats", function() {
-        // TODO F
         el.set("value", "2014-08-03");
         el.set("data-format", "MM/dd/yyyy");
         el.doFormatValue(label);
@@ -157,9 +156,9 @@ describe("better-dateinput-polyfill", function() {
         expect(label.get("textContent")).toBe("5: 3/2/8");
 
         el.set("value", "2007-02-08");
-        el.set("data-format", "dd WW MM, DDD ww yy");
+        el.set("data-format", "dd W MM, DDD ww yy");
         el.doFormatValue(label);
-        expect(label.get("textContent")).toBe("08 02 02, 039 06 07");
+        expect(label.get("textContent")).toBe("08 2 02, 039 06 07");
 
         el.set("value", "2012-10-14");
         el.set("data-format", "d W M, D w y");
@@ -169,10 +168,10 @@ describe("better-dateinput-polyfill", function() {
 
     it("should keep literals on custom formats", function() {
         el.set("value", "2014-12-03");
-        el.set("data-format", "EE (u), MMMM d'th' yy (DD'th of year')");
+        el.set("data-format", "EE (u), F'th week of' MMMM d'th' yy (DD'th of year')");
 
         el.doFormatValue(label);
 
-        expect(label.get("textContent")).toBe("Wednesday (3), December 3th 14 (337th of year)");
+        expect(label.get("textContent")).toBe("Wednesday (3), 1th week of December 3th 14 (337th of year)");
     });
 });
