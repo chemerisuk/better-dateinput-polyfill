@@ -1,5 +1,5 @@
 DOM.importStrings("ru", {
-    // days of week
+    // compact days of week
     "Mo": "Пн",
     "Tu": "Вт",
     "We": "Ср",
@@ -7,6 +7,14 @@ DOM.importStrings("ru", {
     "Fr": "Пт",
     "Sa": "Сб",
     "Su": "Вс",
+    // days of week
+    "Monday": "Понедельник",
+    "Tuesday":"Вторник",
+    "Wednesday": "Среда",
+    "Thursday": "Четверг",
+    "Friday": "Пятница",
+    "Saturday": "Суббота",
+    "Sunday": "Воскресенье",
     // months
     "January": "Январь",
     "February": "Февраль",

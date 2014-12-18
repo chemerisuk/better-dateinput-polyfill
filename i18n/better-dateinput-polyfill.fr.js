@@ -1,5 +1,5 @@
 DOM.importStrings("fr", {
-    // days of week
+    // compact days of week
     "Mo": "Lu",
     "Tu": "Ma",
     "We": "Me",
@@ -7,6 +7,14 @@ DOM.importStrings("fr", {
     "Fr": "Ve",
     "Sa": "Sa",
     "Su": "Di",
+    // days of week
+    "Monday": "Lundi",
+    "Tuesday": "Mardi",
+    "Wednesday": "Mercredi",
+    "Thursday": "Jeudi",
+    "Friday": "Vendredi",
+    "Saturday": "Samedi",
+    "Sunday": "Dimanche",
     // months
     "January": "Janvier",
     "February": "Février",
