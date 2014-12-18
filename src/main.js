@@ -5,10 +5,41 @@
         ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         DAYS = "Su Mo Tu We Th Fr Sa".split(" "),
+        LONG_DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
         MONTHS = "January February March April May June July August September October November December".split(" "),
         PICKER_TMP = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
         LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
-        readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
+        readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
+        pad = (num, maxlen) => ((maxlen === 2 ? "0" : "00") + num).slice(-maxlen);
+
+    var DateUtils = {
+        getWeekInYear: function(d) {
+            d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+            // set to nearest thursday: current date + 4 - current day number
+            // make sunday's day number 7
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+            // calculate full weeks to nearest thursday
+            var weekNo = Math.ceil((1 + (d - yearStart) / 86400000) / 7);
+            return weekNo;
+        },
+        getWeekInMonth: function(d) {
+            var month = d.getUTCMonth();
+            var year = d.getUTCFullYear();
+            var firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
+            var offsetDate = d.getUTCDate() + firstWeekday - 1;
+            return 1 + Math.floor(offsetDate / 7);
+        },
+        getWeekCountInMonth: function(d) {
+            return Math.ceil(d.getUTCDate() / 7);
+        },
+        getDayInYear: function(d) {
+            var year = d.getUTCFullYear();
+            var beginOfYear = Date.UTC(year, 0, 1);
+            var millisBetween = d.getTime() - beginOfYear;
+            return Math.floor(1 + millisBetween / 86400000);
+        }
+    };
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
@@ -143,14 +174,36 @@
                 formattedValue = "";
 
             if (value.getTime()) {
-                // TODO: read formatString value from data-format attribute
-                var formatString = "E, dd MMM yyyy".replace(/\w+/g, "{$&}");
+                var formatString = this.get("data-format");
+                if (!formatString) {
+                    formatString = "E, dd MMM yyyy";
+                }
+                formatString = formatString
+                        .replace(/'([^']+)'/g, "->$1<-")
+                        .replace(/\w+/g, "{$&}")
+                        .replace(/->{(.*?)}<-/g, function(string, group) {
+                            return group.replace(/}|{/g, "");
+                        });
 
                 formattedValue = DOM.format(formatString, {
                     E: __(DAYS[value.getUTCDay()]).toHTMLString(),
-                    dd: (value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate(),
+                    EE: __(LONG_DAYS[value.getUTCDay()]).toHTMLString(),
+                    d: value.getUTCDate(),
+                    dd: pad(value.getUTCDate(), 2),
+                    D: DateUtils.getDayInYear(value),
+                    DD: pad(DateUtils.getDayInYear(value), 3),
+                    w: DateUtils.getWeekInYear(value),
+                    ww: pad(DateUtils.getWeekInYear(value), 2),
+                    W: DateUtils.getWeekInMonth(value),
+                    M: value.getUTCMonth() + 1,
+                    MM: pad(value.getUTCMonth() + 1, 2),
                     MMM: __(MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
-                    yyyy: value.getUTCFullYear()
+                    MMMM: __(MONTHS[value.getUTCMonth()]).toHTMLString(),
+                    y: value.getUTCFullYear() % 100,
+                    yy: pad(value.getUTCFullYear() % 100, 2),
+                    yyyy: value.getUTCFullYear(),
+                    u: value.getUTCDay() || 7,
+                    F: DateUtils.getWeekCountInMonth(value)
                 });
             }
 
