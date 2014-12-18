@@ -156,7 +156,7 @@ describe("better-dateinput-polyfill", function() {
         expect(label.get("textContent")).toBe("5: 3/2/8");
 
         el.set("value", "2007-02-08");
-        el.set("data-format", "dd W MM, DDD ww yy");
+        el.set("data-format", "dd W MM, DD ww yy");
         el.doFormatValue(label);
         expect(label.get("textContent")).toBe("08 2 02, 039 06 07");
 

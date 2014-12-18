@@ -10,8 +10,7 @@
         PICKER_TMP = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
         LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
-        pad = (number) => (number > 9 ? "" : "0") + number,
-        pad3 = (number) => (number > 9 ? (number > 99 ? "" : "0") : "00") + number;
+        pad = (num, maxlen) => ((maxlen === 2 ? "0" : "00") + num).slice(-maxlen);
 
     var DateUtils = {
         getWeekInYear: function(d) {
@@ -190,19 +189,18 @@
                     E: __(DAYS[value.getUTCDay()]).toHTMLString(),
                     EE: __(LONG_DAYS[value.getUTCDay()]).toHTMLString(),
                     d: value.getUTCDate(),
-                    dd: pad(value.getUTCDate()),
+                    dd: pad(value.getUTCDate(), 2),
                     D: DateUtils.getDayInYear(value),
-                    DD: pad(DateUtils.getDayInYear(value)),
-                    DDD: pad3(DateUtils.getDayInYear(value)),
+                    DD: pad(DateUtils.getDayInYear(value), 3),
                     w: DateUtils.getWeekInYear(value),
-                    ww: pad(DateUtils.getWeekInYear(value)),
+                    ww: pad(DateUtils.getWeekInYear(value), 2),
                     W: DateUtils.getWeekInMonth(value),
                     M: value.getUTCMonth() + 1,
-                    MM: pad(value.getUTCMonth() + 1),
+                    MM: pad(value.getUTCMonth() + 1, 2),
                     MMM: __(MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
                     MMMM: __(MONTHS[value.getUTCMonth()]).toHTMLString(),
                     y: value.getUTCFullYear() % 100,
-                    yy: pad(value.getUTCFullYear() % 100),
+                    yy: pad(value.getUTCFullYear() % 100, 2),
                     yyyy: value.getUTCFullYear(),
                     u: value.getUTCDay() || 7,
                     F: DateUtils.getWeekCountInMonth(value)
