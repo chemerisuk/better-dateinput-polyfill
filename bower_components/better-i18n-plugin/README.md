@@ -10,7 +10,7 @@ The project aims to solve the internationalization problem __on front-end side__
 * support for HTML markup in localized string values
 * ability to change language on a document subtree
 
-NOTE: currently the project can't localize empty DOM elements (like `<input>`, `<select>` etc.) or attribute values.
+NOTE: at present the project can't localize empty DOM elements (like `<input>`, `<select>` etc.) or attribute values.
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
@@ -28,7 +28,7 @@ Then append the following scripts on your page:
 <script src="bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"></script>
 ```
 
-## Localization on front-end
+## Localization in browser
 The plugin introduces 2 new static functions for the `DOM` namespace: `DOM.importStrings` and `DOM.__`. The first one is used to populate DOM with new localizations for a particular language:
 
 ```js
@@ -44,11 +44,11 @@ DOM.importStrings("ru", {
 This storage is private therefore you can't access to it directly. Intstead you can use `DOM.__`:
 
 ```js
-alert(DOM.__("Enter your name")); // shows "Enter your name"
+alert(DOM.__("Enter your name")); // displays "Enter your name"
 // change current language...
 DOM.set("lang", "ru");
 
-alert(DOM.__("Enter your name")); // shows "Введите ваше имя"
+alert(DOM.__("Enter your name")); // displays "Введите ваше имя"
 ```
 
 If you need to get a value for a particular language use `toLocaleString` with an appropriate argument:
@@ -60,61 +60,34 @@ entry.toString();           // => "Enter your name"
 entry.toLocaleString("ru"); // => "Введите ваше имя"
 ```
 
-Function `DOM.__` can accept optional argument `varMap`:
-
-```js
-DOM.__("your {name}", {name: "Maksim"}); // => "your Maksim"
-// arrays are supported too
-DOM.__("your {0}", ["Maksim"]);          // => "your Maksim"
-```
-
-## Usage with [`$Element`](http://chemerisuk.github.io/better-dom/$Element.html) objects
-Let's say you need to localize a button to support multiple languages. In this case you can just use `$Element#l10n`:
+## Usage with `$Element`
+Let's say you need to localize a button to support multiple languages. In this case you can use `$Element#l10n`:
 
 ```js
 button.l10n("Hello world");
 ```
 
-When you need to add a support for a new language just import a localized version of the string. For example the string in Russian:
+When you need to add a support for a new language import a localized version of the string. For example the string `"Hello world"` can be translated for Russian we pages like below:
 
 ```js
 DOM.importStrings("ru", "Hello world", "Привет мир");
 ```
 
-Now for web pages where `<html lang="ru">` the button displays `"Привет мир"` instead of `"Hello world"`. 
+Now for web pages where `<html lang="ru">` the button displays `"Привет мир"` instead of `"Hello world"`.
 
-`$Element#l10n` supports optional argument `varMap` too:
+## String variables
+Both `DOM.__` and `$Element#l10n` supports second optional argument:
 
 ```js
+DOM.__("your {name}", {name: "Maksim"}); // => "your Maksim"
+// arrays are supported too
+DOM.__("your {0}", ["Maksim"]);          // => "your Maksim"
+
 button.l10n("Hello {user}", {user: "Maksim"}); // displays "Hello Maksim"
 button.l10n("Hello {0}", ["Maksim"]);          // displays "Hello Maksim"
 ```
 
-## Multilingual live extensions
-In order to add support or use multiple languages of a live extension follow the convension below:
-
-1. All localizations are located inside if the `i18n` folder
-2. File names have following format: `i18n\project.{lang}.js`
-3. To use a particular language make sure you have an appropriate `lang` attribute on the `<html>` element and the corresponsing file with localizations is included on your web page:
-
-```html
-<html lang="ru">
-<head>    
-    ...
-</head>
-<body>
-    ...
-    <!-- required dependencies -->
-    <script src="bower_components/better-dom/dist/better-dom.js"></script>
-    <script src="bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"></script>
-    <!-- project files -->
-    <script src="specific_project/dist/specific_project.js"></script>
-    <script src="specific_project/i18n/specific_project.ru.js"></script>
-</body>
-</html>
-```
-
-## Integration with backend
+## Backend integration
 Often you need to grab localized strings from backend. This is very easy to do using `DOM.importStrings`. In the example below I'll use [Handlebars](http://handlebarsjs.com) as a templating language and [i18n-node](https://github.com/mashpie/i18n-node).
 
 Assume you stored web page language in `res.locals.locale`. Then you need to add another variable that stores all backend strings map passed into `JSON.stringify` call:
@@ -141,6 +114,30 @@ After that add extra `script` element that will populate all backend strings on 
 ```
 
 Now you can use `DOM.__` with an appropriate key to get a backend string on client side.
+
+## Multilingual live extensions
+In order to add support or use multiple languages of a live extension follow the convension below:
+
+1. All localizations are located inside if the `i18n` folder
+2. File names have following format: `i18n\project.{lang}.js`
+3. To use a particular language make sure you have an appropriate `lang` attribute on the `<html>` element and the corresponsing file with localizations is included on your web page:
+
+```html
+<html lang="ru">
+<head>    
+    ...
+</head>
+<body>
+    ...
+    <!-- required dependencies -->
+    <script src="bower_components/better-dom/dist/better-dom.js"></script>
+    <script src="bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"></script>
+    <!-- project files -->
+    <script src="specific_project/dist/specific_project.js"></script>
+    <script src="specific_project/i18n/specific_project.ru.js"></script>
+</body>
+</html>
+```
 
 ## Browser support
 #### Desktop
