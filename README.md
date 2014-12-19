@@ -38,7 +38,7 @@ Then append the following script on your page:
 Displayed date can be formatted using a `data-format` attribute on the `<input type="date">`. For example:
 
 ```html
-<input type="date" data-format="EEE, MMMM dd'th' yyyy">
+<input type="date" data-format="EE, MMMM dd'th' yyyy">
 ```
 
 This will display the selected date like "Monday, December 8th 2014" on the input.
@@ -47,18 +47,17 @@ If `data-format` is not specified, date is formatted using the pattern "E, dd MM
 
 Possible parameters for the format are:
 
-|Letter |Date Component                                   |Presentation |Examples      |
-|-------|-------------------------------------------------|-------------|--------------|
-|G      |Era designator                                   |Text         |AD            |
-|y      |Year                                             |Year         |1996; 96      |
-|M      |Month in year                                    |Month        |July; Jul; 07 |
-|w      |Week in year                                     |Number       |27            |
-|W      |Week in month                                    |Number       |2             |
-|D      |Day in year                                      |Number       |189           |
-|d      |Day in month                                     |Number       |10            |
-|F      |Day of week in month (1st, 2nd, 3rd Tuesday)     |Number       |2             |
-|E      |Day name in week                                 |Text         |Tuesday; Tue  |
-|u      |Day number of week (1 = Monday, ..., 7 = Sunday) |Number       |1             |
+|Letter |Date Component                                   |Presentation |Examples         |
+|-------|-------------------------------------------------|-------------|-----------------|
+|y      |Year                                             |Year         |2002; 02; 2      |
+|M      |Month in year                                    |Month        |July; Jul; 07; 7 |
+|w      |Week in year                                     |Number       |07; 7            |
+|W      |Week in month                                    |Number       |2                |
+|D      |Day in year                                      |Number       |009; 9           |
+|d      |Day in month                                     |Number       |08; 8            |
+|F      |Day of week in month (1st, 2nd, 3rd Tuesday)     |Number       |2                |
+|E      |Day name in week                                 |Text         |Tuesday; Tu.     |
+|u      |Day number of week (1 = Monday, ..., 7 = Sunday) |Number       |1                |
 
 Number of letters in the parameter name specifies form of the output value, for instance:
 
