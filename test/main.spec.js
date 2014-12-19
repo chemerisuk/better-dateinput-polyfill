@@ -16,39 +16,39 @@ describe("better-dateinput-polyfill", function() {
 
         var toggleSpy = spyOn(calendar, "toggle");
 
-        el.onCalendarKeyDown(calendar, 32, false);
+        el._keydownCalendar(calendar, 32, false);
         expect(toggleSpy).toHaveBeenCalled();
     });
 
     it("should hide calendar on escape key", function() {
         var spy = spyOn(calendar, "hide");
 
-        el.onCalendarKeyDown(calendar, 27, false);
+        el._keydownCalendar(calendar, 27, false);
         expect(spy).toHaveBeenCalled();
     });
 
     it("should prevent default action on any key except tab", function() {
-        expect(el.onCalendarKeyDown(calendar, 9, false)).not.toBe(false);
-        expect(el.onCalendarKeyDown(calendar, 111, false)).toBe(false);
+        expect(el._keydownCalendar(calendar, 9, false)).not.toBe(false);
+        expect(el._keydownCalendar(calendar, 111, false)).toBe(false);
 
         var spy = spyOn(calendar, "matches").and.returnValue(true);
 
-        expect(el.onCalendarKeyDown(calendar, 13, false)).toBe(true);
+        expect(el._keydownCalendar(calendar, 13, false)).toBe(true);
         expect(spy).toHaveBeenCalledWith(":hidden");
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
         var spy = spyOn(el, "set");
 
-        el.onCalendarKeyDown(calendar, 8, false);
+        el._keydownCalendar(calendar, 8, false);
         expect(spy).toHaveBeenCalledWith("");
-        el.onCalendarKeyDown(calendar, 46, false);
+        el._keydownCalendar(calendar, 46, false);
         expect(spy.calls.count()).toBe(2);
     });
 
     it("should handle arrow keys with optional shiftKey", function() {
         function expectKey(key, altKey, expected) {
-            el.onCalendarKeyDown(calendar, key, altKey);
+            el._keydownCalendar(calendar, key, altKey);
             expect(el.get()).toBe(expected);
             el.set("2000-01-01");
         }
@@ -75,11 +75,11 @@ describe("better-dateinput-polyfill", function() {
         var target = DOM.mock("a");
 
         el.set("2000-01-01");
-        el.onCalendarClick(calendar, target);
+        el._clickCalendar(calendar, target);
         expect(el.get()).toBe("2000-02-01");
 
         spyOn(target, "next").and.returnValue(el);
-        el.onCalendarClick(calendar, target);
+        el._clickCalendar(calendar, target);
         expect(el.get()).toBe("2000-01-01");
     });
 
@@ -88,14 +88,14 @@ describe("better-dateinput-polyfill", function() {
             target = DOM.mock("td").set("_ts", now.getTime()),
             setSpy = spyOn(el, "set");
 
-        el.onCalendarClick(calendar, target);
+        el._clickCalendar(calendar, target);
         expect(setSpy).toHaveBeenCalledWith("2011-07-13");
     });
 
     it("should hide calendar on blur", function() {
         var hideSpy = spyOn(calendar, "hide");
 
-        el.onCalendarBlur(calendar);
+        el._blurCalendar(calendar);
         expect(hideSpy).toHaveBeenCalled();
     });
 
@@ -107,7 +107,7 @@ describe("better-dateinput-polyfill", function() {
 
         now.setMonth(now.getMonth() + 1);
 
-        el.onCalendarClick(calendar, target);
+        el._clickCalendar(calendar, target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
 
@@ -115,7 +115,7 @@ describe("better-dateinput-polyfill", function() {
 
         now.setMonth(now.getMonth() - 2);
 
-        el.onCalendarClick(calendar, target);
+        el._clickCalendar(calendar, target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
     });
@@ -123,7 +123,7 @@ describe("better-dateinput-polyfill", function() {
     it("should display calendar on focus", function() {
         var spy = spyOn(calendar, "show");
 
-        el.onCalendarFocus(calendar);
+        el._focusCalendar(calendar);
         expect(spy).toHaveBeenCalled();
     });
 
@@ -131,7 +131,7 @@ describe("better-dateinput-polyfill", function() {
         el.set("defaultValue", "2000-10-20");
         el.set("value", "2000-10-2");
 
-        el.onFormReset();
+        el._resetForm();
 
         expect(el.get()).toBe("2000-10-20");
     });
@@ -139,7 +139,7 @@ describe("better-dateinput-polyfill", function() {
     it("should format date with default format", function() {
         el.set("value", "2014-11-02");
 
-        el.doFormatValue(label);
+        el._formatValue(label);
 
         expect(label.get("textContent")).toBe("Su, 02 Nov. 2014");
     });
@@ -147,22 +147,22 @@ describe("better-dateinput-polyfill", function() {
     it("should format date with custom formats", function() {
         el.set("value", "2014-08-03");
         el.set("data-format", "MM/dd/yyyy");
-        el.doFormatValue(label);
+        el._formatValue(label);
         expect(label.get("textContent")).toBe("08/03/2014");
 
         el.set("value", "2008-02-03");
         el.set("data-format", "w: d/M/y");
-        el.doFormatValue(label);
+        el._formatValue(label);
         expect(label.get("textContent")).toBe("5: 3/2/8");
 
         el.set("value", "2007-02-08");
         el.set("data-format", "dd W MM, DD ww yy");
-        el.doFormatValue(label);
+        el._formatValue(label);
         expect(label.get("textContent")).toBe("08 2 02, 039 06 07");
 
         el.set("value", "2012-10-14");
         el.set("data-format", "d W M, D w y");
-        el.doFormatValue(label);
+        el._formatValue(label);
         expect(label.get("textContent")).toBe("14 3 10, 288 41 12");
     });
 
@@ -170,7 +170,7 @@ describe("better-dateinput-polyfill", function() {
         el.set("value", "2014-12-03");
         el.set("data-format", "EE (u), F'th week of' MMMM d'th' yy (DD'th of year')");
 
-        el.doFormatValue(label);
+        el._formatValue(label);
 
         expect(label.get("textContent")).toBe("Wednesday (3), 1th week of December 3th 14 (337th of year)");
     });

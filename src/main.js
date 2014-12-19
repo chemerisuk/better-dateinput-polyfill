@@ -4,8 +4,7 @@
     var __ = DOM.__,
         ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        DAYS = "Su Mo Tu We Th Fr Sa".split(" "),
-        LONG_DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
+        DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
         MONTHS = "January February March April May June July August September October November December".split(" "),
         PICKER_TMP = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
         LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
@@ -58,18 +57,18 @@
                 // IE8 doesn't suport color:transparent - use background-color instead
                 .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
                 // handle arrow keys, esc etc.
-                .on("keydown", [calendar, "which", "shiftKey"], this.onCalendarKeyDown)
+                .on("keydown", ["which", "shiftKey"], this._keydownCalendar.bind(this, calendar))
                 // sync picker visibility on focus/blur
-                .on(["focus", "click"], [calendar], this.onCalendarFocus)
-                .on("blur", [calendar], this.onCalendarBlur)
-                .on("change", [label], this.doFormatValue)
+                .on(["focus", "click"], this._focusCalendar.bind(this, calendar))
+                .on("blur", this._blurCalendar.bind(this, calendar))
+                .on("change", this._formatValue.bind(this, label))
                 .before(calendar)
                 .before(label);
 
             calOffset = calendar.offset();
 
             calendar
-                .on("mousedown", [calendar, "target"], this.onCalendarClick)
+                .on("mousedown", ["target"], this._clickCalendar.bind(this, calendar))
                 .css({
                     "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
                     "margin-top": offset.bottom - calOffset.top,
@@ -97,15 +96,15 @@
 
             calenderDays[1].hide().remove();
 
-            this.closest("form").on("reset", this.onFormReset);
-            this.watch("value", this.onValueChanged.bind(this,
+            this.closest("form").on("reset", this._resetForm);
+            this.watch("value", this._changeValue.bind(this,
                 calendar.find(`.${BASE_CLASS}-calendar-caption`), calenderDays, calendar));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        onValueChanged(caption, calenderDays, calendar, value, prevValue) {
+        _changeValue(caption, calenderDays, calendar, value, prevValue) {
             var year, month, date, iterDate;
 
             value = new Date(value);
@@ -169,7 +168,7 @@
             // trigger event manually to notify about changes
             this.fire("change");
         },
-        doFormatValue(label) {
+        _formatValue(label) {
             var value = new Date(this.get()),
                 formattedValue = "";
 
@@ -186,8 +185,8 @@
                         });
 
                 formattedValue = DOM.format(formatString, {
-                    E: __(DAYS[value.getUTCDay()]).toHTMLString(),
-                    EE: __(LONG_DAYS[value.getUTCDay()]).toHTMLString(),
+                    E: __(DAYS[value.getUTCDay()].slice(0, 2)).toHTMLString(),
+                    EE: __(DAYS[value.getUTCDay()]).toHTMLString(),
                     d: value.getUTCDate(),
                     dd: pad(value.getUTCDate(), 2),
                     D: DateUtils.getDayInYear(value),
@@ -208,9 +207,9 @@
             }
 
             // display formatted date value instead of real one
-            label.set(formattedValue);
+            label.value(formattedValue);
         },
-        onCalendarClick(calendar, target) {
+        _clickCalendar(calendar, target) {
             var targetDate;
 
             if (target.matches("a")) {
@@ -237,12 +236,12 @@
             }
 
             if (targetDate != null) {
-                this.set(formatISODate(targetDate));
+                this.value(formatISODate(targetDate));
             }
             // prevent input from loosing focus
             return false;
         },
-        onCalendarKeyDown(calendar, which, shiftKey) {
+        _keydownCalendar(calendar, which, shiftKey) {
             var delta, currentDate;
 
             // ENTER key should submit form if calendar is hidden
@@ -253,7 +252,7 @@
             } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
                 calendar.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
-                this.set(""); // BACKSPACE, DELETE clear value
+                this.empty(); // BACKSPACE, DELETE clear value
             } else {
                 currentDate = new Date(this.get());
 
@@ -276,7 +275,7 @@
                     var range = readDateRange(this);
 
                     if (!(currentDate < range[0] || currentDate > range[1])) {
-                        this.set(formatISODate(currentDate));
+                        this.value(formatISODate(currentDate));
                     }
                 }
             }
@@ -284,13 +283,13 @@
             // do not allow to change the value manually
             return which === VK_TAB;
         },
-        onCalendarBlur(calendar) {
+        _blurCalendar(calendar) {
             calendar.hide();
         },
-        onCalendarFocus(calendar) {
+        _focusCalendar(calendar) {
             // update calendar weekday captions
             calendar.findAll("th").forEach((el, index) => {
-                el.l10n(DAYS[ampm(index, ++index % 7)]);
+                el.l10n(DAYS[ampm(index, ++index % 7)].slice(0, 2));
             });
 
             calendar.show();
@@ -312,8 +311,8 @@
                 }
             }, 0);
         },
-        onFormReset() {
-            this.set(this.get("defaultValue"));
+        _resetForm() {
+            this.value(this.get("defaultValue"));
         }
     });
 }(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46));
