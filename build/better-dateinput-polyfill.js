@@ -5,10 +5,41 @@
         ampm = function(pos, neg)  {return DOM.get("lang") === "en-US" ? pos : neg},
         formatISODate = function(value)  {return value.toISOString().split("T")[0]},
         DAYS = "Su Mo Tu We Th Fr Sa".split(" "),
+        LONG_DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
         MONTHS = "January February March April May June July August September October November December".split(" "),
         PICKER_TMP = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [(("" + BASE_CLASS) + "-calendar"), "unselectable=on", "aria-hidden=true"]),
         LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
-        readDateRange = function(el)  {return ["min", "max"].map(function(x)  {return new Date(el.get(x) || "")})};
+        readDateRange = function(el)  {return ["min", "max"].map(function(x)  {return new Date(el.get(x) || "")})},
+        pad = function(num, maxlen)  {return ((maxlen === 2 ? "0" : "00") + num).slice(-maxlen)};
+
+    var DateUtils = {
+        getWeekInYear: function(d) {
+            d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+            // set to nearest thursday: current date + 4 - current day number
+            // make sunday's day number 7
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+            // calculate full weeks to nearest thursday
+            var weekNo = Math.ceil((1 + (d - yearStart) / 86400000) / 7);
+            return weekNo;
+        },
+        getWeekInMonth: function(d) {
+            var month = d.getUTCMonth();
+            var year = d.getUTCFullYear();
+            var firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
+            var offsetDate = d.getUTCDate() + firstWeekday - 1;
+            return 1 + Math.floor(offsetDate / 7);
+        },
+        getWeekCountInMonth: function(d) {
+            return Math.ceil(d.getUTCDate() / 7);
+        },
+        getDayInYear: function(d) {
+            var year = d.getUTCFullYear();
+            var beginOfYear = Date.UTC(year, 0, 1);
+            var millisBetween = d.getTime() - beginOfYear;
+            return Math.floor(1 + millisBetween / 86400000);
+        }
+    };
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !("orientation" in window), {
@@ -143,14 +174,36 @@
                 formattedValue = "";
 
             if (value.getTime()) {
-                // TODO: read formatString value from data-format attribute
-                var formatString = "E, dd MMM yyyy".replace(/\w+/g, "{$&}");
+                var formatString = this.get("data-format");
+                if (!formatString) {
+                    formatString = "E, dd MMM yyyy";
+                }
+                formatString = formatString
+                        .replace(/'([^']+)'/g, "->$1<-")
+                        .replace(/\w+/g, "{$&}")
+                        .replace(/->{(.*?)}<-/g, function(string, group) {
+                            return group.replace(/}|{/g, "");
+                        });
 
                 formattedValue = DOM.format(formatString, {
                     E: __(DAYS[value.getUTCDay()]).toHTMLString(),
-                    dd: (value.getUTCDate() > 9 ? "" : "0") + value.getUTCDate(),
+                    EE: __(LONG_DAYS[value.getUTCDay()]).toHTMLString(),
+                    d: value.getUTCDate(),
+                    dd: pad(value.getUTCDate(), 2),
+                    D: DateUtils.getDayInYear(value),
+                    DD: pad(DateUtils.getDayInYear(value), 3),
+                    w: DateUtils.getWeekInYear(value),
+                    ww: pad(DateUtils.getWeekInYear(value), 2),
+                    W: DateUtils.getWeekInMonth(value),
+                    M: value.getUTCMonth() + 1,
+                    MM: pad(value.getUTCMonth() + 1, 2),
                     MMM: __(MONTHS[value.getUTCMonth()].substr(0, 3) + ".").toHTMLString(),
-                    yyyy: value.getUTCFullYear()
+                    MMMM: __(MONTHS[value.getUTCMonth()]).toHTMLString(),
+                    y: value.getUTCFullYear() % 100,
+                    yy: pad(value.getUTCFullYear() % 100, 2),
+                    yyyy: value.getUTCFullYear(),
+                    u: value.getUTCDay() || 7,
+                    F: DateUtils.getWeekCountInMonth(value)
                 });
             }
 
@@ -234,10 +287,18 @@
         onCalendarBlur: function(calendar) {
             calendar.hide();
         },
-        onCalendarFocus: function(calendar) {
-            var node = this[0];
+        onCalendarFocus: function(calendar) {var this$0 = this;
+            // update calendar weekday captions
+            calendar.findAll("th").forEach(function(el, index)  {
+                el.l10n(DAYS[ampm(index, ++index % 7)]);
+            });
+
+            calendar.show();
+
             // use the trick below to reset text selection on focus
             setTimeout(function()  {
+                var node = this$0[0];
+
                 if ("selectionStart" in node) {
                     node.selectionStart = 0;
                     node.selectionEnd = 0;
@@ -250,13 +311,6 @@
                     inputRange.select();
                 }
             }, 0);
-
-            // update calendar weekday captions
-            calendar.findAll("th").forEach(function(el, index)  {
-                el.l10n(DAYS[ampm(index, ++index % 7)]);
-            });
-
-            calendar.show();
         },
         onFormReset: function() {
             this.set(this.get("defaultValue"));
@@ -264,25 +318,26 @@
     });
 }(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46));
 
-DOM.importStyles(".btr-dateinput-value", "position:absolute;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-style:none solid;border-color:transparent");
-DOM.importStyles(".btr-dateinput-calendar", "position:absolute;visibility:hidden;cursor:default;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;color:#FFF;border-bottom:1px solid #CCC;overflow:hidden;border-radius:3px;-webkit-box-shadow:0 .25em .5em rgba(0,0,0,.2);box-shadow:0 .25em .5em rgba(0,0,0,.2);font-family:Helvetica Neue,Helvetica,Arial,sans-serif;text-align:center;opacity:1;-webkit-transform:scale(1,1);-ms-transform:scale(1,1);transform:scale(1,1);-webkit-transform-origin:50% 0;-ms-transform-origin:50% 0;transform-origin:50% 0;-webkit-transition:.1s ease-out;transition:.1s ease-out;width:15em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale");
-DOM.importStyles(".btr-dateinput-calendar[aria-hidden=true]", "opacity:0;-webkit-transform:scale(.75,.75);-ms-transform:scale(.75,.75);transform:scale(.75,.75)");
+DOM.importStyles(".btr-dateinput-value", "position:absolute;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-style:none solid;border-color:transparent;pointer-events:none");
+DOM.importStyles(".btr-dateinput-calendar", "position:absolute;visibility:hidden;cursor:default;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;color:#FFF;border-bottom:1px solid #CCC;overflow:hidden;border-radius:3px;-webkit-box-shadow:0 .25em .5em rgba(0,0,0,.2);box-shadow:0 .25em .5em rgba(0,0,0,.2);font-family:Helvetica Neue,Helvetica,Arial,sans-serif;text-align:center;opacity:1;-webkit-transform:scale(1,1) translateZ(0);transform:scale(1,1) translateZ(0);-webkit-transform-origin:50% 0;-ms-transform-origin:50% 0;transform-origin:50% 0;-webkit-transition:.1s ease-out;transition:.1s ease-out;width:15em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale");
+DOM.importStyles(".btr-dateinput-calendar[aria-hidden=true]", "opacity:0;-webkit-transform:scale(.75,.75) translateZ(0);transform:scale(.75,.75) translateZ(0)");
 DOM.importStyles(".btr-dateinput-calendar-header", "position:relative;margin:0;line-height:2.5em;font-weight:700;white-space:nowrap;background:#2da4d6;text-shadow:0 1px 0 #555;border-bottom:1px solid #207fb1");
-DOM.importStyles(".btr-dateinput-calendar-header>a", "width:2.5em;height:2.5em;position:absolute;left:0;top:0");
+DOM.importStyles(".btr-dateinput-calendar-header>a", "width:2.5em;height:2.5em;position:absolute;left:0;top:0;color:inherit");
 DOM.importStyles(".btr-dateinput-calendar-header>a:before", "content:'\\25C4'");
 DOM.importStyles(".btr-dateinput-calendar-header>a::before", "font-size:.85em");
 DOM.importStyles(".btr-dateinput-calendar-header>a+a", "left:auto;right:0");
 DOM.importStyles(".btr-dateinput-calendar-header>a+a:before", "content:'\\25BA'");
-DOM.importStyles(".btr-dateinput-calendar-days", "table-layout:fixed;border-spacing:0;border-collapse:collapse;color:#555;background:#FFF;border-radius:3px;border:1px solid #CCC;border-bottom:0");
+DOM.importStyles(".btr-dateinput-calendar-days", "width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;color:#555;background:#FFF;border-radius:3px;border:1px solid #CCC;border-bottom:0");
 DOM.importStyles(".btr-dateinput-calendar-days>thead", "border-top:1px solid #EEE;border-bottom:1px solid #CCC;font-size:.75em;background:#DDD;font-weight:700;text-shadow:0 1px 0 #f3f3f3");
-DOM.importStyles(".btr-dateinput-calendar-body", "-webkit-transform:translate(0);-ms-transform:translate(0);transform:translate(0);-webkit-transition:-webkit-transform .1s linear;transition:transform .1s linear");
-DOM.importStyles(".btr-dateinput-calendar-body[aria-hidden=true]", "-webkit-transform:translate(-100%);-ms-transform:translate(-100%);transform:translate(-100%)");
+DOM.importStyles(".btr-dateinput-calendar-body", "-webkit-transform:translateX(0);-ms-transform:translateX(0);transform:translateX(0);-webkit-transition:-webkit-transform .1s linear;transition:transform .1s linear");
+DOM.importStyles(".btr-dateinput-calendar-body[aria-hidden=true]", "-webkit-transform:translateX(-100%);-ms-transform:translateX(-100%);transform:translateX(-100%)");
 DOM.importStyles(".btr-dateinput-calendar-body+.btr-dateinput-calendar-body", "position:absolute;bottom:0");
-DOM.importStyles(".btr-dateinput-calendar-body+.btr-dateinput-calendar-body[aria-hidden=true]", "-webkit-transform:translate(100%);-ms-transform:translate(100%);transform:translate(100%)");
-DOM.importStyles(".btr-dateinput-calendar-days td,.btr-dateinput-calendar-days th", "width:2em;height:2em;line-height:2");
+DOM.importStyles(".btr-dateinput-calendar-body+.btr-dateinput-calendar-body[aria-hidden=true]", "-webkit-transform:translateX(100%);-ms-transform:translateX(100%);transform:translateX(100%)");
+DOM.importStyles(".btr-dateinput-calendar-days td,.btr-dateinput-calendar-days th", "width:2em;height:2em;line-height:2;padding:0;text-align:center");
 DOM.importStyles(".btr-dateinput-calendar-past,.btr-dateinput-calendar-future", "color:#DDD");
 DOM.importStyles(".btr-dateinput-calendar-out", "color:#CCC;text-shadow:0 1px 0 #FFF");
 DOM.importStyles(".btr-dateinput-calendar-today", "color:#FFF;background-color:#2da4d6;text-shadow:0 1px 0 #555;font-weight:700");
 DOM.importStyles(".btr-dateinput-calendar-out,.btr-dateinput-calendar-days td:hover", "background-color:#f3f3f3;background-color:rgba(0,0,0,.05)");
-DOM.importStyles(".btr-dateinput-calendar-header>a:hover,td.btr-dateinput-calendar-today:hover", "background-color:#207fb1");
+DOM.importStyles(".btr-dateinput-calendar-header>a:hover,td.btr-dateinput-calendar-today:hover", "background-color:#207fb1;text-decoration:none");
 DOM.importStyles(".btr-dateinput-value+input::-moz-placeholder", "color:initial");
+DOM.importStyles("::-webkit-inner-spin-button", "display:none");

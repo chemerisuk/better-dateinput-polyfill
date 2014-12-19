@@ -16,6 +16,6 @@
     "better-dom"
   ],
   "dependencies": {
-    "better-dom": "~2.0.0"
+    "better-dom": "^2.0.0"
   }
 }
