@@ -1,5 +1,8 @@
 (function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
     "use strict";
+    
+    // Feature detect browsers that already support date inputs
+    var hasNativeSupport = DOM.create("input[type=date]")[0].type === "date";
 
     var __ = DOM.__,
         ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
@@ -42,7 +45,7 @@
     };
 
     // need to skip mobile/tablet browsers
-    DOM.extend("input[type=date]", !("orientation" in window), {
+    DOM.extend("input[type=date]", !( window.orientation || hasNativeSupport ), {
         constructor() {
             var calendar = PICKER_TMP.clone(true),
                 label = LABEL_TMP.clone(true),
