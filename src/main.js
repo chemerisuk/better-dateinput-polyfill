@@ -19,8 +19,7 @@
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
             var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
             // calculate full weeks to nearest thursday
-            var weekNo = Math.ceil((1 + (d - yearStart) / 86400000) / 7);
-            return weekNo;
+            return Math.ceil((1 + (d - yearStart) / 86400000) / 7);
         },
         getWeekInMonth: function(d) {
             var month = d.getUTCMonth();
@@ -45,9 +44,7 @@
         constructor() {
             var calendar = PICKER_TMP.clone(true),
                 label = LABEL_TMP.clone(true),
-                color = this.css("color"),
-                offset = this.offset(),
-                calOffset;
+                color = this.css("color");
 
             this
                 // remove legacy dateinput implementation if it exists
@@ -62,24 +59,28 @@
                 .on(["focus", "click"], this._focusCalendar.bind(this, calendar))
                 .on("blur", this._blurCalendar.bind(this, calendar))
                 .on("change", this._formatValue.bind(this, label))
-                .before(calendar)
-                .before(label);
+                .before(label, calendar.hide());
 
-            calOffset = calendar.offset();
+            DOM.requestFrame(() => {
+                var offset = this.offset();
+                var calOffset = calendar.offset();
 
-            calendar
-                .on("mousedown", ["target"], this._clickCalendar.bind(this, calendar))
-                .css({
-                    "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
-                    "margin-top": offset.bottom - calOffset.top,
-                    "z-index": 1 + (this.css("z-index") | 0)
-                })
-                .hide(); // hide calendar to trigger show animation properly later
+                calendar
+                    .css({
+                        "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
+                        "margin-top": offset.bottom - calOffset.top,
+                        "z-index": 1 + (this.css("z-index") | 0)
+                    });
 
-            // move calendar to the top when passing cross browser window bounds
-            if (DOM.get("clientHeight") < offset.bottom + calOffset.height) {
-                calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
-            }
+                // move calendar to the top when passing cross browser window bounds
+                if (DOM.get("clientHeight") < offset.bottom + calOffset.height) {
+                    calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
+                }
+            });
+
+            calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar));
+
+            var offset = this.offset();
 
             label
                 .on("click", () => { this.fire("focus") })
@@ -88,15 +89,15 @@
                 .css({
                     "color": color,
                     "line-height": offset.height + "px",
-                    "margin-left": offset.left - calOffset.left,
-                    "margin-top": offset.top - calOffset.top,
+                    // "margin-left": offset.left - calOffset.left,
+                    // "margin-top": offset.top - calOffset.top,
                 });
 
             var calenderDays = calendar.findAll(`.${BASE_CLASS}-calendar-body`);
 
             calenderDays[1].hide().remove();
 
-            this.closest("form").on("reset", this._resetForm);
+            this.closest("form").on("reset", this._resetForm.bind(this));
             this.watch("value", this._changeValue.bind(this,
                 calendar.find(`.${BASE_CLASS}-calendar-caption`), calenderDays, calendar));
             // trigger watchers to build the calendar
@@ -174,9 +175,9 @@
 
             if (value.getTime()) {
                 var formatString = this.get("data-format");
-                if (!formatString) {
-                    formatString = "E, dd MMM yyyy";
-                }
+                // use "E, dd MMM yyyy" as default value
+                if (!formatString) formatString = "E, dd MMM yyyy";
+
                 formatString = formatString
                         .replace(/'([^']+)'/g, "->$1<-")
                         .replace(/\w+/g, "{$&}")
