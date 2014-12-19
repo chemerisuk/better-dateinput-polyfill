@@ -141,7 +141,7 @@ describe("better-dateinput-polyfill", function() {
 
         el._formatValue(label);
 
-        expect(label.get("textContent")).toBe("Su, 02 Nov. 2014");
+        expect(label.get("textContent")).toBe("Su, 02 NovNov. 2014");
     });
 
     it("should format date with custom formats", function() {
