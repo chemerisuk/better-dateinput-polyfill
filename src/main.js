@@ -9,7 +9,7 @@
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
         pad = (num, maxlen) => ((maxlen === 2 ? "0" : "00") + num).slice(-maxlen);
 
-    // compact moths in english don't have dot suffix
+    // compact moths in english don't have the dot suffix
     DOM.importStrings("en", DateUtils.MONTHS.reduce((memo, month) => {
         var shortMonth = month.slice(0, 3);
 
@@ -166,9 +166,7 @@
                 formatString = formatString
                         .replace(/'([^']+)'/g, "->$1<-")
                         .replace(/\w+/g, "{$&}")
-                        .replace(/->{(.*?)}<-/g, function(string, group) {
-                            return group.replace(/}|{/g, "");
-                        });
+                        .replace(/->{(.*?)}<-/g, (_, group) => group.replace(/}|{/g, ""));
 
                 formattedValue = DOM.format(formatString, {
                     E: __(DateUtils.DAYS[day].slice(0, 2)).toHTMLString(),
@@ -204,14 +202,6 @@
                 if (!targetDate.getTime()) targetDate = new Date();
 
                 targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a")[0] ? -1 : 1));
-
-                var range = readDateRange(this);
-
-                if (targetDate < range[0]) {
-                    targetDate = range[0];
-                } else if (targetDate > range[1]) {
-                    targetDate = range[1];
-                }
             } else if (target.matches("td")) {
                 targetDate = target.get("_ts");
 
@@ -222,6 +212,14 @@
             }
 
             if (targetDate != null) {
+                var range = readDateRange(this);
+
+                if (targetDate < range[0]) {
+                    targetDate = range[0];
+                } else if (targetDate > range[1]) {
+                    targetDate = range[1];
+                }
+
                 this.value(formatISODate(targetDate));
             }
             // prevent input from loosing focus
