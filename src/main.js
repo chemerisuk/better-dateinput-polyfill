@@ -38,39 +38,12 @@
                 .on(["focus", "click"], this._focusCalendar.bind(this, calendar))
                 .on("blur", this._blurCalendar.bind(this, calendar))
                 .on("change", this._formatValue.bind(this, label))
-                .before(label, calendar.hide());
-
-            DOM.requestFrame(() => {
-                var offset = this.offset();
-                var calOffset = calendar.offset();
-
-                calendar
-                    .css({
-                        "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
-                        "margin-top": offset.bottom - calOffset.top,
-                        "z-index": 1 + (this.css("z-index") | 0)
-                    });
-
-                // move calendar to the top when passing cross browser window bounds
-                if (DOM.get("clientHeight") < offset.bottom + calOffset.height) {
-                    calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
-                }
-            });
-
-            calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar));
-
-            var offset = this.offset();
+                .before(calendar.hide(), label);
 
             label
                 .on("click", () => { this.fire("focus") })
-                // copy input CSS
-                .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]))
-                .css({
-                    "color": color,
-                    "line-height": offset.height + "px",
-                    // "margin-left": offset.left - calOffset.left,
-                    // "margin-top": offset.top - calOffset.top,
-                });
+                // copy input CSS to adjust visible text position
+                .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]));
 
             var calenderDays = calendar.findAll(`.${BASE_CLASS}-calendar-body`);
 
@@ -81,8 +54,36 @@
                 calendar.find(`.${BASE_CLASS}-calendar-caption`), calenderDays, calendar));
             // trigger watchers to build the calendar
             this.set(this.get("defaultValue"));
-            // display calendar for autofocused elements
-            if (this.matches(":focus")) this.fire("focus");
+
+            calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar));
+            // FIXME: get rid of DOM.requestFrame which is required to get right offset
+            DOM.requestFrame(() => {
+                var offset = this.offset();
+                var labelOffset = label.offset();
+
+                label.css({
+                    "color": color,
+                    "line-height": offset.height + "px",
+                    "margin-left": offset.left - labelOffset.left,
+                    "margin-top": offset.top - labelOffset.top
+                });
+
+                calendar
+                    .css({
+                        "margin-left": offset.left - labelOffset.left,
+                        "margin-top": offset.bottom - labelOffset.top,
+                        "z-index": 1 + (this.css("z-index") | 0)
+                    });
+
+                // FIXME
+                // move calendar to the top when passing cross browser window bounds
+                // if (DOM.get("clientHeight") < offset.bottom + calOffset.height) {
+                //     calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
+                // }
+
+                // display calendar for autofocused elements
+                if (this.matches(":focus")) this.fire("focus");
+            });
         },
         _changeValue(caption, calenderDays, calendar, value, prevValue) {
             var year, month, date, iterDate;
