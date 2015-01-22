@@ -1,76 +1,26 @@
 /**
- * @file better-dom.js
  * @overview better-dom: Live extension playground
- * @version 2.0.3 Tue, 28 Oct 2014 07:19:04 GMT
- * @copyright 2013-2014 Maksim Chemerisuk
+ * @version 2.1.2 Thu, 22 Jan 2015 17:50:19 GMT
+ * @copyright 2013-2015 Maksim Chemerisuk
  * @license MIT
  * @see https://github.com/chemerisuk/better-dom
  */
 (function() {
-    "use strict";
-    var WINDOW = window;
-    var DOCUMENT = WINDOW.document;
-    var HTML = DOCUMENT.documentElement;
+    "use strict";var SLICE$0 = Array.prototype.slice;
 
-    var userAgent = WINDOW.navigator.userAgent;
-
-    var JSCRIPT_VERSION=/*@cc_on @_jscript_version|@*/void 0;
-    var LEGACY_ANDROID = ~userAgent.indexOf("Android") && userAgent.indexOf("Chrome") < 0;
-    var WEBKIT_PREFIX = WINDOW.WebKitAnimationEvent ? "-webkit-" : "";
-    var CUSTOM_EVENT_TYPE = "dataavailable";
-
-    function $NullElement() {}
-
-    function $Element(node) {
-        if (this instanceof $Element) {
-            if (node) {
-                this[0] = node;
-                // use a generated property to store a reference
-                // to the wrapper for circular object binding
-                node["__2000003__"] = this;
-            }
-
-            this._ = { _handlers: [], _watchers: {}, _extensions: [] };
-        } else if (node) {
-            var cached = node["__2000003__"];
-            // create a wrapper only once for each native element
-            return cached ? cached : new $Element(node);
-        } else {
-            return new $NullElement();
-        }
-    }
-
-    $Element.prototype = {
-        constructor: function(node) {
-            // filter non elements like text nodes, comments etc.
-            return $Element(node && node.nodeType === 1 ? node : null);
-        },
-        toString: function() {
-            var node = this[0];
-
-            return node ? "<" + node.tagName.toLowerCase() + ">" : "";
-        },
-        version: "2.0.3"
-    };
-
-    $NullElement.prototype = new $Element();
-
-    var DOM = new $Element(HTML);
-
-    var util$index$$arrayProto = Array.prototype,
-        util$index$$head = DOCUMENT.getElementsByTagName("head")[0];
+    var util$index$$arrayProto = Array.prototype;
 
     var util$index$$default = {
-        computeStyle: function(node)  {
-            if (WINDOW.getComputedStyle) {
-                return WINDOW.getComputedStyle(node);
-            } else {
+        computeStyle: function(node) {
+            if (JSCRIPT_VERSION < 9) {
                 return node.currentStyle;
+            } else {
+                return node.ownerDocument.defaultView.getComputedStyle(node);
             }
         },
-        injectElement: function(el)  {
-            if (el && el.nodeType === 1) {
-                return util$index$$head.appendChild(el);
+        injectElement: function(node) {
+            if (node && node.nodeType === 1) {
+                return node.ownerDocument.getElementsByTagName("head")[0].appendChild(node);
             }
         },
         // utilites
@@ -81,7 +31,7 @@
         slice: util$index$$arrayProto.slice,
         isArray: Array.isArray,
         keys: Object.keys,
-        safeInvoke: function(context, fn, arg1, arg2)  {
+        safeCall: function(context, fn, arg1, arg2) {
             if (typeof fn === "string") fn = context[fn];
 
             try {
@@ -92,16 +42,96 @@
                 return false;
             }
         },
-        register: function(mixins, defaultBehavior)  {
-            defaultBehavior = defaultBehavior || function() {};
+        getLegacyFile: function(type) {
+            if (JSCRIPT_VERSION < 10) {
+                var legacyScripts = util$index$$arrayProto.filter.call(DOCUMENT.scripts, function(el)  {return el.src.indexOf("better-dom-legacy.js") >= 0});
 
-            Object.keys(mixins).forEach(function(key)  {
-                var defaults = defaultBehavior(key) || function() { return this };
+                if (legacyScripts.length < 1) {
+                    throw new Error("In order to use live extensions in IE < 10 you have to include extra files. See https://github.com/chemerisuk/better-dom#notes-about-old-ies for details.");
+                }
 
-                $Element.prototype[key] = mixins[key];
-                $NullElement.prototype[key] = defaults;
-            });
+                return legacyScripts[0].src.replace(".js", "." + type);
+            }
         }
+    };
+
+    function $NullElement() {}
+
+    function $Element(node) {
+        if (this instanceof $Element) {
+            if (node) {
+                // use a generated property to store a reference
+                // to the wrapper for circular object binding
+                node["__2001002__"] = this;
+
+                this[0] = node;
+                this._ = {
+                    "handler2001002": [],
+                    "watcher2001002": {},
+                    "extension2001002": [],
+                    "context2001002": {}
+                };
+            }
+        } else if (node) {
+            var cached = node["__2001002__"];
+            // create a wrapper only once for each native element
+            return cached ? cached : new $Element(node);
+        } else {
+            return new $NullElement();
+        }
+    }
+
+    function $Document(node) {
+        // use documentElement for a $Document wrapper
+        return $Element.call(this, node.documentElement);
+    }
+
+    $Element.prototype = {
+        toString: function() {
+            return "<" + this[0].tagName.toLowerCase() + ">";
+        },
+        version: "2.1.2"
+    };
+
+    $NullElement.prototype = new $Element();
+    $NullElement.prototype.toString = function()  {return ""};
+
+    $Document.prototype = new $Element();
+    $Document.prototype.toString = function()  {return "#document"};
+
+    var WINDOW = window;
+    var DOCUMENT = document;
+    var HTML = DOCUMENT.documentElement;
+
+    var userAgent = WINDOW.navigator.userAgent;
+    var jscriptVersion = WINDOW.ScriptEngineMajorVersion;
+
+    var JSCRIPT_VERSION = jscriptVersion && jscriptVersion();
+    var LEGACY_ANDROID = ~userAgent.indexOf("Android") && userAgent.indexOf("Chrome") < 0;
+    var WEBKIT_PREFIX = WINDOW.WebKitAnimationEvent ? "-webkit-" : "";
+    var CUSTOM_EVENT_TYPE = "dataavailable";
+    var RETURN_THIS = function() { return this };
+    var RETURN_TRUE = function()  {return true};
+    var RETURN_FALSE = function()  {return false};
+
+    var DOM = new $Document(DOCUMENT);
+
+    DOM.register = function(mixins, factory, defaultFactory) {
+        var proto = defaultFactory ? $Element.prototype : $Document.prototype;
+
+        if (factory == null) {
+            factory = function(methodName, strategy)  {return strategy};
+        }
+
+        util$index$$default.keys(mixins).forEach(function(methodName)  {
+            var args = [methodName].concat(mixins[methodName]);
+
+            proto[methodName] = factory.apply(null, args);
+
+            if (defaultFactory) {
+                $NullElement.prototype[methodName] = defaultFactory.apply(null, args);
+            }
+        });
     };
 
     // customized errors
@@ -110,7 +140,7 @@
         var url = "http://chemerisuk.github.io/better-dom/" + type + ".html#" + methodName,
             line = "invalid call `" + type + (type === "DOM" ? "." : "#") + methodName + "(";
 
-        line += util$index$$default.map.call(args, function(arg)  {return String(arg)}).join(", ") + ")`;";
+        line += util$index$$default.map.call(args, String).join(", ") + ")`;";
 
         this.message = line + " check " + url + " to verify the function arguments";
     }
@@ -123,29 +153,15 @@
 
     errors$$StaticMethodError.prototype = new TypeError();
 
-    var exports$$_DOM = WINDOW.DOM;
-
-    DOM.noConflict = function() {
-        if (WINDOW.DOM === DOM) {
-            WINDOW.DOM = exports$$_DOM;
-        }
-
-        return DOM;
-    };
-
-    WINDOW.DOM = DOM;
-
-    /* es6-transpiler has-iterators:false, has-generators: false */
-
     var // operator type / priority object
-        dom$emmet$$operators = {"(": 1,")": 2,"^": 3,">": 4,"+": 5,"*": 6,"`": 7,"[": 8,".": 8,"#": 8},
-        dom$emmet$$reParse = /`[^`]*`|\[[^\]]*\]|\.[^()>^+*`[#]+|[^()>^+*`[#.]+|\^+|./g,
-        dom$emmet$$reAttr = /\s*([\w\-]+)(?:=((?:`([^`]*)`)|[^\s]*))?/g,
-        dom$emmet$$reIndex = /(\$+)(?:@(-)?(\d+)?)?/g,
-        dom$emmet$$reDot = /\./g,
-        dom$emmet$$reDollar = /\$/g,
-        dom$emmet$$tagCache = {"": ""},
-        dom$emmet$$normalizeAttrs = function(_, name, value, rawValue)  {
+        global$emmet$$operators = {"(": 1,")": 2,"^": 3,">": 4,"+": 5,"*": 6,"`": 7,"[": 8,".": 8,"#": 8},
+        global$emmet$$reParse = /`[^`]*`|\[[^\]]*\]|\.[^()>^+*`[#]+|[^()>^+*`[#.]+|\^+|./g,
+        global$emmet$$reAttr = /\s*([\w\-]+)(?:=((?:`([^`]*)`)|[^\s]*))?/g,
+        global$emmet$$reIndex = /(\$+)(?:@(-)?(\d+)?)?/g,
+        global$emmet$$reDot = /\./g,
+        global$emmet$$reDollar = /\$/g,
+        global$emmet$$tagCache = {"": ""},
+        global$emmet$$normalizeAttrs = function(_, name, value, rawValue)  {
             // try to detemnie which kind of quotes to use
             var quote = value && value.indexOf("\"") >= 0 ? "'" : "\"";
 
@@ -159,32 +175,35 @@
             // always wrap attribute values with quotes even they don't exist
             return " " + name + "=" + quote + value + quote;
         },
-        dom$emmet$$injectTerm = function(term, end)  {return function(html)  {
+        global$emmet$$injectTerm = function(term, end)  {return function(html)  {
             // find index of where to inject the term
             var index = end ? html.lastIndexOf("<") : html.indexOf(">");
             // inject the term into the HTML string
-            return html.substr(0, index) + term + html.substr(index);
+            return html.slice(0, index) + term + html.slice(index);
         }},
-        dom$emmet$$makeTerm = function(tag)  {
-            return dom$emmet$$tagCache[tag] || (dom$emmet$$tagCache[tag] = "<" + tag + "></" + tag + ">");
+        global$emmet$$makeTerm = function(tag)  {
+            return global$emmet$$tagCache[tag] || (global$emmet$$tagCache[tag] = "<" + tag + "></" + tag + ">");
         },
-        dom$emmet$$makeIndexedTerm = function(n, term)  {
+        global$emmet$$makeIndexedTerm = function(n, term)  {
             var result = Array(n), i;
 
             for (i = 0; i < n; ++i) {
-                result[i] = term.replace(dom$emmet$$reIndex, function(expr, fmt, sign, base)  {
+                result[i] = term.replace(global$emmet$$reIndex, function(expr, fmt, sign, base)  {
                     var index = (sign ? n - i - 1 : i) + (base ? +base : 1);
                     // handle zero-padded index values, like $$$ etc.
-                    return (fmt + index).slice(-fmt.length).replace(dom$emmet$$reDollar, "0");
+                    return (fmt + index).slice(-fmt.length).replace(global$emmet$$reDollar, "0");
                 });
             }
 
             return result;
-        };
+        },
+        global$emmet$$reUnsafe = /[&<>"']/g,
+        // http://stackoverflow.com/questions/6234773/can-i-escape-html-special-chars-in-javascript
+        global$emmet$$safeSymbol = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"};
 
     // populate empty tag names with result
     "area base br col hr img input link meta param command keygen source".split(" ").forEach(function(tag)  {
-        dom$emmet$$tagCache[tag] = "<" + tag + ">";
+        global$emmet$$tagCache[tag] = "<" + tag + ">";
     });
 
     DOM.emmet = function(template, varMap) {var $D$0;var $D$1;var $D$2;
@@ -192,21 +211,21 @@
 
         if (varMap) template = DOM.format(template, varMap);
 
-        if (template in dom$emmet$$tagCache) {return dom$emmet$$tagCache[template];}
+        if (template in global$emmet$$tagCache) {return global$emmet$$tagCache[template];}
 
         // transform template string into RPN
 
         var stack = [], output = [];
 
-        $D$2 = (template.match(dom$emmet$$reParse));$D$0 = 0;$D$1 = $D$2.length;for (var str ;$D$0 < $D$1;){str = ($D$2[$D$0++]);
+        $D$2 = (template.match(global$emmet$$reParse));$D$0 = 0;$D$1 = $D$2.length;for (var str ;$D$0 < $D$1;){str = ($D$2[$D$0++]);
             var op = str[0];
-            var priority = dom$emmet$$operators[op];
+            var priority = global$emmet$$operators[op];
 
             if (priority) {
                 if (str !== "(") {
                     // for ^ operator need to skip > str.length times
                     for (var i = 0, n = (op === "^" ? str.length : 1); i < n; ++i) {
-                        while (stack[0] !== op && dom$emmet$$operators[stack[0]] >= priority) {
+                        while (stack[0] !== op && global$emmet$$operators[stack[0]] >= priority) {
                             var head = stack.shift();
 
                             output.push(head);
@@ -225,7 +244,7 @@
                     }
                     // handle multiple classes, e.g. a.one.two
                     if (op === ".") {
-                        output.push(str.substr(1).replace(dom$emmet$$reDot, " "));
+                        output.push(str.slice(1).replace(global$emmet$$reDot, " "));
                     }
 
                     stack.unshift(op);
@@ -242,41 +261,41 @@
         stack = [];
 
         $D$0 = 0;$D$1 = output.length;for (var str$0 ;$D$0 < $D$1;){str$0 = (output[$D$0++]);
-            if (str$0 in dom$emmet$$operators) {
+            if (str$0 in global$emmet$$operators) {
                 var value = stack.shift();
                 var node = stack.shift();
 
                 if (typeof node === "string") {
-                    node = [ dom$emmet$$makeTerm(node) ];
+                    node = [ global$emmet$$makeTerm(node) ];
                 }
 
                 switch(str$0) {
                 case ".":
-                    value = dom$emmet$$injectTerm(" class=\"" + value + "\"");
+                    value = global$emmet$$injectTerm(" class=\"" + value + "\"");
                     break;
 
                 case "#":
-                    value = dom$emmet$$injectTerm(" id=\"" + value + "\"");
+                    value = global$emmet$$injectTerm(" id=\"" + value + "\"");
                     break;
 
                 case "[":
-                    value = dom$emmet$$injectTerm(value.replace(dom$emmet$$reAttr, dom$emmet$$normalizeAttrs));
+                    value = global$emmet$$injectTerm(value.replace(global$emmet$$reAttr, global$emmet$$normalizeAttrs));
                     break;
 
                 case "*":
-                    node = dom$emmet$$makeIndexedTerm(+value, node.join(""));
+                    node = global$emmet$$makeIndexedTerm(+value, node.join(""));
                     break;
 
                 case "`":
                     stack.unshift(node);
-                    node = [ value ];
+                    // escape unsafe HTML symbols
+                    node = [ value.replace(global$emmet$$reUnsafe, function(ch)  {return global$emmet$$safeSymbol[ch]}) ];
                     break;
 
-                default: /* ">", "+", "^" */
-                    value = typeof value === "string" ? dom$emmet$$makeTerm(value) : value.join("");
+                default: value = typeof value === "string" ? global$emmet$$makeTerm(value) : value.join("");
 
                     if (str$0 === ">") {
-                        value = dom$emmet$$injectTerm(value, true);
+                        value = global$emmet$$injectTerm(value, true);
                     } else {
                         node.push(value);
                     }
@@ -290,7 +309,7 @@
 
         if (output.length === 1) {
             // handle single tag case
-            output = dom$emmet$$makeTerm(stack[0]);
+            output = global$emmet$$makeTerm(stack[0]);
         } else {
             output = stack[0].join("");
         }
@@ -298,54 +317,58 @@
         return output;
     };
 
-    var dom$emmet$$default = dom$emmet$$tagCache;
+    var global$emmet$$default = global$emmet$$tagCache;
 
-    var dom$create$$sandbox = DOCUMENT.createElement("body"),
-        dom$create$$makeMethod = function(all)  {return function(value, varMap) {
-            var nodes, el;
+    DOM.register({
+        create: "",
+        createAll: "All"
 
-            if (value && value in dom$emmet$$default) {
-                nodes = DOCUMENT.createElement(value);
+    }, function(methodName, all)  {return function(value, varMap) {
+        var doc = this[0].ownerDocument,
+            sandbox = this._["sandbox2001002"];
 
-                if (all) nodes = [ new $Element(nodes) ];
+        if (!sandbox) {
+            sandbox = doc.createElement("div");
+            this._["sandbox2001002"] = sandbox;
+        }
+
+        var nodes, el;
+
+        if (value && value in global$emmet$$default) {
+            nodes = doc.createElement(value);
+
+            if (all) nodes = [ new $Element(nodes) ];
+        } else {
+            value = value.trim();
+
+            if (value[0] === "<" && value[value.length - 1] === ">") {
+                value = varMap ? DOM.format(value, varMap) : value;
             } else {
-                value = value.trim();
+                value = DOM.emmet(value, varMap);
+            }
 
-                if (value[0] === "<" && value[value.length - 1] === ">") {
-                    value = varMap ? DOM.format(value, varMap) : value;
-                } else {
-                    value = DOM.emmet(value, varMap);
-                }
+            sandbox.innerHTML = value; // parse input HTML string
 
-                dom$create$$sandbox.innerHTML = value; // parse input HTML string
+            for (nodes = all ? [] : null; el = sandbox.firstChild; ) {
+                sandbox.removeChild(el); // detach element from the sandbox
 
-                for (nodes = all ? [] : null; el = dom$create$$sandbox.firstChild; ) {
-                    dom$create$$sandbox.removeChild(el); // detach element from the sandbox
+                if (el.nodeType === 1) {
+                    if (all) {
+                        nodes.push(new $Element(el));
+                    } else {
+                        nodes = el;
 
-                    if (el.nodeType === 1) {
-                        if (all) {
-                            nodes.push(new $Element(el));
-                        } else {
-                            nodes = el;
-
-                            break; // stop early, because need only the first element
-                        }
+                        break; // stop early, because need only the first element
                     }
                 }
             }
+        }
 
-            return all ? nodes : $Element(nodes);
-        }};
+        return all ? nodes : $Element(nodes);
+    }});
 
-    DOM.create = dom$create$$makeMethod("");
+    // Helper for css selectors
 
-    DOM.createAll = dom$create$$makeMethod("All");
-
-    /*
-     * Helper for css selectors
-     */
-
-    /*es6-transpiler has-iterators:false, has-generators: false*/
     var util$selectormatcher$$rquickIs = /^(\w*)(?:#([\w\-]+))?(?:\[([\w\-\=]+)\])?(?:\.([\w\-]+))?$/,
         util$selectormatcher$$propName = "m oM msM mozM webkitM".split(" ").reduce(function(result, prefix)  {
                 var propertyName = prefix + "atchesSelector";
@@ -359,6 +382,7 @@
         var quick = util$selectormatcher$$rquickIs.exec(selector);
 
         if (quick) {
+            // Quick matching is inspired by jQuery:
             //   0  1    2   3          4
             // [ _, tag, id, attribute, class ]
             if (quick[1]) quick[1] = quick[1].toLowerCase();
@@ -369,7 +393,7 @@
         return function(node) {var $D$3;var $D$4;
             var result, found;
             if (!quick && !util$selectormatcher$$propName) {
-                found = (context || document).querySelectorAll(selector);
+                found = (context || node.ownerDocument).querySelectorAll(selector);
             }
 
             for (; node && node.nodeType === 1; node = node.parentNode) {
@@ -406,30 +430,32 @@
         return function(node, mock)  {
             var el = $Element(node);
             // skip previously invoked or mismatched elements
-            if (~el._._extensions.indexOf(index) || !matcher(node)) return;
+            if (~el._["extension2001002"].indexOf(index) || !matcher(node)) return;
             // mark extension as invoked
-            el._._extensions.push(index);
+            el._["extension2001002"].push(index);
 
             if (mock === true || condition(el) !== false) {
                 // apply all private/public members to the element's interface
                 var privateFunctions = Object.keys(mixins).filter(function(prop)  {
-                    var method = mixins[prop];
-
+                    var value = mixins[prop];
+                    // TODO: private functions are deprecated, remove this line later
                     if (util$extensionhandler$$rePrivateFunction.exec(prop)) {
                         // preserve context for private functions
-                        el[prop] = function()  {return method.apply(el, arguments)};
+                        el[prop] = function()  {return value.apply(el, arguments)};
 
                         return !mock;
                     }
 
                     if (prop !== "constructor") {
-                        el[prop] = method;
+                        el[prop] = value;
+
+                        return !mock && prop[0] === "_";
                     }
                 });
 
                 // invoke constructor if it exists
                 // make a safe call so live extensions can't break each other
-                if (ctr) util$index$$default.safeInvoke(el, ctr);
+                if (ctr) util$index$$default.safeCall(el, ctr);
                 // remove event handlers from element's interface
                 privateFunctions.forEach(function(prop)  { delete el[prop] });
             }
@@ -439,264 +465,160 @@
     // Inspired by trick discovered by Daniel Buchner:
     // https://github.com/csuwldcat/SelectorListener
 
-    var dom$extend$$extensions = [],
-        dom$extend$$returnTrue = function()  {return true},
-        dom$extend$$returnFalse = function()  {return false},
-        dom$extend$$cssText;
-
-    DOM.extend = function(selector, condition, mixins) {
-        if (arguments.length === 2) {
-            mixins = condition;
-            condition = true;
-        }
-
-        if (typeof condition === "boolean") condition = condition ? dom$extend$$returnTrue : dom$extend$$returnFalse;
-        if (typeof mixins === "function") mixins = {constructor: mixins};
-
-        if (!mixins || typeof mixins !== "object" || typeof condition !== "function") throw new errors$$StaticMethodError("extend", arguments);
-
-        if (selector === "*") {
-            util$index$$default.keys(mixins).forEach(function(methodName)  {
-                $Element.prototype[methodName] = mixins[methodName];
-            });
-        } else {
-            var ext = util$extensionhandler$$default(selector, condition, mixins, dom$extend$$extensions.length);
-
-            dom$extend$$extensions.push(ext);
-
-            // live extensions are always async
-            WINDOW.setTimeout(function()  {
-                // initialize extension manually to make sure that all elements
-                // have appropriate methods before they are used in other DOM.extend.
-                // Also fixes legacy IEs when the HTC behavior is already attached
-                util$index$$default.each.call(DOCUMENT.querySelectorAll(selector), ext);
-                // MUST be after querySelectorAll because of legacy IEs quirks
-                DOM.importStyles(selector, dom$extend$$cssText);
-            }, 1);
-        }
-    };
+    var document$extend$$cssText;
 
     if (JSCRIPT_VERSION < 10) {
-        var dom$extend$$legacyScripts = util$index$$default.filter.call(DOCUMENT.scripts, function(script)  {return script.src.indexOf("better-dom-legacy.js") >= 0});
-
-        if (dom$extend$$legacyScripts.length < 1) {
-            throw new Error("In order to use live extensions in IE < 10 you have to include extra files. See https://github.com/chemerisuk/better-dom#notes-about-old-ies for details.");
-        }
-
-        dom$extend$$cssText = "-ms-behavior:url(" + dom$extend$$legacyScripts[0].src.replace(".js", ".htc") + ") !important";
-
-        DOCUMENT.attachEvent("on" + CUSTOM_EVENT_TYPE, function()  {
-            var e = WINDOW.event;
-
-            if (e.srcUrn === CUSTOM_EVENT_TYPE) {
-                dom$extend$$extensions.forEach(function(ext)  { ext(e.srcElement) });
-            }
-        });
+        document$extend$$cssText = "-ms-behavior:url(" + util$index$$default.getLegacyFile("htc") + ") !important";
     } else {
-        var dom$extend$$ANIMATION_NAME = "DOM2000003";
-        var dom$extend$$_extend = DOM.extend;
-
-        dom$extend$$cssText = WEBKIT_PREFIX + "animation-name:" + dom$extend$$ANIMATION_NAME + " !important;";
-        dom$extend$$cssText += WEBKIT_PREFIX + "animation-duration:1ms !important";
-
-        DOM.extend = function()  {
-            // declare the fake animation on the first DOM.extend method call
-            DOM.importStyles("@" + WEBKIT_PREFIX + "keyframes " + dom$extend$$ANIMATION_NAME, "from {opacity:.99} to {opacity:1}");
-            // restore original method and invoke it
-            (DOM.extend = dom$extend$$_extend).apply(DOM, arguments);
-        };
-
-        // use capturing to suppress internal animationstart events
-        DOCUMENT.addEventListener(WEBKIT_PREFIX ? "webkitAnimationStart" : "animationstart", function(e)  {
-            if (e.animationName === dom$extend$$ANIMATION_NAME) {
-                dom$extend$$extensions.forEach(function(ext)  { ext(e.target) });
-                // this is an internal event - stop it immediately
-                e.stopImmediatePropagation();
-            }
-        }, true);
+        document$extend$$cssText = WEBKIT_PREFIX + "animation-name:DOM2001002 !important;";
+        document$extend$$cssText += WEBKIT_PREFIX + "animation-duration:1ms !important";
     }
 
-    var dom$extend$$default = dom$extend$$extensions;
-
-    var dom$format$$reVar = /\{([\w\-]+)\}/g;
-
-    DOM.format = function(tmpl, varMap) {
-        if (typeof tmpl !== "string") tmpl = String(tmpl);
-
-        if (!varMap || typeof varMap !== "object") varMap = {};
-
-        return tmpl.replace(dom$format$$reVar, function(x, name)  {return name in varMap ? String(varMap[name]) : x});
-    };
-
-    DOM.importScripts = function() {var SLICE$0 = Array.prototype.slice;var urls = SLICE$0.call(arguments, 0);
-        var callback = function() {
-            var arg = urls.shift(),
-                argType = typeof arg,
-                script;
-
-            if (argType === "string") {
-                script = DOCUMENT.createElement("script");
-                script.src = arg;
-                script.onload = callback;
-                script.async = true;
-
-                util$index$$default.injectElement(script);
-            } else if (argType === "function") {
-                arg();
-            } else if (arg) {
-                throw new errors$$StaticMethodError("importScripts", arguments);
+    DOM.register({
+        extend: function(selector, condition, definition) {
+            if (arguments.length === 2) {
+                definition = condition;
+                condition = true;
             }
-        };
 
-        callback();
-    };
+            if (typeof condition === "boolean") condition = condition ? RETURN_TRUE : RETURN_FALSE;
+            if (typeof definition === "function") definition = {constructor: definition};
 
-    /*
-     * Helper for accessing css properties
-     */
-    var util$stylehooks$$hooks = {get: {}, set: {}},
-        util$stylehooks$$reDash = /\-./g,
-        util$stylehooks$$reCamel = /[A-Z]/g,
-        util$stylehooks$$directions = ["Top", "Right", "Bottom", "Left"],
-        util$stylehooks$$computed = util$index$$default.computeStyle(HTML),
-        // In Opera CSSStyleDeclaration objects returned by _.computeStyle have length 0
-        util$stylehooks$$props = util$stylehooks$$computed.length ? util$index$$default.slice.call(util$stylehooks$$computed, 0) : util$index$$default.keys(util$stylehooks$$computed).map(function(key)  {
-            return key.replace(util$stylehooks$$reCamel, function(str)  {return "-" + str.toLowerCase()});
-        }),
-        util$stylehooks$$shortCuts = {
-            font: ["fontStyle", "fontSize", "/", "lineHeight", "fontFamily"],
-            padding: util$stylehooks$$directions.map(function(dir)  {return "padding" + dir}),
-            margin: util$stylehooks$$directions.map(function(dir)  {return "margin" + dir}),
-            "border-width": util$stylehooks$$directions.map(function(dir)  {return "border" + dir + "Width"}),
-            "border-style": util$stylehooks$$directions.map(function(dir)  {return "border" + dir + "Style"})
-        };
+            if (!definition || typeof definition !== "object" || typeof condition !== "function") throw new errors$$StaticMethodError("extend", arguments);
 
-    util$stylehooks$$props.forEach(function(propName)  {
-        var prefix = propName[0] === "-" ? propName.substr(1, propName.indexOf("-", 1) - 1) : null,
-            unprefixedName = prefix ? propName.substr(prefix.length + 2) : propName,
-            stylePropName = propName.replace(util$stylehooks$$reDash, function(str)  {return str[1].toUpperCase()});
-        if (!(stylePropName in util$stylehooks$$computed)) {
-            // most of browsers starts vendor specific props in lowercase
-            stylePropName = stylePropName[0].toLowerCase() + stylePropName.substr(1);
-        }
+            var node = this[0],
+                mappings = this._["mappings2001002"];
 
-        util$stylehooks$$hooks.get[unprefixedName] = function(style)  {return style[stylePropName]};
-        util$stylehooks$$hooks.set[unprefixedName] = function(style, value)  {
-            value = typeof value === "number" ? value + "px" : value.toString();
-            // use cssText property to determine DOM.importStyles call
-            style["cssText" in style ? stylePropName : propName] = value;
-        };
-    });
+            if (!mappings) {
+                this._["mappings2001002"] = mappings = [];
 
-    // Exclude the following css properties from adding px
-    " float fill-opacity font-weight line-height opacity orphans widows z-index zoom ".split(" ").forEach(function(propName)  {
-        var stylePropName = propName.replace(util$stylehooks$$reDash, function(str)  {return str[1].toUpperCase()});
+                if (JSCRIPT_VERSION < 10) {
+                    node.attachEvent("on" + CUSTOM_EVENT_TYPE, function()  {
+                        var e = WINDOW.event;
 
-        if (propName === "float") {
-            stylePropName = "cssFloat" in util$stylehooks$$computed ? "cssFloat" : "styleFloat";
-            // normalize float css property
-            util$stylehooks$$hooks.get[propName] = function(style)  {return style[stylePropName]};
-        }
-
-        util$stylehooks$$hooks.set[propName] = function(style, value)  {
-            style["cssText" in style ? stylePropName : propName] = value.toString();
-        };
-    });
-
-    // normalize property shortcuts
-    util$index$$default.keys(util$stylehooks$$shortCuts).forEach(function(key)  {
-        var props = util$stylehooks$$shortCuts[key];
-
-        util$stylehooks$$hooks.get[key] = function(style)  {
-            var result = [],
-                hasEmptyStyleValue = function(prop, index)  {
-                    result.push(prop === "/" ? prop : style[prop]);
-
-                    return !result[index];
-                };
-
-            return props.some(hasEmptyStyleValue) ? "" : result.join(" ");
-        };
-
-        util$stylehooks$$hooks.set[key] = function(style, value)  {
-            if (value && "cssText" in style) {
-                // normalize setting complex property across browsers
-                style.cssText += ";" + key + ":" + value;
-            } else {
-                props.forEach(function(name)  {return style[name] = typeof value === "number" ? value + "px" : value.toString()});
-            }
-        };
-    });
-
-    var util$stylehooks$$default = util$stylehooks$$hooks;
-
-    var dom$importstyles$$styleNode = util$index$$default.injectElement(DOCUMENT.createElement("style")),
-        dom$importstyles$$styleSheet = dom$importstyles$$styleNode.sheet || dom$importstyles$$styleNode.styleSheet,
-        dom$importstyles$$styleRules = dom$importstyles$$styleSheet.cssRules || dom$importstyles$$styleSheet.rules,
-        dom$importstyles$$toString = function(cssText)  {
-            // use styleObj to collect all style props for a new CSS rule
-            var styleObj = util$index$$default.keys(cssText).reduce(function(styleObj, prop)  {
-                var hook = util$stylehooks$$default.set[prop];
-
-                if (hook) {
-                    hook(styleObj, cssText[prop]);
+                        if (e.srcUrn === CUSTOM_EVENT_TYPE) {
+                            mappings.forEach(function(ext)  { ext(e.srcElement) });
+                        }
+                    });
                 } else {
-                    styleObj[prop] = cssText[prop];
+                    // declare the fake animation on the first DOM.extend method call
+                    this.importStyles("@" + WEBKIT_PREFIX + "keyframes DOM2001002", "from {opacity:.99} to {opacity:1}");
+                    // use capturing to suppress internal animationstart events
+                    node.addEventListener(WEBKIT_PREFIX ? "webkitAnimationStart" : "animationstart", function(e)  {
+                        if (e.animationName === "DOM2001002") {
+                            mappings.forEach(function(ext)  { ext(e.target) });
+                            // this is an internal event - stop it immediately
+                            e.stopImmediatePropagation();
+                        }
+                    }, true);
                 }
-
-                return styleObj;
-            }, {});
-
-            return util$index$$default.keys(styleObj).map(function(key)  {return key + ":" + styleObj[key]}).join(";");
-        },
-        dom$importstyles$$appendCSS = function(cssText)  {return function(selector)  {
-            try {
-                if (dom$importstyles$$styleSheet.cssRules) {
-                    dom$importstyles$$styleSheet.insertRule(selector + "{" + cssText + "}", dom$importstyles$$styleRules.length);
-                } else {
-                    dom$importstyles$$styleSheet.addRule(selector, cssText);
-                }
-            } catch(err) {
-                // silently ignore invalid rules
             }
-        }};
 
-    DOM.importStyles = function(selector, cssText) {
-        if (cssText && typeof cssText === "object") {
-            cssText = dom$importstyles$$toString(cssText);
+            var ext = util$extensionhandler$$default(selector, condition, definition, mappings.length);
+
+            mappings.push(ext);
+
+            // initialize extension manually to make sure that all elements
+            // have appropriate methods before they are used in other DOM.extend.
+            // Also fixes legacy IEs when the HTC behavior is already attached
+            util$index$$default.each.call(node.ownerDocument.querySelectorAll(selector), ext);
+            // MUST be after querySelectorAll because of legacy IEs quirks
+            this.importStyles(selector, document$extend$$cssText);
         }
+    });
 
-        if (typeof selector === "string" && typeof cssText === "string") {
+    DOM.register({
+        importScripts: function() {var urls = SLICE$0.call(arguments, 0);
+            var doc = this[0].ownerDocument;
+
+            var callback = function()  {
+                var arg = urls.shift(),
+                    argType = typeof arg,
+                    script;
+
+                if (argType === "string") {
+                    script = doc.createElement("script");
+                    script.src = arg;
+                    script.onload = callback;
+                    script.async = true;
+
+                    util$index$$default.injectElement(script);
+                } else if (argType === "function") {
+                    arg();
+                } else if (arg) {
+                    throw new errors$$StaticMethodError("importScripts", arguments);
+                }
+            };
+
+            callback();
+        }
+    });
+
+    DOM.register({
+        importStyles: function(selector, cssText) {
+            var styleSheet = this._["styles2001002"];
+
+            if (!styleSheet) {
+                var doc = this[0].ownerDocument,
+                    styleNode = util$index$$default.injectElement(doc.createElement("style"));
+
+                styleSheet = styleNode.sheet || styleNode.styleSheet;
+                // store object internally
+                this._["styles2001002"] = styleSheet;
+            }
+
+            if (typeof selector !== "string" || typeof cssText !== "string") {
+                throw new errors$$StaticMethodError("importStyles", arguments);
+            }
+
             // insert rules one by one because of several reasons:
             // 1. IE8 does not support comma in a selector string
             // 2. if one selector fails it doesn't break others
-            selector.split(",").forEach(dom$importstyles$$appendCSS(cssText));
-        } else {
-            throw new errors$$StaticMethodError("importStyles", arguments);
+            selector.split(",").forEach(function(selector)  {
+                try {
+                    if (styleSheet.cssRules) {
+                        styleSheet.insertRule(selector + "{" + cssText + "}", styleSheet.cssRules.length);
+                    } else if (selector[0] !== "@") {
+                        styleSheet.addRule(selector, cssText);
+                    } else {
+                        // addRule doesn't support at-rules, use cssText instead
+                        styleSheet.cssText += selector + "{" + cssText + "}";
+                    }
+                } catch(err) {
+                    // silently ignore invalid rules
+                }
+            });
         }
-    };
+    });
 
-    function dom$mock$$applyExtensions(node) {
-        dom$extend$$default.forEach(function(ext)  { ext(node, true) });
+    DOM.register({
+        mock: function(content, varMap) {
+            if (!content) return new $NullElement();
 
-        util$index$$default.each.call(node.children, dom$mock$$applyExtensions);
-    }
+            var result = DOM.create(content, varMap),
+                mappings = this._["mappings2001002"],
+                applyExtensions = function(node)  {
+                    mappings.forEach(function(ext)  { ext(node, true) });
 
-    DOM.mock = function(content, varMap) {
-        if (!content) return new $NullElement();
+                    util$index$$default.each.call(node.children, applyExtensions);
+                };
 
-        var result = DOM.create(content, varMap);
+            applyExtensions(result[0]);
 
-        dom$mock$$applyExtensions(result[0]);
+            return result;
+        }
+    });
 
-        return result;
-    };
+    DOM.register({
+        child: false,
 
-    var element$children$$makeMethod = function(all)  {return function(selector) {
+        children: true
+
+    }, function(methodName, all)  {return function(selector) {
         if (all) {
-            if (selector && typeof selector !== "string") throw new errors$$MethodError("children", arguments);
+            if (selector && typeof selector !== "string") throw new errors$$MethodError(methodName, arguments);
         } else {
-            if (selector && typeof selector !== "number") throw new errors$$MethodError("child", arguments);
+            if (selector && typeof selector !== "number") throw new errors$$MethodError(methodName, arguments);
         }
 
         var node = this[0],
@@ -716,71 +638,26 @@
 
             return $Element(children[selector]);
         }
-    }};
+    }}, function(methodName, all)  {return function()  {return all ? [] : new $NullElement()}});
 
-    util$index$$default.register({
-        child: element$children$$makeMethod(false),
+    var element$classes$$reSpace = /[\n\t\r]/g;
 
-        children: element$children$$makeMethod(true)
-    }, function(methodName)  {
-        return methodName === "child" ? function()  {return new $NullElement()} : function()  {return []};
-    });
-
-    /* es6-transpiler has-iterators:false, has-generators: false */
-
-    var element$classes$$reSpace = /[\n\t\r]/g,
-        element$classes$$makeMethod = function(nativeMethodName, strategy)  {
-            var methodName = nativeMethodName === "contains" ? "hasClass" : nativeMethodName + "Class";
-            if (HTML.classList) {
-                // use native classList property if possible
-                strategy = function(el, token) {
-                    return el[0].classList[nativeMethodName](token);
-                };
-            }
-
-            if (methodName === "hasClass" || methodName === "toggleClass") {
-                return function(token, force) {
-                    if (typeof force === "boolean" && methodName === "toggleClass") {
-                        this[force ? "addClass" : "removeClass"](token);
-
-                        return force;
-                    }
-
-                    if (typeof token !== "string") throw new errors$$MethodError(methodName, arguments);
-
-                    return strategy(this, token);
-                };
-            } else {
-                return function() {var $D$5;var $D$6;
-                    var tokens = arguments;
-
-                    $D$5 = 0;$D$6 = tokens.length;for (var token ;$D$5 < $D$6;){token = (tokens[$D$5++]);
-                        if (typeof token !== "string") throw new errors$$MethodError(methodName, arguments);
-
-                        strategy(this, token);
-                    };$D$5 = $D$6 = void 0;
-
-                    return this;
-                };
-            }
-        };
-
-    util$index$$default.register({
-        hasClass: element$classes$$makeMethod("contains", function(el, token)  {
+    DOM.register({
+        hasClass: [RETURN_FALSE, "contains", function(el, token)  {
             return (" " + el[0].className + " ")
                 .replace(element$classes$$reSpace, " ").indexOf(" " + token + " ") >= 0;
-        }),
+        }],
 
-        addClass: element$classes$$makeMethod("add", function(el, token)  {
+        addClass: [RETURN_THIS, "add", function(el, token)  {
             if (!el.hasClass(token)) el[0].className += " " + token;
-        }),
+        }],
 
-        removeClass: element$classes$$makeMethod("remove", function(el, token)  {
+        removeClass: [RETURN_THIS, "remove", function(el, token)  {
             el[0].className = (" " + el[0].className + " ")
                 .replace(element$classes$$reSpace, " ").replace(" " + token + " ", " ").trim();
-        }),
+        }],
 
-        toggleClass: element$classes$$makeMethod("toggle", function(el, token)  {
+        toggleClass: [RETURN_FALSE, "toggle", function(el, token)  {
             var hasClass = el.hasClass(token);
 
             if (hasClass) {
@@ -790,33 +667,60 @@
             }
 
             return !hasClass;
-        })
-    }, function(methodName)  {
-        if (methodName === "hasClass" || methodName === "toggleClass") {
-            return function()  {return false};
+        }]
+    }, function(methodName, defaultStrategy, nativeMethodName, strategy)  {
+        if (HTML.classList) {
+            // use native classList property if possible
+            strategy = function(el, token) {
+                return el[0].classList[nativeMethodName](token);
+            };
         }
-    });
 
-    util$index$$default.register({
-        clone: function() {var deep = arguments[0];if(deep === void 0)deep = true;
+        if (defaultStrategy === RETURN_FALSE) {
+            return function(token, force) {
+                if (typeof force === "boolean" && nativeMethodName === "toggle") {
+                    this[force ? "addClass" : "removeClass"](token);
+
+                    return force;
+                }
+
+                if (typeof token !== "string") throw new errors$$MethodError(methodName, arguments);
+
+                return strategy(this, token);
+            };
+        } else {
+            return function() {var $D$5;var $D$6;
+                var tokens = arguments;
+
+                $D$5 = 0;$D$6 = tokens.length;for (var token ;$D$5 < $D$6;){token = (tokens[$D$5++]);
+                    if (typeof token !== "string") throw new errors$$MethodError(methodName, arguments);
+
+                    strategy(this, token);
+                };$D$5 = $D$6 = void 0;
+
+                return this;
+            };
+        }
+    }, function(methodName, defaultStrategy)  {return defaultStrategy});
+
+    DOM.register({
+        clone: function(deep) {
             if (typeof deep !== "boolean") throw new errors$$MethodError("clone", arguments);
 
             var node = this[0], result;
             if (JSCRIPT_VERSION < 9) {
                 result = DOM.create(node.outerHTML);
 
-                if (!deep) result.set("innerHTML", "");
+                if (!deep) result.set("");
             } else {
                 result = new $Element(node.cloneNode(deep));
             }
 
             return result;
         }
-    }, function()  {
-        return function()  {return new $NullElement()};
-    });
+    }, null, function()  {return function()  {return new $NullElement()}});
 
-    util$index$$default.register({
+    DOM.register({
         contains: function(element) {
             var node = this[0];
 
@@ -833,113 +737,173 @@
 
             throw new errors$$MethodError("contains", arguments);
         }
-    }, function()  {
-        return function()  {return false};
+    }, null, function()  {return RETURN_FALSE});
+
+    // Helper for CSS properties access
+
+    var util$stylehooks$$reDash = /\-./g,
+        util$stylehooks$$cssPrefixes = ["Webkit", "O", "Moz", "ms"],
+        util$stylehooks$$hooks = {get: {}, set: {}, find: function(name, style) {
+            var propName = name.replace(util$stylehooks$$reDash, function(str)  {return str[1].toUpperCase()});
+
+            if (!(propName in style)) {
+                propName = util$stylehooks$$cssPrefixes
+                    .map(function(prefix)  {return prefix + propName[0].toUpperCase() + propName.slice(1)})
+                    .filter(function(prop)  {return prop in style})[0];
+            }
+
+            return this.get[name] = this.set[name] = propName;
+        }},
+        util$stylehooks$$directions = ["Top", "Right", "Bottom", "Left"],
+        util$stylehooks$$shortCuts = {
+            font: ["fontStyle", "fontSize", "/", "lineHeight", "fontFamily"],
+            padding: util$stylehooks$$directions.map(function(dir)  {return "padding" + dir}),
+            margin: util$stylehooks$$directions.map(function(dir)  {return "margin" + dir}),
+            "border-width": util$stylehooks$$directions.map(function(dir)  {return "border" + dir + "Width"}),
+            "border-style": util$stylehooks$$directions.map(function(dir)  {return "border" + dir + "Style"})
+        };
+
+    // Exclude the following css properties from adding px
+    " float fill-opacity font-weight line-height opacity orphans widows z-index zoom ".split(" ").forEach(function(propName)  {
+        var stylePropName = propName.replace(util$stylehooks$$reDash, function(str)  {return str[1].toUpperCase()});
+
+        if (propName === "float") {
+            stylePropName = "cssFloat" in HTML.style ? "cssFloat" : "styleFloat";
+            // normalize float css property
+            util$stylehooks$$hooks.get[propName] = util$stylehooks$$hooks.set[propName] = stylePropName;
+        } else {
+            util$stylehooks$$hooks.get[propName] = stylePropName;
+            util$stylehooks$$hooks.set[propName] = function(value, style)  {
+                style[stylePropName] = value.toString();
+            };
+        }
     });
 
-    util$index$$default.register({
+    // normalize property shortcuts
+    util$index$$default.keys(util$stylehooks$$shortCuts).forEach(function(key)  {
+        var props = util$stylehooks$$shortCuts[key];
+
+        util$stylehooks$$hooks.get[key] = function(style)  {
+            var result = [],
+                hasEmptyStyleValue = function(prop, index)  {
+                    result.push(prop === "/" ? prop : style[prop]);
+
+                    return !result[index];
+                };
+
+            return props.some(hasEmptyStyleValue) ? "" : result.join(" ");
+        };
+
+        util$stylehooks$$hooks.set[key] = function(value, style)  {
+            if (value && "cssText" in style) {
+                // normalize setting complex property across browsers
+                style.cssText += ";" + key + ":" + value;
+            } else {
+                props.forEach(function(name)  {return style[name] = typeof value === "number" ? value + "px" : value.toString()});
+            }
+        };
+    });
+
+    var util$stylehooks$$default = util$stylehooks$$hooks;
+
+    DOM.register({
         css: function(name, value) {var this$0 = this;
             var len = arguments.length,
                 node = this[0],
                 style = node.style,
-                nameType = typeof name,
-                hook, computed, appendCssText;
+                computed;
 
-            if (len === 1 && (nameType === "string" || util$index$$default.isArray(name))) {
-                value = (nameType === "string" ? [name] : name).reduce(function(memo, name)  {
-                    hook = util$stylehooks$$default.get[name];
-                    value = hook ? hook(style) : style[name];
+            if (len === 1 && (typeof name === "string" || util$index$$default.isArray(name))) {
+                var strategy = function(name)  {
+                    var getter = util$stylehooks$$default.get[name] || util$stylehooks$$default.find(name, style),
+                        value = typeof getter === "function" ? getter(style) : style[getter];
 
-                    if (!computed && !value) {
-                        style = util$index$$default.computeStyle(node);
-                        value = hook ? hook(style) : style[name];
+                    if (!value) {
+                        if (!computed) computed = util$index$$default.computeStyle(node);
 
-                        computed = true;
+                        value = typeof getter === "function" ? getter(computed) : computed[getter];
                     }
 
-                    memo[name] = value;
+                    return value;
+                };
 
-                    return memo;
-                }, {});
+                if (typeof name === "string") {
+                    return strategy(name);
+                } else {
+                    return name.map(strategy).reduce(function(memo, value, index)  {
+                        memo[name[index]] = value;
 
-                return nameType === "string" ? value[name] : value;
+                        return memo;
+                    }, {});
+                }
             }
 
-            appendCssText = function(key, value)  {
-                var hook = util$stylehooks$$default.set[key];
+            if (len === 2 && typeof name === "string") {
+                var setter = util$stylehooks$$default.set[name] || util$stylehooks$$default.find(name, style);
 
                 if (typeof value === "function") {
-                    value = value.call(this$0, this$0.css(key));
+                    value = value(this);
                 }
 
                 if (value == null) value = "";
 
-                if (hook) {
-                    hook(style, value);
+                if (typeof setter === "function") {
+                    setter(value, style);
                 } else {
-                    style[key] = typeof value === "number" ? value + "px" : value.toString();
+                    style[setter] = typeof value === "number" ? value + "px" : value.toString();
                 }
-            };
-
-            if (len === 1 && name && nameType === "object") {
-                util$index$$default.keys(name).forEach(function(key)  { appendCssText(key, name[key]) });
-            } else if (len === 2 && nameType === "string") {
-                appendCssText(name, value);
+            } else if (len === 1 && name && typeof name === "object") {
+                util$index$$default.keys(name).forEach(function(key)  { this$0.css(key, name[key]) });
             } else {
                 throw new errors$$MethodError("css", arguments);
             }
 
             return this;
         }
-    }, function()  {
-        return function(name) {
-            if (arguments.length !== 1 || typeof name !== "string" && !util$index$$default.isArray(name)) {
-                return this;
-            }
-        };
-    });
+    }, null, function()  {return function(name) {
+        if (arguments.length === 1 && util$index$$default.isArray(name)) {
+            return {};
+        }
 
-    util$index$$default.register({
-        defineProperty: function(name, accessors) {var this$0 = this;
-            var getter = accessors.get;
-            var setter = accessors.set;
-
-            if (typeof name !== "string" || typeof getter !== "function" || typeof setter !== "function") {
-                throw new errors$$MethodError("defineProperty", arguments);
-            }
-
-            Object.defineProperty(this[0], name, {
-                get: function()  {return getter.call(this$0)},
-                set: function(value)  { setter.call(this$0, value) }
-            });
-
+        if (arguments.length !== 1 || typeof name !== "string") {
             return this;
-        },
-        defineAttribute: function(name, accessors) {var this$0 = this;
+        }
+    }});
+
+    var element$define$$ATTR_CASE = JSCRIPT_VERSION < 9 ? "toUpperCase" : "toLowerCase";
+
+    DOM.register({
+        define: function(name, getter, setter) {var this$0 = this;
             var node = this[0];
-            var getter = accessors.get;
-            var setter = accessors.set;
 
             if (typeof name !== "string" || typeof getter !== "function" || typeof setter !== "function") {
-                throw new errors$$MethodError("defineAttribute", arguments);
+                throw new errors$$MethodError("define", arguments);
             }
 
-            // initial value reading must be before defineProperty
-            // because IE8 will try to read wrong attribute value
-            var initialValue = node.getAttribute(name);
-            var letterCase = JSCRIPT_VERSION < 9 ? "toUpperCase" : "toLowerCase";
-            // trick to fix infinite recursion in IE8
-            var attrName = name[letterCase]();
+            // Use trick to fix infinite recursion in IE8:
+            // http://www.smashingmagazine.com/2014/11/28/complete-polyfill-html5-details-element/
+
+            var attrName = name[element$define$$ATTR_CASE]();
             var _setAttribute = node.setAttribute;
             var _removeAttribute = node.removeAttribute;
+            if (JSCRIPT_VERSION < 9) {
+                // read attribute before the defineProperty call
+                // to set the correct initial state for IE8
+                var initialValue = node.getAttribute(name);
+
+                if (initialValue !== null) {
+                    node[attrName] = initialValue;
+                }
+            }
 
             Object.defineProperty(node, name, {
                 get: function()  {
                     var attrValue = node.getAttribute(attrName, 1);
-
+                    // attr value -> prop value
                     return getter.call(this$0, attrValue);
                 },
                 set: function(propValue)  {
+                    // prop value -> attr value
                     var attrValue = setter.call(this$0, propValue);
 
                     if (attrValue == null) {
@@ -951,88 +915,89 @@
             });
 
             // override methods to catch changes from attributes too
-            node.setAttribute = function(attrName, attrValue, flags)  {
-                if (name === attrName[letterCase]()) {
-                    node[name] = getter.call(this$0, attrValue);
+            node.setAttribute = function(name, value, flags)  {
+                if (attrName === name[element$define$$ATTR_CASE]()) {
+                    node[name] = getter.call(this$0, value);
                 } else {
-                    _setAttribute.call(node, attrName, attrValue, flags);
+                    _setAttribute.call(node, name, value, flags);
                 }
             };
 
-            node.removeAttribute = function(attrName, flags)  {
-                if (name === attrName[letterCase]()) {
+            node.removeAttribute = function(name, flags)  {
+                if (attrName === name[element$define$$ATTR_CASE]()) {
                     node[name] = getter.call(this$0, null);
                 } else {
-                    _removeAttribute.call(node, attrName, flags);
+                    _removeAttribute.call(node, name, flags);
                 }
             };
-
-            // apply initial attribute value
-            node[name] = getter.call(this, initialValue);
 
             return this;
         }
-    });
+    }, null, function()  {return RETURN_THIS});
+
+    DOM.register({
+        empty: function() {
+            return this.set("");
+        }
+    }, null, function()  {return RETURN_THIS});
 
     // big part of code inspired by Sizzle:
     // https://github.com/jquery/sizzle/blob/master/sizzle.js
 
     var element$find$$rquick = DOCUMENT.getElementsByClassName ? /^(?:(\w+)|\.([\w\-]+))$/ : /^(?:(\w+))$/,
-        element$find$$rescape = /'|\\/g,
-        element$find$$makeMethod = function(all)  {return function(selector) {
-            if (typeof selector !== "string") throw new errors$$MethodError("find" + all, arguments);
+        element$find$$rescape = /'|\\/g;
 
-            var node = this[0],
-                quickMatch = element$find$$rquick.exec(selector),
-                result, old, nid, context;
+    DOM.register({
+        find: "",
 
-            if (quickMatch) {
-                if (quickMatch[1]) {
-                    // speed-up: "TAG"
-                    result = node.getElementsByTagName(selector);
-                } else {
-                    // speed-up: ".CLASS"
-                    result = node.getElementsByClassName(quickMatch[2]);
-                }
+        findAll: "All"
 
-                if (result && !all) result = result[0];
+    }, function(methodName, all)  {return function(selector) {
+        if (typeof selector !== "string") throw new errors$$MethodError(methodName, arguments);
+
+        var node = this[0],
+            quickMatch = element$find$$rquick.exec(selector),
+            result, old, nid, context;
+
+        if (quickMatch) {
+            if (quickMatch[1]) {
+                // speed-up: "TAG"
+                result = node.getElementsByTagName(selector);
             } else {
-                old = true;
-                nid = "DOM2000003";
-                context = node;
-
-                if (this !== DOM) {
-                    // qSA works strangely on Element-rooted queries
-                    // We can work around this by specifying an extra ID on the root
-                    // and working up from there (Thanks to Andrew Dupont for the technique)
-                    if ( (old = node.getAttribute("id")) ) {
-                        nid = old.replace(element$find$$rescape, "\\$&");
-                    } else {
-                        node.setAttribute("id", nid);
-                    }
-
-                    nid = "[id='" + nid + "'] ";
-                    selector = nid + selector.split(",").join("," + nid);
-                }
-
-                result = util$index$$default.safeInvoke(context, "querySelector" + all, selector);
-
-                if (!old) node.removeAttribute("id");
+                // speed-up: ".CLASS"
+                result = node.getElementsByClassName(quickMatch[2]);
             }
 
-            return all ? util$index$$default.map.call(result, $Element) : $Element(result);
-        }};
+            if (result && !all) result = result[0];
+        } else {
+            old = true;
+            context = node;
 
-    util$index$$default.register({
-        find: element$find$$makeMethod(""),
+            if (node !== node.ownerDocument.documentElement) {
+                // qSA works strangely on Element-rooted queries
+                // We can work around this by specifying an extra ID on the root
+                // and working up from there (Thanks to Andrew Dupont for the technique)
+                if ( (old = node.getAttribute("id")) ) {
+                    nid = old.replace(element$find$$rescape, "\\$&");
+                } else {
+                    nid = "DOM2001002";
+                    node.setAttribute("id", nid);
+                }
 
-        findAll: element$find$$makeMethod("All")
-    }, function(methodName)  {
-        return methodName === "find" ? function()  {return new $NullElement()} : function()  {return []};
-    });
+                nid = "[id='" + nid + "'] ";
+                selector = nid + selector.split(",").join("," + nid);
+            }
+
+            result = util$index$$default.safeCall(context, "querySelector" + all, selector);
+
+            if (!old) node.removeAttribute("id");
+        }
+
+        return all ? util$index$$default.map.call(result, $Element) : $Element(result);
+    }}, function(methodName, all)  {return function()  {return all ? [] : new $NullElement()}});
 
     var util$eventhooks$$hooks = {};
-    if ("onfocusin" in HTML) {
+    if ("onfocusin" in DOCUMENT.documentElement) {
         util$eventhooks$$hooks.focus = function(handler)  { handler._type = "focusin" };
         util$eventhooks$$hooks.blur = function(handler)  { handler._type = "focusout" };
     } else {
@@ -1054,11 +1019,13 @@
 
     function util$eventhandler$$getEventProperty(name, e, type, node, target, currentTarget) {
         if (typeof name === "number") {
-            return e.detail ? e.detail[name] : void 0;
-        }
+            var args = e["__2001002__"];
 
-        if (typeof name !== "string") return name;
+            return args ? args[name] : void 0;
+        }
         if (JSCRIPT_VERSION < 9) {
+            var docEl = node.ownerDocument.documentElement;
+
             switch (name) {
             case "which":
                 return e.keyCode;
@@ -1067,9 +1034,9 @@
                 // click: 1 === left; 2 === middle; 3 === right
                 return button & 1 ? 1 : ( button & 2 ? 3 : ( button & 4 ? 2 : 0 ) );
             case "pageX":
-                return e.clientX + HTML.scrollLeft - HTML.clientLeft;
+                return e.clientX + docEl.scrollLeft - docEl.clientLeft;
             case "pageY":
-                return e.clientY + HTML.scrollTop - HTML.clientTop;
+                return e.clientY + docEl.scrollTop - docEl.clientTop;
             case "preventDefault":
                 return function()  {return e.returnValue = false};
             case "stopPropagation":
@@ -1112,9 +1079,9 @@
                     return; // handle custom events in legacy IE
                 }
                 // srcElement can be null in legacy IE when target is document
-                var target = e.target || e.srcElement || DOCUMENT,
+                var target = e.target || e.srcElement || node.ownerDocument.documentElement,
                     currentTarget = matcher ? matcher(target) : node,
-                    args;
+                    args = props || [];
 
                 // early stop for late binding or when target doesn't match selector
                 if (!currentTarget) return;
@@ -1122,11 +1089,11 @@
                 // off callback even if it throws an exception later
                 if (once) el.off(type, callback);
 
-                if (props && props.length) {
-                    args = props.map(function(name)  {return util$eventhandler$$getEventProperty(name, e, type, node, target, currentTarget)});
+                if (props) {
+                    args = args.map(function(name)  {return util$eventhandler$$getEventProperty(
+                        name, e, type, node, target, currentTarget)});
                 } else {
-                    // if props is not specified then prepend extra arguments
-                    args = e.detail ? util$index$$default.slice.call(e.detail, 1) : [];
+                    args = util$index$$default.slice.call(e["__2001002__"] || [0], 1);
                 }
 
                 // prevent default if handler returns false
@@ -1154,7 +1121,7 @@
 
     var util$eventhandler$$default = util$eventhandler$$EventHandler;
 
-    util$index$$default.register({
+    DOM.register({
         fire: function(type) {
             var node = this[0],
                 e, eventType, canContinue;
@@ -1170,8 +1137,8 @@
                 throw new errors$$MethodError("fire", arguments);
             }
             if (JSCRIPT_VERSION < 9) {
-                e = DOCUMENT.createEventObject();
-                e.detail = arguments;
+                e = node.ownerDocument.createEventObject();
+                e["__2001002__"] = arguments;
                 // handle custom events for legacy IE
                 if (!("on" + eventType in node)) eventType = CUSTOM_EVENT_TYPE;
                 // store original event type
@@ -1181,8 +1148,8 @@
 
                 canContinue = e.returnValue !== false;
             } else {
-                e = DOCUMENT.createEvent("HTMLEvents");
-                e.detail = arguments;
+                e = node.ownerDocument.createEvent("HTMLEvents");
+                e["__2001002__"] = arguments;
                 e.initEvent(eventType, true, true);
                 canContinue = node.dispatchEvent(e);
             }
@@ -1192,19 +1159,16 @@
                 // prevent re-triggering of the current event
                 util$eventhandler$$default.skip = type;
 
-                util$index$$default.safeInvoke(node, type);
+                util$index$$default.safeCall(node, type);
 
                 util$eventhandler$$default.skip = null;
             }
 
             return canContinue;
         }
-    }, function()  {
-        return function()  {return true};
-    });
+    }, null, function()  {return RETURN_TRUE});
 
     var util$accessorhooks$$hooks = {get: {}, set: {}};
-    var util$accessorhooks$$body = document.createElement("body");
 
     // fix camel cased attributes
     "tabIndex readOnly maxLength cellSpacing cellPadding rowSpan colSpan useMap frameBorder contentEditable".split(" ").forEach(function(key)  {
@@ -1216,37 +1180,16 @@
     util$accessorhooks$$hooks.set.style = function(node, value)  { node.style.cssText = value };
 
     // title hook for DOM
-    util$accessorhooks$$hooks.get.title = function(node)  {return node === HTML ? DOCUMENT.title : node.title};
-    util$accessorhooks$$hooks.set.title = function(node, value)  { (node === HTML ? DOCUMENT : node).title = value; };
+    util$accessorhooks$$hooks.get.title = function(node)  {
+        var doc = node.ownerDocument;
 
-    util$accessorhooks$$hooks.get.undefined = function(node)  {
-        var name;
-
-        switch (node.tagName) {
-        case "SELECT":
-            return ~node.selectedIndex ? node.options[ node.selectedIndex ].value : "";
-
-        case "OPTION":
-            name = node.hasAttribute("value") ? "value" : "text";
-            break;
-
-        default:
-            name = node.type && "value" in node ? "value" : "innerHTML";
-        }
-
-        return node[name];
+        return (node === doc.documentElement ? doc : node).title;
     };
 
-    util$accessorhooks$$hooks.set.value = function(node, value) {
-        if (node.tagName === "SELECT") {
-            // selectbox has special case
-            if (util$index$$default.every.call(node.options, function(o)  {return !(o.selected = o.value === value)})) {
-                node.selectedIndex = -1;
-            }
-        } else {
-            // for IE use innerText for textareabecause it doesn't trigger onpropertychange
-            node[JSCRIPT_VERSION < 9 && node.type === "textarea" ? "innerText" : "value"] = value;
-        }
+    util$accessorhooks$$hooks.set.title = function(node, value)  {
+        var doc = node.ownerDocument;
+
+        (node === doc.documentElement ? doc : node).title = value;
     };
 
     // some browsers don't recognize input[type=email] etc.
@@ -1261,10 +1204,12 @@
             try {
                 node.innerHTML = value;
             } catch (err) {
-                node.innerText = "";
-                util$accessorhooks$$body.innerHTML = value;
+                var sandbox = node.ownerDocument.createElement("div"), it;
 
-                for (var it; it = util$accessorhooks$$body.firstChild; ) {
+                node.innerText = ""; // cleanup inner content
+                sandbox.innerHTML = value;
+
+                while (it = sandbox.firstChild) {
                     node.appendChild(it);
                 }
             }
@@ -1294,7 +1239,7 @@
             return value;
         };
 
-    util$index$$default.register({
+    DOM.register({
         get: function(name) {var this$0 = this;
             var node = this[0],
                 hook = util$accessorhooks$$default.get[name];
@@ -1307,7 +1252,7 @@
                 } else if (name[0] !== "_") {
                     return node.getAttribute(name);
                 } else {
-                    var key = name.substr(1),
+                    var key = name.slice(1),
                         data = this._;
 
                     if (!(key in data)) {
@@ -1320,94 +1265,112 @@
                 return name.reduce(function(memo, key)  {
                     return (memo[key] = this$0.get(key), memo);
                 }, {});
+            } else if (name === void 0) {
+                // TODO: remove this line in future
+                return this.value();
             } else {
                 throw new errors$$MethodError("get", arguments);
             }
         }
-    }, function()  {
-        return function()  {return void 0};
-    });
+    }, null, function()  {return function() {}});
 
-    var element$manipulation$$makeMethod = function(methodName, fasterMethodName, standalone, strategy)  {return function() {var content = arguments[0];if(content === void 0)content = "";
-            var node = this[0];
+    DOM.register({
+        after: ["afterend", true, function(node, relatedNode)  {
+            node.parentNode.insertBefore(relatedNode, node.nextSibling);
+        }],
 
-            if (!standalone && (!node.parentNode || content === DOM)) return this;
+        before: ["beforebegin", true, function(node, relatedNode)  {
+            node.parentNode.insertBefore(relatedNode, node);
+        }],
 
-            if (typeof content === "function") content = content.call(this);
+        prepend: ["afterbegin", false, function(node, relatedNode)  {
+            node.insertBefore(relatedNode, node.firstChild);
+        }],
+
+        append: ["beforeend", false, function(node, relatedNode)  {
+            node.appendChild(relatedNode);
+        }],
+
+        replace: ["", true, function(node, relatedNode)  {
+            node.parentNode.replaceChild(relatedNode, node);
+        }],
+
+        remove: ["", true, function(node)  {
+            node.parentNode.removeChild(node);
+        }]
+    }, function(methodName, fastStrategy, requiresParent, strategy)  {return function() {var contents = SLICE$0.call(arguments, 0);var this$0 = this;
+        var node = this[0];
+
+        if (requiresParent && !node.parentNode) return this;
+
+        // the idea of the algorithm is to construct HTML string
+        // when possible or use document fragment as a fallback to
+        // invoke manipulation using a single method call
+        var fragment = fastStrategy ? "" : node.ownerDocument.createDocumentFragment();
+
+        contents.forEach(function(content)  {
+            if (typeof content === "function") {
+                content = content(this$0);
+            }
 
             if (typeof content === "string") {
-                if (content) {
-                    // parse HTML string for the replace method
-                    if (fasterMethodName) {
-                        content = content.trim();
-                    } else {
-                        content = DOM.create(content)[0];
-                    }
+                if (typeof fragment === "string") {
+                    fragment += content.trim();
+                } else {
+                    content = DOM.createAll(content);
                 }
             } else if (content instanceof $Element) {
-                content = content[0];
-            } else if (util$index$$default.isArray(content)) {
-                content = content.reduce(function(fragment, el)  {
+                content = [ content ];
+            }
+
+            if (util$index$$default.isArray(content)) {
+                if (typeof fragment === "string") {
+                    // append existing string to fragment
+                    content = DOM.createAll(fragment).concat(content);
+                    // fallback to document fragment strategy
+                    fragment = node.ownerDocument.createDocumentFragment();
+                }
+
+                content.forEach(function(el)  {
                     fragment.appendChild(el[0]);
+                });
+            }
+        });
 
-                    return fragment;
-                }, DOCUMENT.createDocumentFragment());
-            } else {
-                throw new errors$$MethodError(methodName, arguments);
+        if (typeof fragment === "string") {
+            node.insertAdjacentHTML(fastStrategy, fragment);
+        } else {
+            strategy(node, fragment);
+        }
+
+        return this;
+    }}, function()  {return RETURN_THIS});
+
+    DOM.register({
+        map: function(fn, context) {
+            if (typeof fn !== "function") {
+                throw new errors$$MethodError("map", arguments);
             }
 
-            if (content && typeof content === "string") {
-                node.insertAdjacentHTML(fasterMethodName, content);
-            } else {
-                if (content || !fasterMethodName) strategy(node, content);
-            }
+            return [ fn.call(context, this) ];
+        }
+    }, null, function()  {return function()  {return []}});
 
-            return this;
-        }};
-
-    util$index$$default.register({
-        after: element$manipulation$$makeMethod("after", "afterend", false, function(node, relatedNode)  {
-            node.parentNode.insertBefore(relatedNode, node.nextSibling);
-        }),
-
-        before: element$manipulation$$makeMethod("before", "beforebegin", false, function(node, relatedNode)  {
-            node.parentNode.insertBefore(relatedNode, node);
-        }),
-
-        prepend: element$manipulation$$makeMethod("prepend", "afterbegin", true, function(node, relatedNode)  {
-            node.insertBefore(relatedNode, node.firstChild);
-        }),
-
-        append: element$manipulation$$makeMethod("append", "beforeend", true, function(node, relatedNode)  {
-            node.appendChild(relatedNode);
-        }),
-
-        replace: element$manipulation$$makeMethod("replace", "", false, function(node, relatedNode)  {
-            node.parentNode.replaceChild(relatedNode, node);
-        }),
-
-        remove: element$manipulation$$makeMethod("remove", "", false, function(node)  {
-            node.parentNode.removeChild(node);
-        })
-    });
-
-    var util$selectorhooks$$hooks = {};
-
-    util$selectorhooks$$hooks[":focus"] = function(node)  {return node === DOCUMENT.activeElement};
-
-    util$selectorhooks$$hooks[":hidden"] = function(node, computed)  {
-        if (node.getAttribute("aria-hidden") === "true") return true;
-
-        computed = computed || util$index$$default.computeStyle(node);
+    var util$selectorhooks$$isHidden = function(node)  {
+        var computed = util$index$$default.computeStyle(node);
 
         return computed.visibility === "hidden" || computed.display === "none";
     };
 
-    util$selectorhooks$$hooks[":visible"] = function(node, computed)  {return !util$selectorhooks$$hooks[":hidden"](node, computed)};
+    var util$selectorhooks$$default = {
+        ":focus": function(node)  {return node === node.ownerDocument.activeElement},
 
-    var util$selectorhooks$$default = util$selectorhooks$$hooks;
+        ":visible": function(node)  {return !util$selectorhooks$$isHidden(node)},
 
-    util$index$$default.register({
+        ":hidden": util$selectorhooks$$isHidden
+    };
+
+    DOM.register({
         matches: function(selector) {
             if (!selector || typeof selector !== "string") throw new errors$$MethodError("matches", arguments);
 
@@ -1415,11 +1378,9 @@
 
             return !!checker(this[0]);
         }
-    }, function()  {
-        return function()  {return false};
-    });
+    }, null, function()  {return RETURN_FALSE});
 
-    util$index$$default.register({
+    DOM.register({
         off: function(type, selector, callback) {
             if (typeof type !== "string") throw new errors$$MethodError("off", arguments);
 
@@ -1430,7 +1391,7 @@
 
             var node = this[0];
 
-            this._._handlers = this._._handlers.filter(function(handler)  {
+            this._["handler2001002"] = this._["handler2001002"].filter(function(handler)  {
                 var skip = type !== handler.type;
 
                 skip = skip || selector && selector !== handler.selector;
@@ -1448,15 +1409,16 @@
 
             return this;
         }
-    });
+    }, null, function()  {return RETURN_THIS});
 
-    util$index$$default.register({
+    DOM.register({
         offset: function() {
             var node = this[0],
-                clientTop = HTML.clientTop,
-                clientLeft = HTML.clientLeft,
-                scrollTop = WINDOW.pageYOffset || HTML.scrollTop,
-                scrollLeft = WINDOW.pageXOffset || HTML.scrollLeft,
+                docEl = node.ownerDocument.documentElement,
+                clientTop = docEl.clientTop,
+                clientLeft = docEl.clientLeft,
+                scrollTop = WINDOW.pageYOffset || docEl.scrollTop,
+                scrollLeft = WINDOW.pageXOffset || docEl.scrollLeft,
                 boundingRect = node.getBoundingClientRect();
 
             return {
@@ -1468,103 +1430,82 @@
                 height: boundingRect.bottom - boundingRect.top
             };
         }
-    }, function()  {
-        return function()  {
-            return { top : 0, left : 0, right : 0, bottom : 0, width : 0, height : 0 };
-        };
-    });
+    }, null, function()  {return function() { return { top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 } }});
 
-    var element$on$$makeMethod = function(method)  {return function(type, selector, args, callback) {var this$0 = this;
-            if (typeof type === "string") {
-                if (typeof args === "function") {
-                    callback = args;
+    DOM.register({
+        on: false,
 
-                    if (typeof selector === "string") {
-                        args = null;
-                    } else {
-                        args = selector;
-                        selector = null;
-                    }
-                }
+        once: true
 
-                if (typeof selector === "function") {
-                    callback = selector;
-                    selector = null;
+    }, function(method, single)  {return function(type, selector, args, callback) {var this$0 = this;
+        if (typeof type === "string") {
+            if (typeof args === "function") {
+                callback = args;
+
+                if (typeof selector === "string") {
                     args = null;
-                }
-
-                if (typeof callback !== "function") {
-                    throw new errors$$MethodError(method, arguments);
-                }
-
-                var node = this[0],
-                    handler = util$eventhandler$$default(type, selector, callback, args, this, method === "once");
-
-                if (handler) {
-                    if (JSCRIPT_VERSION < 9) {
-                        node.attachEvent("on" + (handler._type || type), handler);
-                    } else {
-                        node.addEventListener(handler._type || type, handler, !!handler.capturing);
-                    }
-                    // store event entry
-                    this._._handlers.push(handler);
-                }
-            } else if (typeof type === "object") {
-                if (util$index$$default.isArray(type)) {
-                    type.forEach(function(name)  { this$0[method](name, selector, args, callback) });
                 } else {
-                    util$index$$default.keys(type).forEach(function(name)  { this$0[method](name, type[name]) });
+                    args = selector;
+                    selector = null;
                 }
-            } else {
+            }
+
+            if (typeof selector === "function") {
+                callback = selector;
+                selector = null;
+                args = null;
+            }
+
+            if (typeof callback !== "function") {
                 throw new errors$$MethodError(method, arguments);
             }
 
-            return this;
-        }};
+            var node = this[0],
+                handler = util$eventhandler$$default(type, selector, callback, args, this, single);
 
-    util$index$$default.register({
-        on: element$on$$makeMethod("on"),
+            if (JSCRIPT_VERSION < 9) {
+                node.attachEvent("on" + (handler._type || type), handler);
+            } else {
+                node.addEventListener(handler._type || type, handler, !!handler.capturing);
+            }
+            // store event entry
+            this._["handler2001002"].push(handler);
+        } else if (typeof type === "object") {
+            if (util$index$$default.isArray(type)) {
+                type.forEach(function(name)  { this$0[method](name, selector, args, callback) });
+            } else {
+                util$index$$default.keys(type).forEach(function(name)  { this$0[method](name, type[name]) });
+            }
+        } else {
+            throw new errors$$MethodError(method, arguments);
+        }
 
-        once: element$on$$makeMethod("once")
-    });
+        return this;
+    }}, function()  {return RETURN_THIS});
 
-    util$index$$default.register({
+    DOM.register({
         set: function(name, value) {var this$0 = this;
             var node = this[0];
 
-            // handle the value shortcut
-            if (arguments.length === 1) {
-                if (typeof name === "function") {
-                    value = name;
-                } else {
-                    value = name == null ? "" : String(name);
-                }
-
-                if (value !== "[object Object]") {
-                    var tag = node.tagName;
-
-                    if (tag === "INPUT" || tag === "TEXTAREA" ||  tag === "SELECT" || tag === "OPTION") {
-                        name = "value";
-                    } else {
-                        name = "innerHTML";
-                    }
-                }
-            }
-
             var hook = util$accessorhooks$$default.set[name],
-                watchers = this._._watchers[name],
+                watchers = this._["watcher2001002"][name],
                 oldValue;
 
-            if (watchers || typeof value === "function") {
+            if (watchers) {
                 oldValue = this.get(name);
+            }
+
+            if (arguments.length === 1 && typeof name !== "object") {
+                // TODO: remove this check in future
+                return this.value(name);
             }
 
             if (typeof name === "string") {
                 if (name[0] === "_") {
-                    this._[name.substr(1)] = value;
+                    this._[name.slice(1)] = value;
                 } else {
                     if (typeof value === "function") {
-                        value = value.call(this, oldValue);
+                        value = value(this);
                     }
 
                     if (hook) {
@@ -1591,57 +1532,108 @@
 
             if (watchers && oldValue !== value) {
                 watchers.forEach(function(w)  {
-                    util$index$$default.safeInvoke(this$0, w, value, oldValue);
+                    util$index$$default.safeCall(this$0, w, value, oldValue);
                 });
             }
 
             return this;
         }
-    });
+    }, null, function()  {return RETURN_THIS});
 
-    var element$traversing$$makeMethod = function(methodName, propertyName, all)  {return function(selector) {
-            if (selector && typeof selector !== "string") throw new errors$$MethodError(methodName, arguments);
+    DOM.register({
+        next: "nextSibling",
 
-            var matcher = util$selectormatcher$$default(selector),
-                nodes = all ? [] : null,
-                it = this[0];
+        prev: "previousSibling",
 
-            if (methodName !== "closest" || !matcher) {
-                // method closest starts traversing from the element itself
-                // except no selector was specified
-                it = it[propertyName];
-            }
+        nextAll: "nextSibling",
 
-            for (; it; it = it[propertyName]) {
-                if (it.nodeType === 1 && (!matcher || matcher(it))) {
-                    if (!all) break;
+        prevAll: "previousSibling",
 
-                    nodes.push(it);
-                }
-            }
+        closest: "parentNode"
 
-            return all ? util$index$$default.map.call(nodes, $Element) : $Element(it);
-        }};
+    }, function(methodName, propertyName)  {return function(selector) {
+        if (selector && typeof selector !== "string") throw new errors$$MethodError(methodName, arguments);
 
-    util$index$$default.register({
-        next: element$traversing$$makeMethod("next", "nextSibling"),
+        var all = methodName.slice(-3) === "All",
+            matcher = util$selectormatcher$$default(selector),
+            nodes = all ? [] : null,
+            it = this[0];
 
-        prev: element$traversing$$makeMethod("prev", "previousSibling"),
-
-        nextAll: element$traversing$$makeMethod("nextAll", "nextSibling", true),
-
-        prevAll: element$traversing$$makeMethod("prevAll", "previousSibling", true),
-
-        closest: element$traversing$$makeMethod("closest", "parentNode")
-    }, function(methodName)  {
-        if (methodName.slice(-3) === "All") {
-            return function()  {return []};
-        } else {
-            return function()  {return new $NullElement()};
+        // method closest starts traversing from the element itself
+        // except no selector was specified where it returns parent
+        if (!matcher || methodName !== "closest") {
+            it = it[propertyName];
         }
-    });
 
-    var util$animationhandler$$TRANSITION_PROPS = ["timing-function", "property", "duration", "delay"].map(function(p)  {return "transition-" + p}),
+        for (; it; it = it[propertyName]) {
+            if (it.nodeType === 1 && (!matcher || matcher(it))) {
+                if (!all) break;
+
+                nodes.push(it);
+            }
+        }
+
+        return all ? util$index$$default.map.call(nodes, $Element) : $Element(it);
+    }}, function(methodName)  {return function()  {return methodName.slice(-3) === "All" ? [] : new $NullElement()}});
+
+    DOM.register({
+        value: function(content) {
+            var node = this[0], name;
+
+            if (content === void 0) {
+                switch (node.tagName) {
+                case "SELECT":
+                    return ~node.selectedIndex ? node.options[ node.selectedIndex ].value : "";
+
+                case "OPTION":
+                    name = node.hasAttribute("value") ? "value" : "text";
+                    break;
+
+                default:
+                    name = node.type && "value" in node ? "value" : "innerHTML";
+                }
+
+                return node[name];
+            } else if (content instanceof $Element) {
+                return this.set("").append(content);
+            }
+
+            if (typeof content === "function") {
+                content = content(this);
+            }
+
+            if (typeof content !== "string") {
+                content = content == null ? "" : String(content);
+            }
+
+            switch (node.tagName) {
+            case "INPUT":
+            case "OPTION":
+                name = "value";
+                break;
+
+            case "SELECT":
+                // selectbox has special case
+                if (util$index$$default.every.call(node.options, function(o)  {return !(o.selected = o.value === content)})) {
+                    node.selectedIndex = -1;
+                }
+                // return earlier
+                return this;
+
+            case "TEXTAREA":
+                // for IE use innerText for textareabecause it doesn't trigger onpropertychange
+                name = JSCRIPT_VERSION < 9 ? "innerText" : "value";
+                break;
+
+            default:
+                name = "innerHTML";
+            }
+
+            return this.set(name, content);
+        }
+    }, null, function()  {return RETURN_THIS});
+
+    var util$animationhandler$$TRANSITION_PROPS = ["timing-function", "property", "duration", "delay"].map(function(prop)  {return "transition-" + prop}),
         util$animationhandler$$parseTimeValue = function(value)  {
             var result = parseFloat(value) || 0;
             // if duration is in seconds, then multiple result value by 1000
@@ -1656,19 +1648,18 @@
             }));
         };
 
+    // initialize hooks for properties used below
+    util$animationhandler$$TRANSITION_PROPS.concat("animation-duration").forEach(function(prop)  { util$stylehooks$$default.find(prop, HTML.style) });
+
     var util$animationhandler$$default = function(node, computed, animationName, hiding, done)  {
         var rules, duration;
 
         // Legacy Android is usually slow and has lots of bugs in the
         // CSS animations implementation, so skip any animations for it
-
-        // Determine of we need animation by checking if an element
-        // has non-zero width. It also fixes animation of new elements
-        // inserted into the DOM in Webkit and Opera 12 browsers
-        if (LEGACY_ANDROID || JSCRIPT_VERSION < 10 || !computed.width) return null;
+        if (LEGACY_ANDROID || JSCRIPT_VERSION < 10) return null;
 
         if (animationName) {
-            duration = util$animationhandler$$parseTimeValue(util$stylehooks$$default.get["animation-duration"](computed));
+            duration = util$animationhandler$$parseTimeValue(computed[util$stylehooks$$default.get["animation-duration"]]);
 
             if (!duration) return; // skip animations with zero duration
 
@@ -1681,7 +1672,7 @@
         } else {
             var transitionValues = util$animationhandler$$TRANSITION_PROPS.map(function(prop, index)  {
                     // have to use regexp to split transition-timing-function value
-                    return util$stylehooks$$default.get[prop](computed).split(index ? ", " : /, (?!\d)/);
+                    return computed[util$stylehooks$$default.get[prop]].split(index ? ", " : /, (?!\d)/);
                 });
 
             duration = util$animationhandler$$calcTransitionDuration(transitionValues);
@@ -1740,83 +1731,80 @@
     };
 
     var element$visibility$$TRANSITION_EVENT_TYPE = WEBKIT_PREFIX ? "webkitTransitionEnd" : "transitionend",
-        element$visibility$$ANIMATION_EVENT_TYPE = WEBKIT_PREFIX ? "webkitAnimationEnd" : "animationend",
-        element$visibility$$makeMethod = function(name, condition)  {return function(animationName, callback) {var this$0 = this;
-            if (typeof animationName !== "string") {
-                callback = animationName;
-                animationName = null;
-            }
+        element$visibility$$ANIMATION_EVENT_TYPE = WEBKIT_PREFIX ? "webkitAnimationEnd" : "animationend";
 
-            if (callback && typeof callback !== "function") {
-                throw new errors$$MethodError(name, arguments);
-            }
+    DOM.register({
+        show: false,
 
-            var node = this[0],
-                style = node.style,
-                computed = util$index$$default.computeStyle(node),
-                hiding = condition,
-                done = function()  {
-                    // Check equality of the flag and aria-hidden to recognize
-                    // cases when an animation was toggled in the intermediate
-                    // state. Don't need to proceed in such situation
-                    if (String(hiding) === node.getAttribute("aria-hidden")) {
-                        if (animationHandler) {
-                            node.removeEventListener(eventType, animationHandler, true);
-                            // restore initial state
-                            style.cssText = animationHandler.initialCssText;
-                        } else {
-                            // no animation was applied
-                            if (hiding) {
-                                var displayValue = computed.display;
+        hide: true,
 
-                                if (displayValue !== "none") {
-                                    // internally store original display value
-                                    this$0._._display = displayValue;
-                                }
+        toggle: null
 
-                                style.display = "none";
-                            } else {
-                                // restore previously store display value
-                                style.display = this$0._._display || "inherit";
-                            }
-                        }
-                        // always update element visibility property
-                        // use value "inherit" to respect parent container visibility
-                        style.visibility = hiding ? "hidden" : "inherit";
+    }, function(methodName, condition)  {return function(animationName, callback) {var this$0 = this;
+        if (typeof animationName !== "string") {
+            callback = animationName;
+            animationName = null;
+        }
 
-                        if (callback) callback.call(this$0);
-                    }
-                },
-                animationHandler = util$animationhandler$$default(node, computed, animationName, hiding, done),
+        if (callback && typeof callback !== "function") {
+            throw new errors$$MethodError(methodName, arguments);
+        }
+
+        var node = this[0],
+            style = node.style,
+            computed = util$index$$default.computeStyle(node),
+            hiding = condition,
+            frameId = this._["frame2001002"],
+            done = function()  {
+                if (animationHandler) {
+                    node.removeEventListener(eventType, animationHandler, true);
+                    // clear inline style adjustments were made previously
+                    style.cssText = animationHandler.initialCssText;
+                } else {
+                    this$0.set("aria-hidden", String(hiding));
+                }
+                // always update element visibility property: use value "inherit"
+                // to respect parent container visibility. Should be a separate
+                // from setting cssText because of Opera 12 quirks
+                style.visibility = hiding ? "hidden" : "inherit";
+
+                this$0._["frame2001002"] = null;
+
+                if (callback) callback(this$0);
+            };
+
+        if (typeof hiding !== "boolean") {
+            hiding = computed.visibility !== "hidden";
+        }
+
+        // cancel previous frame if it exists
+        if (frameId) DOM.cancelFrame(frameId);
+
+        if (!node.ownerDocument.documentElement.contains(node)) {
+            // apply attribute/visibility syncronously for detached DOM elements
+            // because browser returns zero animation/transition duration for them
+            done();
+        } else {
+            var animationHandler = util$animationhandler$$default(node, computed, animationName, hiding, done),
                 eventType = animationName ? element$visibility$$ANIMATION_EVENT_TYPE : element$visibility$$TRANSITION_EVENT_TYPE;
-
-            if (typeof hiding !== "boolean") {
-                hiding = !util$selectorhooks$$default[":hidden"](node, computed);
-            }
-
-            if (animationHandler) {
+            // use requestAnimationFrame to avoid animation quirks for
+            // new elements inserted into the DOM
+            // http://christianheilmann.com/2013/09/19/quicky-fading-in-a-newly-created-element-using-css/
+            this._["frame2001002"] = DOM.requestFrame(!animationHandler ? done : function()  {
                 node.addEventListener(eventType, animationHandler, true);
-                // trigger animation(s)
+                // update modified style rules
                 style.cssText = animationHandler.initialCssText + animationHandler.cssText;
-            } else {
-                // done callback is always async
-                setTimeout(done, 0);
-            }
-            // trigger CSS3 transition if it exists
-            return this.set("aria-hidden", String(hiding));
-        }};
+                // trigger CSS3 transition / animation
+                this$0.set("aria-hidden", String(hiding));
+            });
+        }
 
-    util$index$$default.register({
-        show: element$visibility$$makeMethod("show", false),
+        return this;
+    }}, function()  {return RETURN_THIS});
 
-        hide: element$visibility$$makeMethod("hide", true),
-
-        toggle: element$visibility$$makeMethod("toggle")
-    });
-
-    util$index$$default.register({
+    DOM.register({
         watch: function(name, callback) {
-            var watchers = this._._watchers;
+            var watchers = this._["watcher2001002"];
 
             if (!watchers[name]) watchers[name] = [];
 
@@ -1826,7 +1814,7 @@
         },
 
         unwatch: function(name, callback) {
-            var watchers = this._._watchers;
+            var watchers = this._["watcher2001002"];
 
             if (watchers[name]) {
                 watchers[name] = watchers[name].filter(function(w)  {return w !== callback});
@@ -1834,5 +1822,78 @@
 
             return this;
         }
-    });
+    }, null, function()  {return RETURN_THIS});
+
+    DOM.constructor = function(node)  {
+        var nodeType = node && node.nodeType,
+            ctr = nodeType === 9 ? $Document : $Element;
+        // filter non elements like text nodes, comments etc.
+        return ctr(nodeType === 1 || nodeType === 9 ? node : null);
+    };
+
+    var global$format$$reVar = /\{([\w\-]+)\}/g;
+
+    DOM.format = function(tmpl, varMap) {
+        if (typeof tmpl !== "string") tmpl = String(tmpl);
+
+        if (!varMap || typeof varMap !== "object") varMap = {};
+
+        return tmpl.replace(global$format$$reVar, function(x, name, index)  {
+            if (name in varMap) {
+                x = varMap[name];
+
+                if (typeof x === "function") x = x(index);
+
+                x = String(x);
+            }
+
+            return x;
+        });
+    };
+
+    var global$frame$$raf = WINDOW.requestAnimationFrame,
+        global$frame$$craf = WINDOW.cancelAnimationFrame,
+        global$frame$$lastTime = 0;
+
+    if (!(global$frame$$raf && global$frame$$craf)) {
+        ["ms", "moz", "webkit", "o"].forEach(function(prefix)  {
+            global$frame$$raf = global$frame$$raf || WINDOW[prefix + "RequestAnimationFrame"];
+            global$frame$$craf = global$frame$$craf || WINDOW[prefix + "CancelAnimationFrame"];
+        });
+    }
+
+    DOM.requestFrame = function(callback)  {
+        if (global$frame$$raf) {
+            return global$frame$$raf.call(WINDOW, callback);
+        } else {
+            // use idea from Erik Möller's polyfill:
+            // http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
+            var currTime = Date.now();
+            var timeToCall = Math.max(0, 16 - (currTime - global$frame$$lastTime));
+
+            global$frame$$lastTime = currTime + timeToCall;
+
+            return WINDOW.setTimeout(function()  { callback(currTime + timeToCall) }, timeToCall);
+        }
+    };
+
+    DOM.cancelFrame = function(frameId)  {
+        if (global$frame$$craf) {
+            global$frame$$craf.call(WINDOW, frameId);
+        } else {
+            WINDOW.clearTimeout(frameId);
+        }
+    };
+
+    var exports$$_DOM = WINDOW.DOM;
+
+    DOM.noConflict = function() {
+        if (WINDOW.DOM === DOM) {
+            WINDOW.DOM = exports$$_DOM;
+        }
+
+        return DOM;
+    };
+
+    WINDOW.DOM = DOM;
 })();

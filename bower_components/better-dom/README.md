@@ -1,8 +1,12 @@
 # [better-dom](https://github.com/chemerisuk/better-dom): Live extension playground<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 
-This library is about __ideas__. After some time of using jQuery I found that it's just too big, has lack of [features](#features) I need and some desicions of the API design is debatable. In particular [live extensions](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) was one of the main ideas that encouraged me to build a new library from scratch.
-
 [API DOCUMENTATION](http://chemerisuk.github.io/better-dom/)
+
+This library is about __ideas__. After some time of using jQuery I found that it's just too big, has lack of [features](#features) I need and the API design is debatable. In particular [live extensions](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) was one of the main ideas that encouraged me to build a new library from scratch.
+
+Vanilla DOM also has a lot of bad parts, that I'm trying to fix by providing a JavaScript wrapper for each DOM element you use in code. This extra layer allows to abstract from legacy interfaces and to add new methods on __the top of particular elements__ without touching vanilla DOM prototypes. So the object model used is very different from what jQuery does.
+
+Note, that the better-dom project is only about the DOM. It does not contain any AJAX or BOM helper.
 
 [![Sauce Test Status](https://saucelabs.com/browser-matrix/chemerisuk.svg)](https://saucelabs.com/u/chemerisuk)
 
@@ -10,20 +14,24 @@ This library is about __ideas__. After some time of using jQuery I found that it
 * lightweight: ~5 kB gzipped
 * [live extensions](https://github.com/chemerisuk/better-dom/wiki/Live-extensions)
 * [getter and setter](https://github.com/chemerisuk/better-dom/wiki/Getter-and-setter)
-* [animations via CSS3](https://github.com/chemerisuk/better-dom/wiki/CSS-driven-animations)
+* [declarative animations](https://github.com/chemerisuk/better-dom/wiki/Declarative-animations)
 * [microtemplating using the Emmet syntax](https://github.com/chemerisuk/better-dom/wiki/Microtemplating)
 * [improved event handling](https://github.com/chemerisuk/better-dom/wiki/Event-handling)
 
 ## Installation
 The simplest way is to use [bower](http://bower.io/):
 
-    $ bower install better-dom
+```sh
+$ bower install better-dom
+```
 
 This will clone the latest version of the __better-dom__ with dependencies into the `bower_components` directory at the root of your project. Then just include the script below on your web page:
 
 ```html
 <script src="bower_components/better-dom/dist/better-dom.js"></script>
 ```
+
+If you need to support IE8-9 please read [the section below](#notes-about-old-ies).
 
 ## Documentation
 * Read the [FAQ](https://github.com/chemerisuk/better-dom/wiki/FAQ)
@@ -34,13 +42,17 @@ This will clone the latest version of the __better-dom__ with dependencies into 
 ## Contributing
 In order to modify the source code you have to have [gulp](http://gulpjs.com) installed globally:
 
-    $ npm install -g gulp
+```sh
+$ npm install -g gulp
+```
 
-The project uses set of ES6 transpilers to compile an output file that works in current browsers. You can use the commend below to start development: 
+The project uses set of ES6 transpilers to compile an output file. You can use the command below to start development: 
 
-    $ npm start
+```sh
+$ npm start
+```
 
-After any change it recompiles `build/better-dom.js` and runs it through the unit tests.
+After any change it recompiles `build/better-dom.js` and runs unit tests automatically.
 
 ## Notes about old IEs
 For IE8-9 support you have to incude an extra file via the conditional comment below __before end of the `<head>`__ on your page:
