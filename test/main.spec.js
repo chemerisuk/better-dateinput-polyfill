@@ -89,7 +89,7 @@ describe("better-dateinput-polyfill", function() {
             setSpy = spyOn(el, "set");
 
         el._clickCalendar(calendar, target);
-        expect(setSpy).toHaveBeenCalledWith("2011-07-13");
+        expect(setSpy).toHaveBeenCalledWith("value", "2011-07-13");
     });
 
     it("should hide calendar on blur", function() {
@@ -109,7 +109,7 @@ describe("better-dateinput-polyfill", function() {
 
         el._clickCalendar(calendar, target);
         expect(getSpy).toHaveBeenCalled();
-        expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
+        expect(setSpy).toHaveBeenCalledWith("value", formatDateISO(now));
 
         spyOn(target, "next").and.returnValue(el);
 
@@ -117,7 +117,7 @@ describe("better-dateinput-polyfill", function() {
 
         el._clickCalendar(calendar, target);
         expect(getSpy).toHaveBeenCalled();
-        expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
+        expect(setSpy).toHaveBeenCalledWith("value", formatDateISO(now));
     });
 
     it("should display calendar on focus", function() {

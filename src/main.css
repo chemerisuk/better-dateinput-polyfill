@@ -62,6 +62,7 @@
         position: relative;
         margin: 0;
 
+        height: var(--height-header);
         line-height: var(--height-header);
         font-weight: bold;
         white-space: nowrap;
@@ -183,9 +184,5 @@
     /* fix firefox issue with color:transparent */
     .btr-dateinput-value + input::-moz-placeholder {
         color: initial;
-    }
-
-    ::-webkit-inner-spin-button {
-        display: none; /* remove extra datepicker margin in Chrome */
     }
 }

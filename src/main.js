@@ -1,31 +1,22 @@
 (function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, DateUtils) {
     "use strict";
-    
-    // Feature detect browsers that already support date inputs
-    var hasNativeSupport = DOM.create("input[type=date]")[0].type === "date";
 
     var __ = DOM.__,
         ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TMP = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
-        LABEL_TMP = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
+        PICKER_TEMPLATE = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
+        LABEL_TEMPLATE = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
         pad = (num, maxlen) => ((maxlen === 2 ? "0" : "00") + num).slice(-maxlen);
 
-    // compact moths in english don't have the dot suffix
-    DOM.importStrings("en", DateUtils.MONTHS.reduce((memo, month) => {
-        var shortMonth = month.slice(0, 3);
-
-        memo[shortMonth + "."] = shortMonth;
-
-        return memo;
-    }, {}));
+    // Feature detect browsers that already support date inputs
+    var hasNativeSupport = DOM.create("input[type=date]")[0].type === "date";
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", !( window.orientation || hasNativeSupport ), {
         constructor() {
-            var calendar = PICKER_TMP.clone(true),
-                label = LABEL_TMP.clone(true),
+            var calendar = PICKER_TEMPLATE.clone(true),
+                label = LABEL_TEMPLATE.clone(true),
                 color = this.css("color");
 
             this
@@ -100,7 +91,6 @@
             month = value.getUTCMonth();
             date = value.getUTCDate();
             year = value.getUTCFullYear();
-
             // update calendar caption
             caption.set(__(DateUtils.MONTHS[month]).toHTMLString() + " " + year);
             // update calendar content
@@ -302,6 +292,15 @@
             this.value(this.get("defaultValue"));
         }
     });
+
+    // compact moths in english don't have the dot suffix
+    DOM.importStrings("en", DateUtils.MONTHS.reduce((memo, month) => {
+        var shortMonth = month.slice(0, 3);
+
+        memo[shortMonth + "."] = shortMonth;
+
+        return memo;
+    }, {}));
 }(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, {
     DAYS: "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
     MONTHS: "January February March April May June July August September October November December".split(" "),
