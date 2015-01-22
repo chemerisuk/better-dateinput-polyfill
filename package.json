@@ -1,7 +1,7 @@
 {
   "name": "better-dateinput-polyfill",
   "description": "input[type=date] polyfill for better-dom",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "author": "Maksim Chemerisuk",
   "license": "MIT",
   "homepage": "https://github.com/chemerisuk/better-dateinput-polyfill",
@@ -12,11 +12,14 @@
   "devDependencies": {
     "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"
   },
+  "config": {
+    "gulp": "--gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd ."
+  },
   "scripts": {
-    "test": "gulp test --gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd .",
-    "start": "gulp dev --gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd .",
-    "release": "gulp release --gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd .",
-    "gh-pages": "gulp gh-pages --gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd ."
+    "test": "gulp test $npm_package_config_gulp",
+    "start": "gulp dev $npm_package_config_gulp",
+    "release": "gulp release $npm_package_config_gulp",
+    "postrelease": "gulp gh-pages $npm_package_config_gulp"
   },
   "karmaFiles": [
     "bower_components/better-dom/dist/better-dom.js",
