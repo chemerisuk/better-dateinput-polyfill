@@ -20,9 +20,6 @@
                 color = this.css("color");
 
             this
-                // remove legacy dateinput implementation if it exists
-                // also set value to current time to trigger watchers later
-                .set({type: "text", value: Date.now()})
                 // hide original input text
                 // IE8 doesn't suport color:transparent - use background-color instead
                 .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
@@ -39,15 +36,16 @@
                 // copy input CSS to adjust visible text position
                 .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]));
 
-            var calenderDays = calendar.findAll(`.${BASE_CLASS}-calendar-body`);
+            var calenderDays = calendar.findAll(`.${BASE_CLASS}-calendar-body`),
+                calendarCaption = calendar.find(`.${BASE_CLASS}-calendar-caption`),
+                changeValue = this._changeValue.bind(this, calendarCaption, calenderDays, calendar);
 
             calenderDays[1].hide().remove();
 
             this.closest("form").on("reset", this._resetForm.bind(this));
-            this.watch("value", this._changeValue.bind(this,
-                calendar.find(`.${BASE_CLASS}-calendar-caption`), calenderDays, calendar));
+            this.watch("value", changeValue);
             // trigger watchers to build the calendar
-            this.set(this.get("defaultValue"));
+            changeValue(this.value());
 
             calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar));
             // FIXME: get rid of DOM.requestFrame which is required to get right offset
