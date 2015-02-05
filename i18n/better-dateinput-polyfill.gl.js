@@ -39,6 +39,6 @@ DOM.importStrings("gl", {
     "Aug.": "Ago",
     "Sep.": "Set",
     "Oct.": "Out",
-    "Nov.": "Nov.",
-    "Dec.": "Dec."
+    "Nov.": "Nov",
+    "Dec.": "Dec"
 });
