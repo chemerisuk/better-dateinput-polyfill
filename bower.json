@@ -7,7 +7,8 @@
     "i18n/better-dateinput-polyfill.fr.js",
     "i18n/better-dateinput-polyfill.de.js",
     "i18n/better-dateinput-polyfill.es.js",
-    "i18n/better-dateinput-polyfill.pt.js"
+    "i18n/better-dateinput-polyfill.pt.js",
+    "i18n/better-dateinput-polyfill.gl.js"
   ],
   "ignore": [
     ".*",
