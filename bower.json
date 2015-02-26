@@ -2,13 +2,7 @@
   "name": "better-dateinput-polyfill",
   "version": "1.5.1",
   "main": [
-    "dist/better-dateinput-polyfill.js",
-    "i18n/better-dateinput-polyfill.ru.js",
-    "i18n/better-dateinput-polyfill.fr.js",
-    "i18n/better-dateinput-polyfill.de.js",
-    "i18n/better-dateinput-polyfill.es.js",
-    "i18n/better-dateinput-polyfill.pt.js",
-    "i18n/better-dateinput-polyfill.gl.js"
+    "dist/better-dateinput-polyfill.js"
   ],
   "ignore": [
     ".*",
