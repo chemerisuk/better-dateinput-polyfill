@@ -1,4 +1,4 @@
-(function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, DateUtils) {
+(function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, DateUtils, testDateInput) {
     "use strict";
 
     var __ = DOM.__,
@@ -9,11 +9,8 @@
         readDateRange = function(el)  {return ["min", "max"].map(function(x)  {return new Date(el.get(x) || "")})},
         pad = function(num, maxlen)  {return ((maxlen === 2 ? "0" : "00") + num).slice(-maxlen)};
 
-    // Feature detect browsers that already support date inputs
-    var hasNativeSupport = DOM.create("input[type=date]")[0].type === "date";
-
     // need to skip mobile/tablet browsers
-    DOM.extend("input[type=date]", !( window.orientation || hasNativeSupport ), {
+    DOM.extend("input[type=date]", testDateInput, {
         constructor: function() {var this$0 = this;
             var calendar = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
@@ -323,6 +320,20 @@
         var beginOfYear = Date.UTC(d.getUTCFullYear(), 0, 1);
         var millisBetween = d.getTime() - beginOfYear;
         return Math.floor(1 + millisBetween / 86400000);
+    }
+}, function(el)  {
+    var nativeValue = el.get("_native"),
+        deviceType = "orientation" in window ? "mobile" : "desktop";
+
+    if (!nativeValue || nativeValue === deviceType) {
+        // by default test if the type property is "date"
+        // to determine if the device supports native control
+        return el[0].type !== "date";
+    } else {
+        // remove native control
+        el.set("type", "text");
+        // force applying the polyfill
+        return true;
     }
 }));
 
