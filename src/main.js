@@ -16,6 +16,9 @@
                 label = LABEL_TEMPLATE.clone(true),
                 color = this.css("color");
 
+            if ( this.get('disabled') == true || this.get('readonly') == true){
+            	return;
+            }
             this
                 // hide original input text
                 // IE8 doesn't suport color:transparent - use background-color instead
