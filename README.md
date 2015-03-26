@@ -68,10 +68,10 @@ Number of letters in the parameter name specifies form of the output value, for 
 "MMMM" yields "January"
 ```
 
-## Forcing polyfill
-Sometimes it's useful to override browser implemetation with the consistent control implemented by the polyfill. In order to suppress feature detection you can use `data-native` attribute. Possible values are `desktop` and `mobile`. They allow to limit type of devices where you want to see native control.
+## Forcing the polyfill
+Sometimes it's useful to override browser implemetation with the consistent control implemented by the polyfill. In order to suppress feature detection you can use the `data-native` attribute. Possible values are `desktop` and `mobile`. They allow to limit type of devices where you want to see a native control.
 
-For example, the code below defines a dateinput that will use native implementation on mobile phones, but ALL desktop browsers (even Chrome) will have a consistent widget.
+For example, the code below defines a dateinput that uses a native implementation on mobile phones, but ALL desktop browsers (even Chrome desktop) will have a consistent widget created by the polyfill.
 
 ```html
 <input type="date" data-native="mobile" name="foo" value="bar">
@@ -82,6 +82,12 @@ In order to modify the source code you have to install [gulp](http://gulpjs.com)
 
 ```sh
 $ npm install -g gulp
+```
+
+Now you can download project dependencies:
+
+```sh
+$ npm install
 ```
 
 The project uses set of ES6 transpilers to compile the output file. You can use command below to start development: 
