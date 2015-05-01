@@ -81,6 +81,8 @@
         top: 0;
 
         color: inherit;
+
+        cursor: pointer;
     }
 
     .btr-dateinput-calendar-header > a:before {
@@ -98,6 +100,16 @@
 
     .btr-dateinput-calendar-header > a + a:before {
         content: '\25BA';
+    }
+
+    .btr-dateinput-calendar-header > span {
+        display: block;
+        
+        position: absolute;
+        left: var(--height-header);
+        right: var(--height-header);
+
+        cursor: pointer;
     }
 
     .btr-dateinput-calendar-days {
@@ -152,6 +164,10 @@
         text-align: center;
     }
 
+    .btr-dateinput-calendar-days td {
+        cursor: pointer;
+    }
+
     .btr-dateinput-calendar-past,
     .btr-dateinput-calendar-future {
         color: var(--color-border);
@@ -176,6 +192,7 @@
     }
 
     .btr-dateinput-calendar-header > a:hover,
+    .btr-dateinput-calendar-header > span:hover,
     td.btr-dateinput-calendar-today:hover {
         background-color: var(--bkg-active);
         text-decoration: none;
