@@ -4,6 +4,10 @@
     --bkg-active: #207FB1;
     --color-border: #DDD;
     --color-graytext: #CCC;
+    --bkg-month: #FFF;
+    --bkg-month-active: #A0E857;
+    --color-month: #2DA4D6;
+    --color-month-active: #000;
     --bkg-graytext: #F3F3F3;
     --bkg-normal: #FFF;
     --border-normal: 1px solid;
@@ -112,7 +116,8 @@
         cursor: pointer;
     }
 
-    .btr-dateinput-calendar-days {
+    .btr-dateinput-calendar-days,
+    .btr-dateinput-calendar-months {
         width: 100%;
         table-layout: fixed;
         border-spacing: 0;
@@ -164,8 +169,28 @@
         text-align: center;
     }
 
-    .btr-dateinput-calendar-days td {
+    .btr-dateinput-calendar-days td,
+    .btr-dateinput-calendar-months td {
         cursor: pointer;
+    }
+
+    .btr-dateinput-calendar-months {
+        display: none;
+    }
+
+    .btr-dateinput-calendar-months td {
+        width: 3em;
+        height: 4em;
+        line-height: 2;
+        padding: 0;
+        text-align: center;
+        color: var(--color-month);
+        background-color: var(--bkg-month);
+    }
+
+    .btr-dateinput-calendar-months td:hover {
+        background-color: var(--bkg-month-active);
+        color: var(--color-month-active);
     }
 
     .btr-dateinput-calendar-past,
