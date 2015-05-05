@@ -4,7 +4,7 @@
     var __ = DOM.__,
         ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TEMPLATE = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
+        PICKER_TEMPLATE = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^(table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7))^(table[{2}].{0}-months>(tbody.{0}-body>tr*3>td*4))", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
         LABEL_TEMPLATE = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
         pad = (num, maxlen) => ((maxlen === 2 ? "0" : "00") + num).slice(-maxlen);
@@ -28,6 +28,8 @@
                 .on("change", this._formatValue.bind(this, label))
                 .before(calendar.hide(), label);
 
+            this.currentDisplayed = "calendar";
+
             label
                 .on("click", () => { this.fire("focus") })
                 // copy input CSS to adjust visible text position
@@ -43,6 +45,18 @@
             this.watch("value", changeValue);
             // trigger watchers to build the calendar
             changeValue(this.value());
+
+            // FIXME: Improve that code please!
+            var i = 0;
+            var MONTHS = "Jan Feb Mar Apr May June Jul Aug Sep Oct Nov Dec".split(" ");
+            calendar.find(".btr-dateinput-calendar-months").findAll("td").forEach((month) => {
+                month.set({
+                    _month: i,
+                    textContent: MONTHS[i]
+                });
+
+                i++;
+            });
 
             calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar));
             // FIXME: get rid of DOM.requestFrame which is required to get right offset
@@ -73,6 +87,16 @@
                 // display calendar for autofocused elements
                 if (this.matches(":focus")) this.fire("focus");
             });
+        },
+        _showMonths(calendar) {
+            calendar.find(".btr-dateinput-calendar-days").css({display: "none"});
+            calendar.find(".btr-dateinput-calendar-months").css({display: "table"});
+            this.currentDisplayed = "months";
+        },
+        _showCalendar(calendar) {
+            calendar.find(".btr-dateinput-calendar-days").css({display: "table"});
+            calendar.find(".btr-dateinput-calendar-months").css({display: "none"});
+            this.currentDisplayed = "calendar";
         },
         _changeValue(caption, calenderDays, calendar, value, prevValue) {
             var year, month, date, iterDate;
@@ -183,20 +207,11 @@
         },
         _clickCalendar(calendar, target) {
             var targetDate;
-
-            if (target.matches("a")) {
-                targetDate = new Date(this.get());
-
-                if (!targetDate.getTime()) targetDate = new Date();
-
-                targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a")[0] ? -1 : 1));
-            } else if (target.matches("td")) {
-                targetDate = target.get("_ts");
-
-                if (targetDate) {
-                    targetDate = new Date(targetDate);
-                    calendar.hide();
-                }
+            
+            if (this.currentDisplayed === "calendar") {
+                targetDate = this._getNewDateFromCalendar(calendar, target);
+            } else if (this.currentDisplayed === "months") {
+                targetDate = this._getNewDateFromMonths(calendar, target);
             }
 
             if (targetDate != null) {
@@ -212,6 +227,49 @@
             }
             // prevent input from loosing focus
             return false;
+        },
+        _getNewDateFromCalendar(calendar, target) {
+            var targetDate;
+
+            if (target.matches("a")) {
+                targetDate = new Date(this.get());
+
+                if (!targetDate.getTime()) targetDate = new Date();
+
+                targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a")[0] ? -1 : 1));
+            } else if (target.matches("td")) {
+                targetDate = target.get("_ts");
+
+                if (targetDate) {
+                    targetDate = new Date(targetDate);
+                    calendar.hide();
+                }
+            } else if (target.matches(".btr-dateinput-calendar-header span")) {
+                this._showMonths(calendar);
+            }
+
+            return targetDate;
+        },
+        _getNewDateFromMonths(calendar, target) {
+            var targetDate;
+
+            if (target.matches("a")) {
+                targetDate = new Date(this.get());
+
+                if (!targetDate.getTime()) targetDate = new Date();
+
+                targetDate.setUTCFullYear(targetDate.getUTCFullYear() + (target.next("a")[0] ? -1 : 1));
+            } else if (target.matches("td")) {
+                targetDate = new Date(this.get());
+
+                if (!targetDate.getTime()) targetDate = new Date();
+
+                targetDate.setUTCMonth(target.get("_month"));
+
+                this._showCalendar(calendar);
+            }
+
+            return targetDate;
         },
         _keydownCalendar(calendar, which, shiftKey) {
             var delta, currentDate;
@@ -263,6 +321,9 @@
             calendar.findAll("th").forEach((el, index) => {
                 el.l10n(DateUtils.DAYS[ampm(index, ++index % 7)].slice(0, 2));
             });
+
+            // show Calendar (could be showing Months view)
+            this._showCalendar(calendar);
 
             calendar.show();
 
