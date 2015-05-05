@@ -174,4 +174,12 @@ describe("better-dateinput-polyfill", function() {
 
         expect(label.get("textContent")).toBe("Wednesday (3), 1th week of December 3th 14 (337th of year)");
     });
+
+    it("should change the 'currentDisplayed' value", function() {
+        el._showMonths(calendar);
+        expect(el.currentDisplayed).toEqual("months");
+
+        el._showCalendar(calendar);
+        expect(el.currentDisplayed).toEqual("calendar");
+    });
 });
