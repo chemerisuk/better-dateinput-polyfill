@@ -326,9 +326,15 @@
         deviceType = "orientation" in window ? "mobile" : "desktop";
 
     if (!nativeValue || nativeValue === deviceType) {
-        // by default test if the type property is "date"
-        // to determine if the device supports native control
-        return el[0].type !== "date";
+        // use a stronger type support detection that handles old WebKit browsers:
+        // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
+        if (el[0].type === "date") return false;
+
+        var invalidValue = el.value("_").value();
+        // restore the original input value
+        el.value(el.get("defaultValue"));
+        // if browser allows invalid value then it doesn't support the feature
+        return invalidValue === "_";
     } else {
         // remove native control
         el.set("type", "text");
