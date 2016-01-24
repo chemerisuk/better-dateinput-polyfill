@@ -1,4 +1,4 @@
-(function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, testDateInput) {
+(function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
     "use strict";
 
     var __ = DOM.__,
@@ -11,8 +11,10 @@
         MONTHS = "January February March April May June July August September October November December".split(" ");
 
     // need to skip mobile/tablet browsers
-    DOM.extend("input[type=date]", testDateInput, {
+    DOM.extend("input[type=date]", {
         constructor() {
+            if (this.isNative()) return false;
+
             var calendar = PICKER_TEMPLATE.clone(true),
                 time = TIME_TEMPLATE.clone(true),
                 color = this.css("color");
@@ -75,6 +77,27 @@
                 // display calendar for autofocused elements
                 if (this.matches(":focus")) this.fire("focus");
             });
+        },
+        isNative() {
+            var nativeValue = this.get("data-native"),
+                deviceType = "orientation" in window ? "mobile" : "desktop";
+
+            if (!nativeValue || nativeValue === deviceType) {
+                // use a stronger type support detection that handles old WebKit browsers:
+                // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
+                if (this[0].type === "date") return true;
+
+                var invalidValue = this.value("_").value();
+                // restore the original input value
+                this.value(this.get("defaultValue"));
+                // if browser allows invalid value then it doesn't support the feature
+                return invalidValue !== "_";
+            } else {
+                // remove native control
+                this.set("type", "text");
+                // force applying the polyfill
+                return false;
+            }
         },
         _changeValue(caption, calenderDays, calendar, value, prevValue) {
             var year, month, date, iterDate;
@@ -248,24 +271,4 @@
             this.value(this.get("defaultValue"));
         }
     });
-}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, (el) => {
-    var nativeValue = el.get("_native"),
-        deviceType = "orientation" in window ? "mobile" : "desktop";
-
-    if (!nativeValue || nativeValue === deviceType) {
-        // use a stronger type support detection that handles old WebKit browsers:
-        // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
-        if (el[0].type === "date") return false;
-
-        var invalidValue = el.value("_").value();
-        // restore the original input value
-        el.value(el.get("defaultValue"));
-        // if browser allows invalid value then it doesn't support the feature
-        return invalidValue === "_";
-    } else {
-        // remove native control
-        el.set("type", "text");
-        // force applying the polyfill
-        return true;
-    }
-}));
+}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46));
