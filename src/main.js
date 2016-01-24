@@ -89,7 +89,7 @@
             date = value.getUTCDate();
             year = value.getUTCFullYear();
             // update calendar caption
-            caption.set(__(MONTHS[month]).toHTMLString() + " " + year);
+            caption.value(__(MONTHS[month]).toHTMLString() + " " + year);
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
@@ -146,7 +146,7 @@
             var targetDate;
 
             if (target.matches("a")) {
-                targetDate = new Date(this.get());
+                targetDate = new Date(this.value());
 
                 if (!targetDate.getTime()) targetDate = new Date();
 
@@ -187,7 +187,7 @@
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
                 this.empty(); // BACKSPACE, DELETE clear value
             } else {
-                currentDate = new Date(this.get());
+                currentDate = new Date(this.value());
 
                 if (!currentDate.getTime()) currentDate = new Date();
 
