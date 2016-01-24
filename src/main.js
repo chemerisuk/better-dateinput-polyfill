@@ -1,19 +1,20 @@
-(function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, DateUtils, testDateInput) {
+(function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, testDateInput) {
     "use strict";
 
     var __ = DOM.__,
         ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         PICKER_TEMPLATE = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
-        LABEL_TEMPLATE = DOM.create("span[aria-hidden=true].{0}-value", [BASE_CLASS]),
+        TIME_TEMPLATE = DOM.create("time[is=`local-time` aria-hidden=true].{0}-value", [BASE_CLASS]),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
-        pad = (num, maxlen) => ((maxlen === 2 ? "0" : "00") + num).slice(-maxlen);
+        DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
+        MONTHS = "January February March April May June July August September October November December".split(" ");
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", testDateInput, {
         constructor() {
             var calendar = PICKER_TEMPLATE.clone(true),
-                label = LABEL_TEMPLATE.clone(true),
+                time = TIME_TEMPLATE.clone(true),
                 color = this.css("color");
 
             this
@@ -25,10 +26,11 @@
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this._focusCalendar.bind(this, calendar))
                 .on("blur", this._blurCalendar.bind(this, calendar))
-                .on("change", this._formatValue.bind(this, label))
-                .before(calendar.hide(), label);
+                .on("change", this._syncDateValue.bind(this, time))
+                .before(calendar.hide(), time);
 
-            label
+            time
+                .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
                 .on("click", () => { this.fire("focus") })
                 // copy input CSS to adjust visible text position
                 .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]));
@@ -48,9 +50,9 @@
             // FIXME: get rid of DOM.requestFrame which is required to get right offset
             DOM.requestFrame(() => {
                 var offset = this.offset();
-                var labelOffset = label.offset();
+                var labelOffset = time.offset();
 
-                label.css({
+                time.css({
                     "color": color,
                     "line-height": offset.height + "px",
                     "margin-left": offset.left - labelOffset.left,
@@ -87,7 +89,7 @@
             date = value.getUTCDate();
             year = value.getUTCFullYear();
             // update calendar caption
-            caption.set(__(DateUtils.MONTHS[month]).toHTMLString() + " " + year);
+            caption.set(__(MONTHS[month]).toHTMLString() + " " + year);
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
@@ -137,49 +139,8 @@
             // trigger event manually to notify about changes
             this.fire("change");
         },
-        _formatValue(label) {
-            var value = new Date(this.get()),
-                formattedValue = "";
-
-            if (value.getTime()) {
-                var formatString = this.get("data-format");
-                // use "E, dd MMM yyyy" as default value
-                if (!formatString) formatString = "E, dd MMM yyyy";
-
-                var day = value.getUTCDay();
-                var date = value.getUTCDate();
-                var month = value.getUTCMonth();
-                var year = value.getUTCFullYear();
-
-                formatString = formatString
-                        .replace(/'([^']+)'/g, "->$1<-")
-                        .replace(/\w+/g, "{$&}")
-                        .replace(/->{(.*?)}<-/g, (_, group) => group.replace(/}|{/g, ""));
-
-                formattedValue = DOM.format(formatString, {
-                    E: __(DateUtils.DAYS[day].slice(0, 2)).toHTMLString(),
-                    EE: __(DateUtils.DAYS[day]).toHTMLString(),
-                    d: date,
-                    dd: pad(date, 2),
-                    D: DateUtils.getDayInYear(value),
-                    DD: pad(DateUtils.getDayInYear(value), 3),
-                    w: DateUtils.getWeekInYear(value),
-                    ww: pad(DateUtils.getWeekInYear(value), 2),
-                    W: DateUtils.getWeekInMonth(value),
-                    M: month + 1,
-                    MM: pad(month + 1, 2),
-                    MMM: __(DateUtils.MONTHS[month].substr(0, 3) + ".").toHTMLString(),
-                    MMMM: __(DateUtils.MONTHS[month]).toHTMLString(),
-                    y: year % 100,
-                    yy: pad(year % 100, 2),
-                    yyyy: year,
-                    u: day || 7,
-                    F: DateUtils.getWeekCountInMonth(value)
-                });
-            }
-
-            // display formatted date value instead of real one
-            label.value(formattedValue);
+        _syncDateValue(time) {
+            time.set("datetime", this.value()).fire("change");
         },
         _clickCalendar(calendar, target) {
             var targetDate;
@@ -261,7 +222,7 @@
         _focusCalendar(calendar) {
             // update calendar weekday captions
             calendar.findAll("th").forEach((el, index) => {
-                el.l10n(DateUtils.DAYS[ampm(index, ++index % 7)].slice(0, 2));
+                el.l10n(DAYS[ampm(index, ++index % 7)].slice(0, 2));
             });
 
             calendar.show();
@@ -287,41 +248,7 @@
             this.value(this.get("defaultValue"));
         }
     });
-
-    // compact moths in english don't have the dot suffix
-    DOM.importStrings("en", DateUtils.MONTHS.reduce((memo, month) => {
-        var shortMonth = month.slice(0, 3);
-
-        memo[shortMonth + "."] = shortMonth;
-
-        return memo;
-    }, {}));
-}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, {
-    DAYS: "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
-    MONTHS: "January February March April May June July August September October November December".split(" "),
-    getWeekInYear(d) {
-        d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-        // set to nearest thursday: current date + 4 - current day number
-        // make sunday's day number 7
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
-        // calculate full weeks to nearest thursday
-        return Math.ceil((1 + (d - yearStart) / 86400000) / 7);
-    },
-    getWeekInMonth(d) {
-        var firstWeekday = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).getUTCDay();
-        var offsetDate = d.getUTCDate() + firstWeekday - 1;
-        return 1 + Math.floor(offsetDate / 7);
-    },
-    getWeekCountInMonth(d) {
-        return Math.ceil(d.getUTCDate() / 7);
-    },
-    getDayInYear(d) {
-        var beginOfYear = Date.UTC(d.getUTCFullYear(), 0, 1);
-        var millisBetween = d.getTime() - beginOfYear;
-        return Math.floor(1 + millisBetween / 86400000);
-    }
-}, (el) => {
+}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, (el) => {
     var nativeValue = el.get("_native"),
         deviceType = "orientation" in window ? "mobile" : "desktop";
 
