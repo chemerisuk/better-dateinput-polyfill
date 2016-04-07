@@ -4,11 +4,10 @@
     var __ = DOM.__,
         ampm = (pos, neg) => DOM.get("documentElement").lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TEMPLATE = DOM.create(DOM.emmet("div.btr-dateinput-calendar>(p.btr-dateinput-calendar-header>a[unselectable=on]*2+span[aria-hidden=true unselectable=on].btr-dateinput-calendar-caption)+table[aria-hidden=true].btr-dateinput-calendar-days>(thead>(tr>th[unselectable=on]*7))+(tbody.btr-dateinput-calendar-body*2>tr*6>td*7)")),
-        TIME_TEMPLATE = DOM.create(DOM.emmet("time[is='local-time' aria-hidden=true].btr-dateinput-value", [BASE_CLASS])),
+        PICKER_TEMPLATE = DOM.create(DOM.emmet("div.btr-dateinput-calendar>(p.btr-dateinput-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].btr-dateinput-calendar-caption)+table[aria-hidden=true].btr-dateinput-calendar-days>(thead>(tr>th[unselectable=on]*7))+(tbody.btr-dateinput-calendar-body*2>tr*6>td*7)")),
+        TIME_TEMPLATE = DOM.create(DOM.emmet("time[is=local-time aria-hidden=true].btr-dateinput-value", [BASE_CLASS])),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
-        DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
-        MONTHS = "January February March April May June July August September October November December".split(" ");
+        DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" ");
 
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", {
@@ -113,7 +112,7 @@
             date = value.getUTCDate();
             year = value.getUTCFullYear();
             // update calendar caption
-            caption.value(__(MONTHS[month]) + " " + year);
+            caption.set("datetime", new Date(year, month).toISOString()).fire("change");
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
