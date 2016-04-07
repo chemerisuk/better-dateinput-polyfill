@@ -98,6 +98,9 @@
             }
         },
         _changeValue(caption, calenderDays, calendar, value, prevValue) {
+            // #47: do not proceed if animation is in progress still
+            if (calendar.contains(calenderDays[0]) && calendar.contains(calenderDays[1])) return false;
+
             var year, month, date, iterDate;
 
             value = new Date(value);
