@@ -1,15 +1,22 @@
 (function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
     "use strict";
 
-    var __ = DOM.__,
-        ampm = (pos, neg) => DOM.get("documentElement").lang === "en-US" ? pos : neg,
+    var ampm = (pos, neg) => DOM.get("documentElement").lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TEMPLATE = DOM.create(DOM.emmet(`div.${BASE}-calendar>(p.${BASE}-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE}-calendar-caption)+table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7))+(tbody.${BASE}-calendar-body*2>tr*6>td*7)`)),
+        PICKER_TEMPLATE = DOM.create(DOM.emmet(`div.${BASE}-calendar>(p.${BASE}-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE}-calendar-caption)`)),
+        DAYS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE}-calendar-body*2>tr*6>td*7)`)),
+        MONTHS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-months>tbody>tr*3>td*4>time[is=local-time data-format=MMM])`)),
         TIME_TEMPLATE = DOM.create(DOM.emmet(`time[is=local-time aria-hidden=true].${BASE}-value`)),
-        readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
-        DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" ");
+        readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
-    // need to skip mobile/tablet browsers
+    MONTHS_TEMPLATE.findAll("time").forEach((time, index) => {
+        time.set("datetime", new Date(2001, index).toISOString());
+    });
+
+    DAYS_TEMPLATE.findAll("time").forEach((time, index) => {
+        time.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
+    });
+
     DOM.extend("input[type=date]", {
         constructor() {
             if (this.isNative()) return false;
@@ -36,11 +43,31 @@
                 // copy input CSS to adjust visible text position
                 .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]));
 
-            var calenderDays = calendar.findAll(`.${BASE}-calendar-body`),
+            var calendarDaysMain = DAYS_TEMPLATE.clone(true),
+                calenderDays = calendarDaysMain.findAll(`.${BASE}-calendar-body`),
+                calendarMonths = MONTHS_TEMPLATE.clone(true),
                 calendarCaption = calendar.find(`.${BASE}-calendar-caption`),
                 changeValue = this._changeValue.bind(this, calendarCaption, calenderDays, calendar);
 
+            calendar.append(calendarDaysMain);
+
             calenderDays[1].hide().remove();
+
+            calendarCaption.on("click", () => {
+                if (calendar.contains(calendarMonths)) {
+                    calendarMonths.remove();
+                    calendar.append(calendarDaysMain);
+
+                    calendarCaption.set("data-format", "MMMM yyyy");
+                } else {
+                    calendarDaysMain.remove();
+                    calendar.append(calendarMonths);
+
+                    calendarCaption.set("data-format", "yyyy");
+                }
+
+                calendarCaption.fire("change");
+            });
 
             this.closest("form").on("reset", this._resetForm.bind(this));
             this.watch("value", changeValue);
@@ -244,11 +271,6 @@
             calendar.hide();
         },
         _focusCalendar(calendar) {
-            // update calendar weekday captions
-            calendar.findAll("th").forEach((el, index) => {
-                el.value(__(DAYS[ampm(index, ++index % 7)].slice(0, 2)));
-            });
-
             calendar.show();
 
             // use the trick below to reset text selection on focus

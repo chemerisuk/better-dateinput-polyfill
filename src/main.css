@@ -100,7 +100,8 @@
         content: '\25BA';
     }
 
-    .btr-dateinput-calendar-days {
+    .btr-dateinput-calendar-days,
+    .btr-dateinput-calendar-months {
         width: 100%;
         table-layout: fixed;
         border-spacing: 0;
@@ -143,13 +144,18 @@
         transform: translateX(100%);
     }
 
-    .btr-dateinput-calendar-days td,
-    .btr-dateinput-calendar-days th {
+    .btr-dateinput-calendar td,
+    .btr-dateinput-calendar th {
         width: 2em;
         height: 2em;
         line-height: 2;
         padding: 0;
         text-align: center;
+    }
+
+    .btr-dateinput-calendar-months td {
+        line-height: 4;
+        height: 4em;
     }
 
     .btr-dateinput-calendar-past,
@@ -170,7 +176,7 @@
     }
 
     .btr-dateinput-calendar-out,
-    .btr-dateinput-calendar-days td:hover {
+    .btr-dateinput-calendar td:hover {
         background-color: var(--bkg-graytext);
         background-color: rgba(0,0,0,0.05);
     }
