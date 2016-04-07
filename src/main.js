@@ -2,10 +2,10 @@
     "use strict";
 
     var __ = DOM.__,
-        ampm = (pos, neg) => DOM.get("lang") === "en-US" ? pos : neg,
+        ampm = (pos, neg) => DOM.get("documentElement").lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TEMPLATE = DOM.create("div.{0}>p.{0}-header>a[{1}]*2+span[{2} {1}].{0}-caption^table[{2}].{0}-days>thead>(tr>th[{1}]*7)^(tbody.{0}-body*2>tr*6>td*7)", [`${BASE_CLASS}-calendar`, "unselectable=on", "aria-hidden=true"]),
-        TIME_TEMPLATE = DOM.create("time[is=`local-time` aria-hidden=true].{0}-value", [BASE_CLASS]),
+        PICKER_TEMPLATE = DOM.create(DOM.emmet("div.btr-dateinput-calendar>(p.btr-dateinput-calendar-header>a[unselectable=on]*2+span[aria-hidden=true unselectable=on].btr-dateinput-calendar-caption)+table[aria-hidden=true].btr-dateinput-calendar-days>(thead>(tr>th[unselectable=on]*7))+(tbody.btr-dateinput-calendar-body*2>tr*6>td*7)")),
+        TIME_TEMPLATE = DOM.create(DOM.emmet("time[is='local-time' aria-hidden=true].btr-dateinput-value", [BASE_CLASS])),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
         DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" "),
         MONTHS = "January February March April May June July August September October November December".split(" ");
@@ -49,34 +49,32 @@
             changeValue(this.value());
 
             calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar));
-            // FIXME: get rid of DOM.requestFrame which is required to get right offset
-            DOM.requestFrame(() => {
-                var offset = this.offset();
-                var labelOffset = time.offset();
 
-                time.css({
-                    "color": color,
-                    "line-height": offset.height + "px",
+            var offset = this.offset();
+            var labelOffset = time.offset();
+
+            time.css({
+                "color": color,
+                "line-height": offset.height + "px",
+                "margin-left": offset.left - labelOffset.left,
+                "margin-top": offset.top - labelOffset.top
+            });
+
+            calendar
+                .css({
                     "margin-left": offset.left - labelOffset.left,
-                    "margin-top": offset.top - labelOffset.top
+                    "margin-top": offset.bottom - labelOffset.top,
+                    "z-index": 1 + (this.css("z-index") | 0)
                 });
 
-                calendar
-                    .css({
-                        "margin-left": offset.left - labelOffset.left,
-                        "margin-top": offset.bottom - labelOffset.top,
-                        "z-index": 1 + (this.css("z-index") | 0)
-                    });
+            // FIXME
+            // move calendar to the top when passing cross browser window bounds
+            // if (DOM.get("clientHeight") < offset.bottom + calOffset.height) {
+            //     calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
+            // }
 
-                // FIXME
-                // move calendar to the top when passing cross browser window bounds
-                // if (DOM.get("clientHeight") < offset.bottom + calOffset.height) {
-                //     calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
-                // }
-
-                // display calendar for autofocused elements
-                if (this.matches(":focus")) this.fire("focus");
-            });
+            // display calendar for autofocused elements
+            if (this.matches(":focus")) this.fire("focus");
         },
         isNative() {
             var nativeValue = this.get("data-native"),
@@ -112,7 +110,7 @@
             date = value.getUTCDate();
             year = value.getUTCFullYear();
             // update calendar caption
-            caption.value(__(MONTHS[month]).toHTMLString() + " " + year);
+            caption.value(__(MONTHS[month]) + " " + year);
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 0));
             // move to beginning of current month week
@@ -147,10 +145,11 @@
                 }
 
                 day.set({
-                    _ts: iterDate.getTime(),
                     className: className,
                     textContent: iterDate.getUTCDate()
                 });
+
+                day.data("ts", iterDate.getTime());
             });
 
             if (delta) {
@@ -175,7 +174,7 @@
 
                 targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a")[0] ? -1 : 1));
             } else if (target.matches("td")) {
-                targetDate = target.get("_ts");
+                targetDate = target.data("ts");
 
                 if (targetDate) {
                     targetDate = new Date(targetDate);
@@ -245,7 +244,7 @@
         _focusCalendar(calendar) {
             // update calendar weekday captions
             calendar.findAll("th").forEach((el, index) => {
-                el.l10n(DAYS[ampm(index, ++index % 7)].slice(0, 2));
+                el.value(__(DAYS[ampm(index, ++index % 7)].slice(0, 2)));
             });
 
             calendar.show();

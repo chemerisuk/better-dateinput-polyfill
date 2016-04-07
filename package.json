@@ -9,6 +9,12 @@
     "type": "git",
     "url": "https://github.com/chemerisuk/better-dateinput-polyfill"
   },
+  "peerDependencies": {
+    "better-dom": "^3.0.0-beta.3",
+    "better-emmet-plugin": "^1.0.0-beta.2",
+    "better-i18n-plugin": "^2.0.0-beta.2",
+    "better-time-element": "^1.0.0-beta.3"
+  },
   "devDependencies": {
     "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"
   },
@@ -23,7 +29,8 @@
   },
   "karmaFiles": [
     "bower_components/better-dom/dist/better-dom.js",
-    "bower_components/better-dom/dist/better-dom-legacy.js",
-    "bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"
+    "bower_components/better-i18n-plugin/dist/better-i18n-plugin.js",
+    "bower_components/better-emmet-plugin/dist/better-emmet-plugin.js",
+    "bower_components/better-time-element/dist/better-time-element.js"
   ]
 }
