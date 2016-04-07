@@ -29,8 +29,6 @@
                 // hide original input text
                 // IE8 doesn't suport color:transparent - use background-color instead
                 .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
-                // handle arrow keys, esc etc.
-                .on("keydown", ["which", "shiftKey"], this._keydownCalendar.bind(this, calendar))
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this._focusCalendar.bind(this, calendar))
                 .on("blur", this._blurCalendar.bind(this, calendar))
@@ -47,7 +45,7 @@
                 calenderDays = calendarDaysMain.findAll(`.${BASE}-calendar-body`),
                 calendarMonths = MONTHS_TEMPLATE.clone(true),
                 calendarCaption = calendar.find(`.${BASE}-calendar-caption`),
-                changeValue = this._changeValue.bind(this, calendarCaption, calenderDays, calendar);
+                changeValue = this._changeValue.bind(this, calendarCaption, calendarMonths, calenderDays, calendar);
 
             calendar.append(calendarDaysMain);
 
@@ -67,8 +65,12 @@
                 }
 
                 calendarCaption.fire("change");
+
+                changeValue(this.value());
             });
 
+            // handle arrow keys, esc etc.
+            this.on("keydown", ["which"], this._keydownCalendar.bind(this, calendar, calendarMonths));
             this.closest("form").on("reset", this._resetForm.bind(this));
             this.watch("value", changeValue);
             // trigger watchers to build the calendar
@@ -123,7 +125,7 @@
                 return false;
             }
         },
-        _changeValue(caption, calenderDays, calendar, value, prevValue) {
+        _changeValue(caption, calendarMonths, calenderDays, calendar, value, prevValue) {
             // #47: do not proceed if animation is in progress still
             if (calenderDays.every((days) => calendar.contains(days))) return false;
 
@@ -141,50 +143,68 @@
             // update calendar caption
             caption.set("datetime", new Date(year, month).toISOString()).fire("change");
             // update calendar content
-            iterDate = new Date(Date.UTC(year, month, 0));
-            // move to beginning of current month week
-            iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
+            iterDate = new Date(Date.UTC(year, month, 1));
 
-            prevValue = new Date(prevValue);
-
-            var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
-            var currenDays = calenderDays[calendar.contains(calenderDays[0]) ? 0 : 1];
-            var targetDays = delta ? calenderDays[calenderDays[0] === currenDays ? 1 : 0] : currenDays;
             var range = readDateRange(this);
 
-            // update days
-            targetDays.findAll("td").forEach((day) => {
-                iterDate.setUTCDate(iterDate.getUTCDate() + 1);
+            if (calendar.contains(calendarMonths)) {
+                calendarMonths.findAll("td").forEach((day, index) => {
+                    iterDate.setUTCMonth(index);
 
-                var mDiff = month - iterDate.getUTCMonth(),
-                    className = `${BASE}-calendar-`;
+                    var mDiff = month - iterDate.getUTCMonth(),
+                        className = `${BASE}-calendar-`;
 
-                if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
+                    if (iterDate < range[0] || iterDate > range[1]) {
+                        className += "out";
+                    } else if (!mDiff) {
+                        className += "today";
+                    } else {
+                        className = "";
+                    }
 
-                if (iterDate < range[0] || iterDate > range[1]) {
-                    className += "out";
-                } else if (mDiff > 0) {
-                    className += "past";
-                } else if (mDiff < 0) {
-                    className += "future";
-                } else if (date === iterDate.getUTCDate()) {
-                    className += "today";
-                } else {
-                    className = "";
-                }
+                    day.set("class", className);
+                });
+            } else {
+                // move to beginning of current month week
+                iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
 
-                day.set({
-                    className: className,
-                    textContent: iterDate.getUTCDate()
+                prevValue = new Date(prevValue);
+
+                var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
+                var currenDays = calenderDays[calendar.contains(calenderDays[0]) ? 0 : 1];
+                var targetDays = delta ? calenderDays[calenderDays[0] === currenDays ? 1 : 0] : currenDays;
+                // update days
+                targetDays.findAll("td").forEach((day) => {
+                    iterDate.setUTCDate(iterDate.getUTCDate() + 1);
+
+                    var mDiff = month - iterDate.getUTCMonth(),
+                        className = `${BASE}-calendar-`;
+
+                    if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
+
+                    if (iterDate < range[0] || iterDate > range[1]) {
+                        className += "out";
+                    } else if (mDiff > 0) {
+                        className += "past";
+                    } else if (mDiff < 0) {
+                        className += "future";
+                    } else if (date === iterDate.getUTCDate()) {
+                        className += "today";
+                    } else {
+                        className = "";
+                    }
+
+                    day
+                        .set("class", className)
+                        .data("ts", iterDate.getTime())
+                        .value(iterDate.getUTCDate());
                 });
 
-                day.data("ts", iterDate.getTime());
-            });
-
-            if (delta) {
-                currenDays[delta > 0 ? "after" : "before"](targetDays);
-                currenDays.hide(() => { currenDays.remove() });
-                targetDays.show();
+                if (delta) {
+                    currenDays[delta > 0 ? "after" : "before"](targetDays);
+                    currenDays.hide(() => { currenDays.remove() });
+                    targetDays.show();
+                }
             }
 
             // trigger event manually to notify about changes
@@ -238,7 +258,7 @@
             // prevent input from loosing focus
             return false;
         },
-        _keydownCalendar(calendar, which, shiftKey) {
+        _keydownCalendar(calendar, calendarMonths, which) {
             var delta, currentDate;
 
             // ENTER key should submit form if calendar is hidden
@@ -261,8 +281,10 @@
                 else if (which === 72 || which === 37) { delta = -1; }
 
                 if (delta) {
+                    var shiftKey = calendar.contains(calendarMonths);
+
                     if (shiftKey && (which === 40 || which === 38)) {
-                        currentDate.setUTCFullYear(currentDate.getUTCFullYear() + (delta > 0 ? 1 : -1));
+                        currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
                     } else if (shiftKey && (which === 37 || which === 39)) {
                         currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 1 : -1));
                     } else {
