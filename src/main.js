@@ -1,11 +1,11 @@
-(function(DOM, BASE_CLASS, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
+(function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
     "use strict";
 
     var __ = DOM.__,
         ampm = (pos, neg) => DOM.get("documentElement").lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TEMPLATE = DOM.create(DOM.emmet("div.btr-dateinput-calendar>(p.btr-dateinput-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].btr-dateinput-calendar-caption)+table[aria-hidden=true].btr-dateinput-calendar-days>(thead>(tr>th[unselectable=on]*7))+(tbody.btr-dateinput-calendar-body*2>tr*6>td*7)")),
-        TIME_TEMPLATE = DOM.create(DOM.emmet("time[is=local-time aria-hidden=true].btr-dateinput-value", [BASE_CLASS])),
+        PICKER_TEMPLATE = DOM.create(DOM.emmet(`div.${BASE}-calendar>(p.${BASE}-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE}-calendar-caption)+table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7))+(tbody.${BASE}-calendar-body*2>tr*6>td*7)`)),
+        TIME_TEMPLATE = DOM.create(DOM.emmet(`time[is=local-time aria-hidden=true].${BASE}-value`)),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || "")),
         DAYS = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" ");
 
@@ -36,8 +36,8 @@
                 // copy input CSS to adjust visible text position
                 .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]));
 
-            var calenderDays = calendar.findAll(`.${BASE_CLASS}-calendar-body`),
-                calendarCaption = calendar.find(`.${BASE_CLASS}-calendar-caption`),
+            var calenderDays = calendar.findAll(`.${BASE}-calendar-body`),
+                calendarCaption = calendar.find(`.${BASE}-calendar-caption`),
                 changeValue = this._changeValue.bind(this, calendarCaption, calenderDays, calendar);
 
             calenderDays[1].hide().remove();
@@ -98,7 +98,7 @@
         },
         _changeValue(caption, calenderDays, calendar, value, prevValue) {
             // #47: do not proceed if animation is in progress still
-            if (calendar.contains(calenderDays[0]) && calendar.contains(calenderDays[1])) return false;
+            if (calenderDays.every((days) => calendar.contains(days))) return false;
 
             var year, month, date, iterDate;
 
@@ -130,7 +130,7 @@
                 iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                 var mDiff = month - iterDate.getUTCMonth(),
-                    className = `${BASE_CLASS}-calendar-`;
+                    className = `${BASE}-calendar-`;
 
                 if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
