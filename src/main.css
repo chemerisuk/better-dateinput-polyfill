@@ -83,6 +83,10 @@
         color: inherit;
     }
 
+    .btr-dateinput-calendar-header > time {
+        display: block;
+    }
+
     .btr-dateinput-calendar-header > a:before {
         content: '\25C4';
     }
@@ -156,6 +160,10 @@
     .btr-dateinput-calendar-months td {
         line-height: 4;
         height: 4em;
+    }
+
+    .btr-dateinput-calendar-months time {
+        display: block;
     }
 
     .btr-dateinput-calendar-past,

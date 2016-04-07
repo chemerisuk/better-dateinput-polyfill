@@ -10,7 +10,7 @@
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
     MONTHS_TEMPLATE.findAll("time").forEach((time, index) => {
-        time.set("datetime", new Date(2001, index).toISOString());
+        time.set("datetime", new Date(2001, index, 9).toISOString());
     });
 
     DAYS_TEMPLATE.findAll("time").forEach((time, index) => {
@@ -74,7 +74,7 @@
             // trigger watchers to build the calendar
             changeValue(this.value());
 
-            calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar));
+            calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar, calendarMonths));
 
             var offset = this.offset();
             var labelOffset = time.offset();
@@ -193,7 +193,7 @@
         _syncDateValue(time) {
             time.set("datetime", this.value()).fire("change");
         },
-        _clickCalendar(calendar, target) {
+        _clickCalendar(calendar, calendarMonths, target) {
             var targetDate;
 
             if (target.matches("a")) {
@@ -201,7 +201,20 @@
 
                 if (!targetDate.getTime()) targetDate = new Date();
 
-                targetDate.setUTCMonth(targetDate.getUTCMonth() + (target.next("a")[0] ? -1 : 1));
+                var sign = target.next("a")[0] ? -1 : 1;
+
+                if (calendar.contains(calendarMonths)) {
+                    targetDate.setUTCFullYear(targetDate.getUTCFullYear() + sign);
+                } else {
+                    targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
+                }
+            } else if (calendarMonths.contains(target)) {
+                target = target.closest("time");
+
+                targetDate = new Date(this.value());
+                targetDate.setUTCMonth(new Date(target.get("datetime")).getUTCMonth());
+
+                calendar.hide();
             } else if (target.matches("td")) {
                 targetDate = target.data("ts");
 
