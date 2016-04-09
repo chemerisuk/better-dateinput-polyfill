@@ -1,12 +1,13 @@
 (function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
     "use strict";
 
-    var ampm = (pos, neg) => DOM.get("documentElement").lang === "en-US" ? pos : neg,
+    var HTML = DOM.get("documentElement"),
+        ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         PICKER_TEMPLATE = DOM.create(DOM.emmet(`div.${BASE}-calendar>(p.${BASE}-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE}-calendar-caption)`)),
         DAYS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE}-calendar-body*2>tr*6>td*7)`)),
         MONTHS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-months>tbody>tr*3>td*4>time[is=local-time data-format=MMM])`)),
-        TIME_TEMPLATE = DOM.create(DOM.emmet(`time[is=local-time aria-hidden=true].${BASE}-value`)),
+        LABEL_TEMPLATE = DOM.create(DOM.emmet(`time[is=local-time aria-hidden=true].${BASE}-value`)),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
     MONTHS_TEMPLATE.findAll("time").forEach((time, index) => {
@@ -22,8 +23,9 @@
             if (this.isNative()) return false;
 
             var calendar = PICKER_TEMPLATE.clone(true),
-                time = TIME_TEMPLATE.clone(true),
-                color = this.css("color");
+                label = LABEL_TEMPLATE.clone(true),
+                color = this.css("color"),
+                offset = this.offset();
 
             this
                 // hide original input text
@@ -32,10 +34,10 @@
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this._focusCalendar.bind(this, calendar))
                 .on("blur", this._blurCalendar.bind(this, calendar))
-                .on("change", this._syncDateValue.bind(this, time))
-                .before(calendar.hide(), time);
+                .on("change", this._syncDateValue.bind(this, label))
+                .before(calendar.hide(), label);
 
-            time
+            label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
                 .on("click", () => { this.fire("focus") })
                 // copy input CSS to adjust visible text position
@@ -76,8 +78,15 @@
             // trigger watchers to build the calendar
             changeValue(this.value());
 
+            var calOffset = calendar.offset();
+
             calendar
                 .on("mousedown", ["target"], this._clickCalendar.bind(this, calendar, calendarMonths))
+                .css({
+                    "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
+                    "margin-top": offset.bottom - calOffset.top,
+                    "z-index": 1 + (this.css("z-index") | 0)
+                })
                 .watch("aria-hidden", (value) => {
                     if (value !== "true") {
                         if (calendar.contains(calendarMonths)) {
@@ -85,30 +94,22 @@
                             calendarCaption.fire("click");
                         }
                     }
-                });
+                })
+                .hide(); // hide calendar to trigger show animation properly later
 
-            var offset = this.offset();
-            var labelOffset = time.offset();
+            // #3: move calendar to the top when passing cross browser window bounds
+            if (HTML.clientHeight < offset.bottom + calOffset.height) {
+                calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
+            }
 
-            time.css({
+            var labelOffset = label.offset();
+
+            label.css({
                 "color": color,
                 "line-height": offset.height + "px",
                 "margin-left": offset.left - labelOffset.left,
                 "margin-top": offset.top - labelOffset.top
             });
-
-            calendar
-                .css({
-                    "margin-left": offset.left - labelOffset.left,
-                    "margin-top": offset.bottom - labelOffset.top,
-                    "z-index": 1 + (this.css("z-index") | 0)
-                });
-
-            // FIXME
-            // move calendar to the top when passing cross browser window bounds
-            // if (DOM.get("clientHeight") < offset.bottom + calOffset.height) {
-            //     calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
-            // }
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
