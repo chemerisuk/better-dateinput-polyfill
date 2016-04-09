@@ -64,19 +64,28 @@
                     calendarCaption.set("data-format", "yyyy");
                 }
 
-                calendarCaption.fire("change");
-
                 changeValue(this.value());
             });
 
             // handle arrow keys, esc etc.
-            this.on("keydown", ["which"], this._keydownCalendar.bind(this, calendar, calendarMonths));
+            this
+                .on("keydown", ["which"], this._keydownCalendar.bind(this, calendar, calendarMonths))
+                .watch("value", changeValue);
+
             this.closest("form").on("reset", this._resetForm.bind(this));
-            this.watch("value", changeValue);
             // trigger watchers to build the calendar
             changeValue(this.value());
 
-            calendar.on("mousedown", ["target"], this._clickCalendar.bind(this, calendar, calendarMonths));
+            calendar
+                .on("mousedown", ["target"], this._clickCalendar.bind(this, calendar, calendarMonths))
+                .watch("aria-hidden", (value) => {
+                    if (value !== "true") {
+                        if (calendar.contains(calendarMonths)) {
+                            // restore picker state
+                            calendarCaption.fire("click");
+                        }
+                    }
+                });
 
             var offset = this.offset();
             var labelOffset = time.offset();
@@ -141,7 +150,7 @@
             date = value.getUTCDate();
             year = value.getUTCFullYear();
             // update calendar caption
-            caption.set("datetime", new Date(year, month).toISOString()).fire("change");
+            caption.set("datetime", new Date(year, month).toISOString());
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 1));
 
@@ -211,7 +220,7 @@
             this.fire("change");
         },
         _syncDateValue(time) {
-            time.set("datetime", this.value()).fire("change");
+            time.set("datetime", this.value());
         },
         _clickCalendar(calendar, calendarMonths, target) {
             var targetDate;
