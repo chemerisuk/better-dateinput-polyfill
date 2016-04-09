@@ -74,10 +74,12 @@
             if (this.matches(":focus")) picker.show();
         },
         _isNative() {
-            var nativeValue = this.get("data-native"),
+            var polyfillType = this.get("data-polyfill"),
                 deviceType = "orientation" in window ? "mobile" : "desktop";
 
-            if (!nativeValue || nativeValue === deviceType) {
+            if (polyfillType === "none") return true;
+
+            if (!polyfillType || polyfillType === deviceType && polyfillType !== "all") {
                 // use a stronger type support detection that handles old WebKit browsers:
                 // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
                 if (this[0].type === "date") return true;

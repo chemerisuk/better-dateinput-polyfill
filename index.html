@@ -46,7 +46,7 @@
         </p>
         <p>
             <label>Start date<br></label>
-            <input type="date" name="start" required value="2000-01-01" placeholder="Party begins" data-native="mobile">
+            <input type="date" name="start" required value="2000-01-01" placeholder="Party begins" data-polyfill="mobile">
         </p>
         <p>
             <label>End date<br></label>
@@ -54,11 +54,11 @@
         </p>
         <p>
             <label>This field is disabled<br></label>
-            <input type="date" data-native="mobile" disabled>
+            <input type="date" data-polyfill="none" disabled>
         </p>
         <p>
             <label>This field is readonly<br></label>
-            <input type="date" data-native="mobile" readonly>
+            <input type="date" data-polyfill="all" readonly>
         </p>
         <p>
             <input type="checkbox" name="accept" required/>
