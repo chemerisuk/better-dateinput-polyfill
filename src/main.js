@@ -20,7 +20,7 @@
 
     DOM.extend("input[type=date]", {
         constructor() {
-            if (this.isNative()) return false;
+            if (this._isNative()) return false;
 
             var calendar = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
@@ -78,15 +78,9 @@
             // trigger watchers to build the calendar
             changeValue(this.value());
 
-            var calOffset = calendar.offset();
-
             calendar
                 .on("mousedown", ["target"], this._clickCalendar.bind(this, calendar, calendarMonths))
-                .css({
-                    "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
-                    "margin-top": offset.bottom - calOffset.top,
-                    "z-index": 1 + (this.css("z-index") | 0)
-                })
+                .css(this._getPickerStyles(offset, calendar))
                 .watch("aria-hidden", (value) => {
                     if (value !== "true") {
                         if (calendar.contains(calendarMonths)) {
@@ -97,24 +91,11 @@
                 })
                 .hide(); // hide calendar to trigger show animation properly later
 
-            // #3: move calendar to the top when passing cross browser window bounds
-            if (HTML.clientHeight < offset.bottom + calOffset.height) {
-                calendar.css("margin-top", calOffset.top - offset.bottom - calOffset.height);
-            }
-
-            var labelOffset = label.offset();
-
-            label.css({
-                "color": color,
-                "line-height": offset.height + "px",
-                "margin-left": offset.left - labelOffset.left,
-                "margin-top": offset.top - labelOffset.top
-            });
-
+            label.css(this._getLabelStyles(offset, label, color));
             // display calendar for autofocused elements
             if (this.matches(":focus")) this.fire("focus");
         },
-        isNative() {
+        _isNative() {
             var nativeValue = this.get("data-native"),
                 deviceType = "orientation" in window ? "mobile" : "desktop";
 
@@ -134,6 +115,31 @@
                 // force applying the polyfill
                 return false;
             }
+        },
+        _getPickerStyles(offset, calendar) {
+            var calOffset = calendar.offset();
+            var marginTop = offset.bottom - calOffset.top;
+
+            // #3: move calendar to the top when passing cross browser window bounds
+            if (HTML.clientHeight < offset.bottom + calOffset.height) {
+                marginTop = calOffset.top - offset.bottom - calOffset.height;
+            }
+
+            return {
+                "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
+                "margin-top": marginTop,
+                "z-index": 1 + (this.css("z-index") | 0)
+            };
+        },
+        _getLabelStyles(offset, label, color) {
+            var labelOffset = label.offset();
+
+            return {
+                "color": color,
+                "line-height": offset.height + "px",
+                "margin-left": offset.left - labelOffset.left,
+                "margin-top": offset.top - labelOffset.top
+            };
         },
         _changeValue(caption, calendarMonths, calenderDays, calendar, value, prevValue) {
             // #47: do not proceed if animation is in progress still
