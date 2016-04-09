@@ -1,4 +1,4 @@
-# better-dateinput-polyfill<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
+# better-dateinput-polyfill<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 > `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
 
 Why another date picker? The problem is that most of existing solutions do not follow standards regarding to `value` property format, that should have “a valid full-date as defined in [RFC 3339]”. In other words representation of date can vary, but the string value should have `yyyy-MM-dd` format. It helps to work with such values consistently regarding on the current language.
@@ -110,6 +110,10 @@ After any change it recompiles `build/better-dateinput-polyfill.js` and runs uni
 * iOS Safari 6+
 * Android 2.3+
 * Chrome for Android
+
+[npm-url]: https://www.npmjs.com/package/better-dateinput-polyfill
+[npm-version]: https://img.shields.io/npm/v/better-dateinput-polyfill.svg
+[npm-downloads]: https://img.shields.io/npm/dt/better-dateinput-polyfill.svg
 
 [travis-url]: http://travis-ci.org/chemerisuk/better-dateinput-polyfill
 [travis-image]: http://img.shields.io/travis/chemerisuk/better-dateinput-polyfill/master.svg
