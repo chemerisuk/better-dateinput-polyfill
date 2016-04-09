@@ -39,9 +39,7 @@
 
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
-                .on("click", () => { this.fire("focus") })
-                // copy input CSS to adjust visible text position
-                .css(this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]));
+                .on("click", this._clickLabel.bind(this));
 
             var calendarDaysMain = DAYS_TEMPLATE.clone(true),
                 calenderDays = calendarDaysMain.findAll(`.${BASE}-calendar-body`),
@@ -53,21 +51,8 @@
 
             calenderDays[1].hide().remove();
 
-            calendarCaption.on("click", () => {
-                if (picker.contains(calendarMonths)) {
-                    calendarMonths.remove();
-                    picker.append(calendarDaysMain);
-
-                    calendarCaption.set("data-format", "MMMM yyyy");
-                } else {
-                    calendarDaysMain.remove();
-                    picker.append(calendarMonths);
-
-                    calendarCaption.set("data-format", "yyyy");
-                }
-
-                changeValue(this.value());
-            });
+            calendarCaption.on("click", this._clickPickerCaption.bind(this,
+                picker, calendarMonths, calendarDaysMain, calendarCaption, changeValue));
 
             // handle arrow keys, esc etc.
             this
@@ -76,19 +61,12 @@
 
             this.closest("form").on("reset", this._resetForm.bind(this));
             // trigger watchers to build the calendar
-            changeValue(this.value());
+            changeValue(this.get("defaultValue"));
 
             picker
                 .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths))
+                .watch("aria-hidden", this._changePickerVisibility.bind(this, picker, calendarMonths, calendarCaption))
                 .css(this._getPickerStyles(offset, picker))
-                .watch("aria-hidden", (value) => {
-                    if (value !== "true") {
-                        if (picker.contains(calendarMonths)) {
-                            // restore picker state
-                            calendarCaption.fire("click");
-                        }
-                    }
-                })
                 .hide(); // hide calendar to trigger show animation properly later
 
             label.css(this._getLabelStyles(offset, label, color));
@@ -105,8 +83,6 @@
                 if (this[0].type === "date") return true;
 
                 var invalidValue = this.value("_").value();
-                // restore the original input value
-                this.value(this.get("defaultValue"));
                 // if browser allows invalid value then it doesn't support the feature
                 return invalidValue !== "_";
             } else {
@@ -132,13 +108,15 @@
         },
         _getLabelStyles(offset, label, color) {
             var labelOffset = label.offset();
+            // copy input CSS to adjust visible text position
+            var styles = this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]);
 
-            return {
-                "color": color,
-                "line-height": offset.height + "px",
-                "margin-left": offset.left - labelOffset.left,
-                "margin-top": offset.top - labelOffset.top
-            };
+            styles.color = color;
+            styles["line-height"] = offset.height + "px";
+            styles["margin-left"] = offset.left - labelOffset.left + "px";
+            styles["margin-top"] = offset.top - labelOffset.top + "px";
+
+            return styles;
         },
         _changeValue(caption, calendarMonths, calenderDays, picker, value, prevValue) {
             // #47: do not proceed if animation is in progress still
@@ -338,6 +316,32 @@
                     inputRange.select();
                 }
             }, 0);
+        },
+        _clickPickerCaption(picker, calendarMonths, calendarDaysMain, calendarCaption, changeValue) {
+            if (picker.contains(calendarMonths)) {
+                calendarMonths.remove();
+                picker.append(calendarDaysMain);
+
+                calendarCaption.set("data-format", "MMMM yyyy");
+            } else {
+                calendarDaysMain.remove();
+                picker.append(calendarMonths);
+
+                calendarCaption.set("data-format", "yyyy");
+            }
+
+            changeValue(this.value());
+        },
+        _changePickerVisibility(picker, calendarMonths, calendarCaption, hidden) {
+            if (hidden !== "true") {
+                if (picker.contains(calendarMonths)) {
+                    // restore picker state
+                    calendarCaption.fire("click");
+                }
+            }
+        },
+        _clickLabel() {
+            this.fire("focus");
         },
         _resetForm() {
             this.value(this.get("defaultValue"));
