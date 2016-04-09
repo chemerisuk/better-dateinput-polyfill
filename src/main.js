@@ -22,7 +22,7 @@
         constructor() {
             if (this._isNative()) return false;
 
-            var calendar = PICKER_TEMPLATE.clone(true),
+            var picker = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
                 color = this.css("color"),
                 offset = this.offset();
@@ -32,10 +32,10 @@
                 // IE8 doesn't suport color:transparent - use background-color instead
                 .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
                 // sync picker visibility on focus/blur
-                .on(["focus", "click"], this._focusCalendar.bind(this, calendar))
-                .on("blur", this._blurCalendar.bind(this, calendar))
+                .on(["focus", "click"], this._focusCalendar.bind(this, picker))
+                .on("blur", this._blurCalendar.bind(this, picker))
                 .on("change", this._syncDateValue.bind(this, label))
-                .before(calendar.hide(), label);
+                .before(picker.hide(), label);
 
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
@@ -46,22 +46,22 @@
             var calendarDaysMain = DAYS_TEMPLATE.clone(true),
                 calenderDays = calendarDaysMain.findAll(`.${BASE}-calendar-body`),
                 calendarMonths = MONTHS_TEMPLATE.clone(true),
-                calendarCaption = calendar.find(`.${BASE}-calendar-caption`),
-                changeValue = this._changeValue.bind(this, calendarCaption, calendarMonths, calenderDays, calendar);
+                calendarCaption = picker.find(`.${BASE}-calendar-caption`),
+                changeValue = this._changeValue.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
 
-            calendar.append(calendarDaysMain);
+            picker.append(calendarDaysMain);
 
             calenderDays[1].hide().remove();
 
             calendarCaption.on("click", () => {
-                if (calendar.contains(calendarMonths)) {
+                if (picker.contains(calendarMonths)) {
                     calendarMonths.remove();
-                    calendar.append(calendarDaysMain);
+                    picker.append(calendarDaysMain);
 
                     calendarCaption.set("data-format", "MMMM yyyy");
                 } else {
                     calendarDaysMain.remove();
-                    calendar.append(calendarMonths);
+                    picker.append(calendarMonths);
 
                     calendarCaption.set("data-format", "yyyy");
                 }
@@ -71,19 +71,19 @@
 
             // handle arrow keys, esc etc.
             this
-                .on("keydown", ["which"], this._keydownCalendar.bind(this, calendar, calendarMonths))
+                .on("keydown", ["which"], this._keydownCalendar.bind(this, picker, calendarMonths))
                 .watch("value", changeValue);
 
             this.closest("form").on("reset", this._resetForm.bind(this));
             // trigger watchers to build the calendar
             changeValue(this.value());
 
-            calendar
-                .on("mousedown", ["target"], this._clickCalendar.bind(this, calendar, calendarMonths))
-                .css(this._getPickerStyles(offset, calendar))
+            picker
+                .on("mousedown", ["target"], this._clickCalendar.bind(this, picker, calendarMonths))
+                .css(this._getPickerStyles(offset, picker))
                 .watch("aria-hidden", (value) => {
                     if (value !== "true") {
-                        if (calendar.contains(calendarMonths)) {
+                        if (picker.contains(calendarMonths)) {
                             // restore picker state
                             calendarCaption.fire("click");
                         }
@@ -116,10 +116,9 @@
                 return false;
             }
         },
-        _getPickerStyles(offset, calendar) {
-            var calOffset = calendar.offset();
+        _getPickerStyles(offset, picker) {
+            var calOffset = picker.offset();
             var marginTop = offset.bottom - calOffset.top;
-
             // #3: move calendar to the top when passing cross browser window bounds
             if (HTML.clientHeight < offset.bottom + calOffset.height) {
                 marginTop = calOffset.top - offset.bottom - calOffset.height;
@@ -141,9 +140,9 @@
                 "margin-top": offset.top - labelOffset.top
             };
         },
-        _changeValue(caption, calendarMonths, calenderDays, calendar, value, prevValue) {
+        _changeValue(caption, calendarMonths, calenderDays, picker, value, prevValue) {
             // #47: do not proceed if animation is in progress still
-            if (calenderDays.every((days) => calendar.contains(days))) return false;
+            if (calenderDays.every((days) => picker.contains(days))) return false;
 
             var year, month, date, iterDate;
 
@@ -163,7 +162,7 @@
 
             var range = readDateRange(this);
 
-            if (calendar.contains(calendarMonths)) {
+            if (picker.contains(calendarMonths)) {
                 calendarMonths.findAll("td").forEach((day, index) => {
                     iterDate.setUTCMonth(index);
 
@@ -187,7 +186,7 @@
                 prevValue = new Date(prevValue);
 
                 var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
-                var currenDays = calenderDays[calendar.contains(calenderDays[0]) ? 0 : 1];
+                var currenDays = calenderDays[picker.contains(calenderDays[0]) ? 0 : 1];
                 var targetDays = delta ? calenderDays[calenderDays[0] === currenDays ? 1 : 0] : currenDays;
                 // update days
                 targetDays.findAll("td").forEach((day) => {
@@ -229,7 +228,7 @@
         _syncDateValue(time) {
             time.set("datetime", this.value());
         },
-        _clickCalendar(calendar, calendarMonths, target) {
+        _clickCalendar(picker, calendarMonths, target) {
             var targetDate;
 
             if (target.matches("a")) {
@@ -239,7 +238,7 @@
 
                 var sign = target.next("a")[0] ? -1 : 1;
 
-                if (calendar.contains(calendarMonths)) {
+                if (picker.contains(calendarMonths)) {
                     targetDate.setUTCFullYear(targetDate.getUTCFullYear() + sign);
                 } else {
                     targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
@@ -250,13 +249,13 @@
                 targetDate = new Date(this.value());
                 targetDate.setUTCMonth(new Date(target.get("datetime")).getUTCMonth());
 
-                calendar.hide();
+                picker.hide();
             } else if (target.matches("td")) {
                 targetDate = target.data("ts");
 
                 if (targetDate) {
                     targetDate = new Date(targetDate);
-                    calendar.hide();
+                    picker.hide();
                 }
             }
 
@@ -274,16 +273,15 @@
             // prevent input from loosing focus
             return false;
         },
-        _keydownCalendar(calendar, calendarMonths, which) {
+        _keydownCalendar(picker, calendarMonths, which) {
             var delta, currentDate;
-
             // ENTER key should submit form if calendar is hidden
-            if (calendar.matches(":hidden") && which === VK_ENTER) return true;
+            if (picker.matches(":hidden") && which === VK_ENTER) return true;
 
             if (which === VK_SPACE) {
-                calendar.toggle(); // SPACE key toggles calendar visibility
+                picker.toggle(); // SPACE key toggles calendar visibility
             } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
-                calendar.hide(); // ESC, TAB or ENTER keys hide calendar
+                picker.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
                 this.empty(); // BACKSPACE, DELETE clear value
             } else {
@@ -297,7 +295,7 @@
                 else if (which === 72 || which === 37) { delta = -1; }
 
                 if (delta) {
-                    var shiftKey = calendar.contains(calendarMonths);
+                    var shiftKey = picker.contains(calendarMonths);
 
                     if (shiftKey && (which === 40 || which === 38)) {
                         currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
@@ -318,11 +316,11 @@
             // do not allow to change the value manually
             return which === VK_TAB;
         },
-        _blurCalendar(calendar) {
-            calendar.hide();
+        _blurCalendar(picker) {
+            picker.hide();
         },
-        _focusCalendar(calendar) {
-            calendar.show();
+        _focusCalendar(picker) {
+            picker.show();
 
             // use the trick below to reset text selection on focus
             setTimeout(() => {
