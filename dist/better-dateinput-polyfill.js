@@ -19,6 +19,9 @@
     // need to skip mobile/tablet browsers
     DOM.extend("input[type=date]", testDateInput, {
         constructor: function() {var this$0 = this;
+            if (this$0.data('dateinput-disabled')) {
+              return;
+            }
             var calendar = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
                 color = this.css("color");
