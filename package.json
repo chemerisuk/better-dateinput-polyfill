@@ -24,8 +24,8 @@
   "scripts": {
     "test": "gulp test $npm_package_config_gulp",
     "start": "gulp dev $npm_package_config_gulp",
-    "release": "gulp release $npm_package_config_gulp",
-    "postrelease": "gulp gh-pages $npm_package_config_gulp"
+    "version": "gulp dist $npm_package_config_gulp && git add -A dist bower.json",
+    "postversion": "git push && git push --tags"
   },
   "karmaFiles": [
     "bower_components/better-dom/dist/better-dom.js",
