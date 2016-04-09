@@ -138,4 +138,38 @@ describe("better-dateinput-polyfill", function() {
 
         expect(el.value()).toBe("2000-10-20");
     });
+
+    describe("caption", () => {
+        var pickerCaption;
+        var calendarDaysMain;
+
+        beforeEach(() => {
+            pickerCaption = DOM.mock();
+            calendarDaysMain = DOM.mock();
+        });
+
+        it("updates visible value format on click", () => {
+            var spy = jasmine.createSpy();
+            var setSpy = spyOn(pickerCaption, "set");
+
+            el._clickPickerCaption(calendar, months, calendarDaysMain, pickerCaption, spy);
+            expect(setSpy).toHaveBeenCalledWith("data-format", "yyyy");
+            expect(spy.calls.count()).toBe(1);
+
+            spyOn(calendar, "contains").and.returnValue(true);
+            el._clickPickerCaption(calendar, months, calendarDaysMain, pickerCaption, spy);
+            expect(setSpy).toHaveBeenCalledWith("data-format", "MMMM yyyy");
+            expect(spy.calls.count()).toBe(2);
+        });
+    });
+
+    describe("label", () => {
+        it("propagates click to input", () => {
+            var spy = jasmine.createSpy();
+
+            el.on("focus", spy);
+            el._clickLabel();
+            expect(spy).toHaveBeenCalled();
+        });
+    });
 });
