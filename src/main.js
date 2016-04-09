@@ -32,8 +32,8 @@
                 // IE8 doesn't suport color:transparent - use background-color instead
                 .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
                 // sync picker visibility on focus/blur
-                .on(["focus", "click"], this._focusCalendar.bind(this, picker))
-                .on("blur", this._blurCalendar.bind(this, picker))
+                .on(["focus", "click"], this._focusPicker.bind(this, picker))
+                .on("blur", this._blurPicker.bind(this, picker))
                 .on("change", this._syncDateValue.bind(this, label))
                 .before(picker.hide(), label);
 
@@ -71,7 +71,7 @@
 
             // handle arrow keys, esc etc.
             this
-                .on("keydown", ["which"], this._keydownCalendar.bind(this, picker, calendarMonths))
+                .on("keydown", ["which"], this._keydownPicker.bind(this, picker, calendarMonths))
                 .watch("value", changeValue);
 
             this.closest("form").on("reset", this._resetForm.bind(this));
@@ -79,7 +79,7 @@
             changeValue(this.value());
 
             picker
-                .on("mousedown", ["target"], this._clickCalendar.bind(this, picker, calendarMonths))
+                .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths))
                 .css(this._getPickerStyles(offset, picker))
                 .watch("aria-hidden", (value) => {
                     if (value !== "true") {
@@ -93,7 +93,7 @@
 
             label.css(this._getLabelStyles(offset, label, color));
             // display calendar for autofocused elements
-            if (this.matches(":focus")) this.fire("focus");
+            if (this.matches(":focus")) picker.show();
         },
         _isNative() {
             var nativeValue = this.get("data-native"),
@@ -228,7 +228,7 @@
         _syncDateValue(time) {
             time.set("datetime", this.value());
         },
-        _clickCalendar(picker, calendarMonths, target) {
+        _clickPicker(picker, calendarMonths, target) {
             var targetDate;
 
             if (target.matches("a")) {
@@ -273,7 +273,7 @@
             // prevent input from loosing focus
             return false;
         },
-        _keydownCalendar(picker, calendarMonths, which) {
+        _keydownPicker(picker, calendarMonths, which) {
             var delta, currentDate;
             // ENTER key should submit form if calendar is hidden
             if (picker.matches(":hidden") && which === VK_ENTER) return true;
@@ -316,10 +316,10 @@
             // do not allow to change the value manually
             return which === VK_TAB;
         },
-        _blurCalendar(picker) {
+        _blurPicker(picker) {
             picker.hide();
         },
-        _focusCalendar(picker) {
+        _focusPicker(picker) {
             picker.show();
 
             // use the trick below to reset text selection on focus
