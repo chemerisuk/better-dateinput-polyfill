@@ -298,6 +298,8 @@
             picker.hide();
         },
         _focusPicker(picker) {
+            if (this.get("readonly")) return false;
+
             picker.show();
 
             // use the trick below to reset text selection on focus
