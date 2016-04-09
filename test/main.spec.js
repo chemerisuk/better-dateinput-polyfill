@@ -72,27 +72,52 @@ describe("better-dateinput-polyfill", function() {
         // expectKey(38, true, "1999-01-01");
     });
 
-    it("should change month on nav buttons click", function() {
-        var months = DOM.mock("<table>");
-        var target = DOM.mock("<a>");
+    describe("nav", () => {
+        it("changes month in day picker mode", function() {
+            var target = DOM.mock("<a>");
+
+            el.value("2000-01-01");
+            el._clickPicker(calendar, months, target);
+            expect(el.value()).toBe("2000-02-01");
+
+            spyOn(target, "next").and.returnValue(el);
+            el._clickPicker(calendar, months, target);
+            expect(el.value()).toBe("2000-01-01");
+        });
+
+        it("changes year in month picker mode", function() {
+            var target = DOM.mock("<time>");
+
+            spyOn(months, "contains").and.returnValue(true);
+
+            el.value("2000-01-01");
+
+            target.set("datetime", "2000-06-09");
+            el._clickPicker(calendar, months, target);
+            expect(el.value()).toBe("2000-06-01");
+
+            target.set("datetime", "2000-10-09");
+            el._clickPicker(calendar, months, target);
+            expect(el.value()).toBe("2000-10-01");
+        });
+    });
+
+    it("should select appropriate day on calendar click", function() {
+        var now = new Date(2011, 6, 13, 12);
+        var target = DOM.mock();
+
+        spyOn(target, "matches").and.callFake((tagName) => {
+            return tagName === "td";
+        });
 
         el.value("2000-01-01");
         el._clickPicker(calendar, months, target);
-        expect(el.value()).toBe("2000-02-01");
-
-        spyOn(target, "next").and.returnValue(el);
-        el._clickPicker(calendar, months, target);
         expect(el.value()).toBe("2000-01-01");
+
+        spyOn(target, "data").and.returnValue(now.getTime());
+        el._clickPicker(calendar, months, target);
+        expect(el.value()).toBe("2011-07-13");
     });
-
-    // it("should select appropriate day on calendar click", function() {
-    //     var now = new Date(2011, 6, 13, 12),
-    //         target = DOM.mock("<td>").data("ts", now.getTime()),
-    //         setSpy = spyOn(el, "value");
-
-    //     el._clickPicker(calendar, target);
-    //     expect(setSpy).toHaveBeenCalledWith("2011-07-13");
-    // });
 
     it("should hide calendar on blur", function() {
         var hideSpy = spyOn(calendar, "hide");
