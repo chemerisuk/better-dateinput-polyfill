@@ -43,8 +43,8 @@
         text-align: center;
 
         opacity: 1;
-        transform: scale(1,1) translate3d(0,0,0);
-        transform-origin: 50% 0;
+        transform: translate3d(0,0,0);
+        transform-origin: 0 0;
         transition: 0.1s ease-out;
 
         width: 15em;
@@ -56,7 +56,7 @@
 
     .btr-dateinput-calendar[aria-hidden=true] {
         opacity: 0;
-        transform: scale(0.75,0.75) translate3d(0,0,0);
+        transform: scaleX(0.75) translate3d(0,-5%,0);
     }
 
     .btr-dateinput-calendar-header {

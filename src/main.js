@@ -275,7 +275,14 @@
             if (this.get("readonly")) return false;
 
             var offset = this.offset();
+            var pickerOffset = picker.offset();
             var marginTop = offset.height;
+
+            // #3: move calendar to the top when passing cross browser window bounds
+            if (HTML.clientHeight < offset.bottom + pickerOffset.height) {
+                marginTop = -pickerOffset.height;
+            }
+
             // always recalculate picker top position
             picker.css("margin-top", marginTop).show();
 
