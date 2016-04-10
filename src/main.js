@@ -1,4 +1,4 @@
-(function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_SHIFT) {
+(function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
     "use strict";
 
     var HTML = DOM.get("documentElement"),
@@ -236,8 +236,8 @@
                 picker.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
                 this.empty(); // BACKSPACE, DELETE clear value
-            } else if (which === VK_SHIFT) {
-                calendarCaption.fire("click"); // SHIFT toggles calendar mode
+            } else if (which === VK_CONTROL) {
+                calendarCaption.fire("click"); // CONTROL toggles calendar mode
             } else {
                 currentDate = new Date(this.value());
 
@@ -335,4 +335,4 @@
             this.value(this.get("defaultValue"));
         }
     });
-}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, 16));
+}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, 17));

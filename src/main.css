@@ -39,7 +39,7 @@
 
         border-radius: var(--border-radius);
         box-shadow: 0 0.25em 0.5em rgba(0,0,0,0.2);
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-family: sans-serif;
         text-align: center;
 
         opacity: 1;
@@ -56,7 +56,7 @@
 
     .btr-dateinput-calendar[aria-hidden=true] {
         opacity: 0;
-        transform: skew(-15deg) scaleX(0.75);
+        transform: skew(-25deg) scaleX(0.75);
     }
 
     .btr-dateinput-calendar-header {
