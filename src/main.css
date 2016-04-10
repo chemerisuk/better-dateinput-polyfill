@@ -47,7 +47,7 @@
         transform-origin: 0 0;
         transition: 0.1s ease-out;
 
-        width: 15em;
+        width: 17em;
 
         /* improve font on OSX */
         -webkit-font-smoothing: antialiased;
@@ -56,7 +56,7 @@
 
     .btr-dateinput-calendar[aria-hidden=true] {
         opacity: 0;
-        transform: scaleX(0.75) translate3d(0,-5%,0);
+        transform: skew(-10deg) scaleX(0.75);
     }
 
     .btr-dateinput-calendar-header {
@@ -151,9 +151,9 @@
 
     .btr-dateinput-calendar td,
     .btr-dateinput-calendar th {
-        width: 2em;
-        height: 2em;
-        line-height: 2;
+        width: 2.5em;
+        height: 2.25em;
+        line-height: 2.25;
         padding: 0;
         text-align: center;
     }
