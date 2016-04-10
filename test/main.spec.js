@@ -3,11 +3,11 @@ describe("better-dateinput-polyfill", function() {
         return value.toISOString().split("T")[0];
     }
 
-    var el, calendar, months, caption, label;
+    var el, picker, months, caption, label;
 
     beforeEach(function() {
         el = DOM.mock("<input type='date'>");
-        calendar = DOM.mock();
+        picker = DOM.mock("<div>");
         months = DOM.mock();
         caption = DOM.mock();
         label = DOM.mock("<span>");
@@ -16,41 +16,41 @@ describe("better-dateinput-polyfill", function() {
     it("should toggle calendar visibility on space key", function() {
         spyOn(el, "get").and.returnValue("");
 
-        var toggleSpy = spyOn(calendar, "toggle");
+        var toggleSpy = spyOn(picker, "toggle");
 
-        el._keydownPicker(calendar, months, caption, 32);
+        el._keydownPicker(picker, caption, 32);
         expect(toggleSpy).toHaveBeenCalled();
     });
 
     it("should hide calendar on escape key", function() {
-        var spy = spyOn(calendar, "hide");
+        var spy = spyOn(picker, "hide");
 
-        el._keydownPicker(calendar, months, caption, 27);
+        el._keydownPicker(picker, caption, 27);
         expect(spy).toHaveBeenCalled();
     });
 
     it("should prevent default action on any key except tab", function() {
-        expect(el._keydownPicker(calendar, months, caption, 9)).not.toBe(false);
-        expect(el._keydownPicker(calendar, months, caption, 111)).toBe(false);
+        expect(el._keydownPicker(picker, caption, 9)).not.toBe(false);
+        expect(el._keydownPicker(picker, caption, 111)).toBe(false);
 
-        var spy = spyOn(calendar, "matches").and.returnValue(true);
+        var spy = spyOn(picker, "matches").and.returnValue(true);
 
-        expect(el._keydownPicker(calendar, months, caption, 13)).toBe(true);
+        expect(el._keydownPicker(picker, caption, 13)).toBe(true);
         expect(spy).toHaveBeenCalledWith(":hidden");
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
         var spy = spyOn(el, "value");
 
-        el._keydownPicker(calendar, months, caption, 8);
+        el._keydownPicker(picker, caption, 8);
         expect(spy).toHaveBeenCalledWith("");
-        el._keydownPicker(calendar, months, caption, 46);
+        el._keydownPicker(picker, caption, 46);
         expect(spy.calls.count()).toBe(2);
     });
 
     it("should handle arrow keys with optional shiftKey", function() {
         function expectKey(key, altKey, expected) {
-            el._keydownPicker(calendar, months, caption, key);
+            el._keydownPicker(picker, caption, key);
             expect(el.value()).toBe(expected);
             el.value("2000-01-01");
         }
@@ -78,11 +78,11 @@ describe("better-dateinput-polyfill", function() {
             var target = DOM.mock("<a>");
 
             el.value("2000-01-01");
-            el._clickPicker(calendar, months, target);
+            el._clickPicker(picker, months, target);
             expect(el.value()).toBe("2000-02-01");
 
             spyOn(target, "next").and.returnValue(el);
-            el._clickPicker(calendar, months, target);
+            el._clickPicker(picker, months, target);
             expect(el.value()).toBe("2000-01-01");
         });
 
@@ -94,11 +94,11 @@ describe("better-dateinput-polyfill", function() {
             el.value("2000-01-01");
 
             target.set("datetime", "2000-06-09");
-            el._clickPicker(calendar, months, target);
+            el._clickPicker(picker, months, target);
             expect(el.value()).toBe("2000-06-01");
 
             target.set("datetime", "2000-10-09");
-            el._clickPicker(calendar, months, target);
+            el._clickPicker(picker, months, target);
             expect(el.value()).toBe("2000-10-01");
         });
     });
@@ -112,18 +112,18 @@ describe("better-dateinput-polyfill", function() {
         });
 
         el.value("2000-01-01");
-        el._clickPicker(calendar, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2000-01-01");
 
         spyOn(target, "data").and.returnValue(now.getTime());
-        el._clickPicker(calendar, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2011-07-13");
     });
 
     it("should hide calendar on blur", function() {
-        var hideSpy = spyOn(calendar, "hide");
+        var hideSpy = spyOn(picker, "hide");
 
-        el._blurPicker(calendar);
+        el._blurPicker(picker);
         expect(hideSpy).toHaveBeenCalled();
     });
 
@@ -136,7 +136,7 @@ describe("better-dateinput-polyfill", function() {
 
         now.setMonth(now.getMonth() + 1);
 
-        el._clickPicker(calendar, months, target);
+        el._clickPicker(picker, months, target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
 
@@ -144,15 +144,15 @@ describe("better-dateinput-polyfill", function() {
 
         now.setMonth(now.getMonth() - 2);
 
-        el._clickPicker(calendar, months, target);
+        el._clickPicker(picker, months, target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
     });
 
     it("should display calendar on focus", function() {
-        var spy = spyOn(calendar, "show");
+        var spy = spyOn(picker, "show");
 
-        el._focusPicker(calendar);
+        el._focusPicker(picker);
         expect(spy).toHaveBeenCalled();
     });
 
@@ -178,12 +178,12 @@ describe("better-dateinput-polyfill", function() {
             var spy = jasmine.createSpy();
             var setSpy = spyOn(pickerCaption, "set");
 
-            el._clickPickerCaption(calendar, months, calendarDaysMain, pickerCaption, spy);
+            el._clickPickerCaption(picker, pickerCaption, spy);
             expect(setSpy).toHaveBeenCalledWith("data-format", "yyyy");
             expect(spy.calls.count()).toBe(1);
 
-            spyOn(calendar, "contains").and.returnValue(true);
-            el._clickPickerCaption(calendar, months, calendarDaysMain, pickerCaption, spy);
+            picker.set("aria-expanded", "true");
+            el._clickPickerCaption(picker, pickerCaption, spy);
             expect(setSpy).toHaveBeenCalledWith("data-format", "MMMM yyyy");
             expect(spy.calls.count()).toBe(2);
         });
