@@ -23,14 +23,9 @@
             if (this._isNative()) return false;
 
             var picker = PICKER_TEMPLATE.clone(true),
-                label = LABEL_TEMPLATE.clone(true),
-                color = this.css("color"),
-                offset = this.offset();
+                label = LABEL_TEMPLATE.clone(true);
 
             this
-                // hide original input text
-                // IE8 doesn't suport color:transparent - use background-color instead
-                .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this._focusPicker.bind(this, picker))
                 .on("blur", this._blurPicker.bind(this, picker))
@@ -39,6 +34,7 @@
 
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
+                .css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing", "border-style"]))
                 .on("click", this._clickLabel.bind(this));
 
             var calendarDaysMain = DAYS_TEMPLATE.clone(true),
@@ -66,10 +62,12 @@
             picker
                 .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths))
                 .watch("aria-hidden", this._changePickerVisibility.bind(this, picker, calendarMonths, calendarCaption))
-                .css(this._getPickerStyles(offset, picker))
+                .css("z-index", 1 + (this.css("z-index") | 0))
                 .hide(); // hide calendar to trigger show animation properly later
 
-            label.css(this._getLabelStyles(offset, label, color));
+            // hide original input text
+            // IE8 doesn't suport color:transparent - use background-color instead
+            this.css("color", document.addEventListener ? "transparent" : this.css("background-color"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) picker.show();
         },
@@ -93,32 +91,6 @@
                 // force applying the polyfill
                 return false;
             }
-        },
-        _getPickerStyles(offset, picker) {
-            var calOffset = picker.offset();
-            var marginTop = offset.bottom - calOffset.top;
-            // #3: move calendar to the top when passing cross browser window bounds
-            if (HTML.clientHeight < offset.bottom + calOffset.height) {
-                marginTop = calOffset.top - offset.bottom - calOffset.height;
-            }
-
-            return {
-                "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
-                "margin-top": marginTop,
-                "z-index": 1 + (this.css("z-index") | 0)
-            };
-        },
-        _getLabelStyles(offset, label, color) {
-            var labelOffset = label.offset();
-            // copy input CSS to adjust visible text position
-            var styles = this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]);
-
-            styles.color = color;
-            styles["line-height"] = offset.height + "px";
-            styles["margin-left"] = offset.left - labelOffset.left + "px";
-            styles["margin-top"] = offset.top - labelOffset.top + "px";
-
-            return styles;
         },
         _changeValue(caption, calendarMonths, calenderDays, picker, value, prevValue) {
             // #47: do not proceed if animation is in progress still
@@ -302,7 +274,10 @@
         _focusPicker(picker) {
             if (this.get("readonly")) return false;
 
-            picker.show();
+            var offset = this.offset();
+            var marginTop = offset.height;
+            // always recalculate picker top position
+            picker.css("margin-top", marginTop).show();
 
             // use the trick below to reset text selection on focus
             setTimeout(() => {

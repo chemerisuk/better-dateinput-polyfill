@@ -15,7 +15,7 @@
 @media screen {
     .btr-dateinput-value {
         position: absolute;
-        display: block;
+        display: inline-block;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -28,6 +28,7 @@
     .btr-dateinput-calendar {
         position: absolute;
         visibility: hidden; /* initially calendar is hidden */
+        display: inline-block;
 
         cursor: default;
         user-select: none;
