@@ -1,9 +1,9 @@
 :root {
     --font-color: #555;
-    --bkg-header: #2DA4D6;
+    --bkg-header: #34b3df;
     --bkg-active: #207FB1;
     --color-border: #DDD;
-    --color-graytext: #CCC;
+    --color-graytext: #ABABAB;
     --bkg-graytext: #F3F3F3;
     --bkg-normal: #FFF;
     --border-normal: 1px solid;
@@ -34,7 +34,7 @@
         user-select: none;
 
         color: var(--bkg-normal);
-        border-bottom: var(--border-normal) var(--color-graytext);
+        border-bottom: var(--border-normal) var(--color-border);
         overflow: hidden;
 
         border-radius: var(--border-radius);
@@ -116,7 +116,7 @@
         background: var(--bkg-normal);
 
         border-radius: var(--border-radius);
-        border: var(--border-normal) var(--color-graytext);
+        border: var(--border-normal) var(--color-border);
         border-bottom: 0;
     }
 
@@ -169,7 +169,7 @@
 
     .btr-dateinput-calendar-past,
     .btr-dateinput-calendar-future {
-        color: var(--color-border);
+        color: var(--color-graytext);
     }
 
     .btr-dateinput-calendar-out {
