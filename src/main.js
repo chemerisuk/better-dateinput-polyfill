@@ -34,7 +34,7 @@
 
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
-                .css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing", "border-style"]))
+                .css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing"]))
                 .on("click", this._clickLabel.bind(this));
 
             var calendarDaysMain = DAYS_TEMPLATE.clone(true),

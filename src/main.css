@@ -20,7 +20,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
 
-        border-style: none solid;
+        border-style: solid;
         border-color: transparent;
         pointer-events: none;
     }
@@ -56,7 +56,7 @@
 
     .btr-dateinput-calendar[aria-hidden=true] {
         opacity: 0;
-        transform: skew(-10deg) scaleX(0.75);
+        transform: skew(-15deg) scaleX(0.75);
     }
 
     .btr-dateinput-calendar-header {
@@ -124,7 +124,7 @@
         border-top: var(--border-normal) #EEE;
         border-bottom: var(--border-normal) var(--color-graytext);
 
-        font-size: 0.75em;
+        font-size: 0.85em;
         background: var(--color-border);
         font-weight: bold;
 
