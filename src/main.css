@@ -39,7 +39,7 @@
 
         border-radius: var(--border-radius);
         box-shadow: 0 0.25em 0.5em rgba(0,0,0,0.2);
-        font-family: sans-serif;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
         text-align: center;
 
         opacity: 1;

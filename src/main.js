@@ -305,15 +305,10 @@
             }, 0);
         },
         _clickPickerCaption(picker, calendarCaption, changeValue) {
-            if (picker.get("aria-expanded") === "true") {
-                calendarCaption.set("data-format", "MMMM yyyy");
+            var expanded = picker.get("aria-expanded") === "true";
 
-                picker.set("aria-expanded", "false");
-            } else {
-                calendarCaption.set("data-format", "yyyy");
-
-                picker.set("aria-expanded", "true");
-            }
+            picker.set("aria-expanded", !expanded);
+            calendarCaption.set("data-format", expanded ? "MMMM yyyy" : "yyyy");
 
             changeValue(this.value());
         },
