@@ -74,34 +74,42 @@ describe("better-dateinput-polyfill", function() {
         expectKey(38, "1999-09-01");
     });
 
-    describe("nav", () => {
-        it("changes month in day picker mode", function() {
-            var target = DOM.mock("<a>");
+    it("changes month/year", function() {
+        var target = DOM.mock("<a>");
 
-            el.value("2000-01-01");
-            el._clickPicker(picker, months, target);
-            expect(el.value()).toBe("2000-02-01");
+        el.value("2000-01-01");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("2000-02-01");
 
-            spyOn(target, "next").and.returnValue(el);
-            el._clickPicker(picker, months, target);
-            expect(el.value()).toBe("2000-01-01");
-        });
+        picker.set("aria-expanded", "true");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("2001-02-01");
 
-        it("changes year in month picker mode", function() {
-            var target = DOM.mock("<time>");
+        spyOn(target, "next").and.returnValue(el);
 
-            spyOn(months, "contains").and.returnValue(true);
+        el.value("2000-01-01");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("1999-01-01");
 
-            el.value("2000-01-01");
+        picker.set("aria-expanded", "true");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("1998-01-01");
+    });
 
-            target.set("datetime", "2000-06-09");
-            el._clickPicker(picker, months, target);
-            expect(el.value()).toBe("2000-06-01");
+    it("changes month in month picker mode", function() {
+        var target = DOM.mock("<time>");
 
-            target.set("datetime", "2000-10-09");
-            el._clickPicker(picker, months, target);
-            expect(el.value()).toBe("2000-10-01");
-        });
+        spyOn(months, "contains").and.returnValue(true);
+
+        el.value("2000-01-01");
+
+        target.set("datetime", "2000-06-09");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("2000-06-01");
+
+        target.set("datetime", "2000-10-09");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("2000-10-01");
     });
 
     it("should select appropriate day on calendar click", function() {
