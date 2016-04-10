@@ -76,10 +76,10 @@
                 // use a stronger type support detection that handles old WebKit browsers:
                 // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
                 if (this[0].type === "date") return true;
-
-                var invalidValue = this.value("_").value();
+                // persist current value to restore it later
+                this.set("defaultValue", this.value());
                 // if browser allows invalid value then it doesn't support the feature
-                return invalidValue !== "_";
+                return this.value("_").value() !== "_";
             } else {
                 // remove native control
                 this.set("type", "text");
