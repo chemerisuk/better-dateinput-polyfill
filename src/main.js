@@ -40,7 +40,8 @@
 
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
-                .css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing"]))
+                .css(this.css(["width", "font", "padding", "text-align", "border-width", "box-sizing"]))
+                .css("line-height", "") // IE10 returns invalid line-height for hidden elements
                 .on("click", this._clickLabel.bind(this));
 
             calenderDays[1].hide().remove();
