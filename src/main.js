@@ -288,6 +288,7 @@
                 .show();
 
             // use the trick below to reset text selection on focus
+            /* istanbul ignore next */
             setTimeout(() => {
                 var node = this[0];
 
@@ -307,7 +308,7 @@
         _clickPickerCaption(picker, calendarCaption, changeValue) {
             var expanded = picker.get("aria-expanded") === "true";
 
-            picker.set("aria-expanded", !expanded);
+            picker.set("aria-expanded", String(!expanded));
             calendarCaption.set("data-format", expanded ? "MMMM yyyy" : "yyyy");
 
             changeValue(this.value());

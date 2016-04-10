@@ -48,6 +48,16 @@ describe("better-dateinput-polyfill", function() {
         expect(spy.calls.count()).toBe(2);
     });
 
+    it("toggles calendar mode on control key", function() {
+        var spy = spyOn(caption, "fire");
+
+        el._keydownPicker(picker, caption, 17);
+        expect(spy.calls.count()).toBe(1);
+
+        el._keydownPicker(picker, caption, 17);
+        expect(spy.calls.count()).toBe(2);
+    });
+
     it("should handle arrow keys", function() {
         function expectKey(key, expected) {
             el._keydownPicker(picker, caption, key);
@@ -212,6 +222,19 @@ describe("better-dateinput-polyfill", function() {
             el.on("focus", spy);
             el._clickLabel();
             expect(spy).toHaveBeenCalled();
+        });
+    });
+
+    describe("data-polyfill", () => {
+        it("skips when value is 'none'", () => {
+            el.set("data-polyfill", "none");
+            expect(el._isNative()).toBe(true);
+        });
+
+        it("forces polyfill if value is 'all'", () => {
+            el.set("data-polyfill", "all");
+            expect(el._isNative()).toBe(false);
+            expect(el.get("type")).toBe("text");
         });
     });
 });
