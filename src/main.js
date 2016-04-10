@@ -1,4 +1,4 @@
-(function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
+(function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_SHIFT) {
     "use strict";
 
     var HTML = DOM.get("documentElement"),
@@ -52,7 +52,7 @@
 
             // handle arrow keys, esc etc.
             this
-                .on("keydown", ["which"], this._keydownPicker.bind(this, picker, calendarMonths))
+                .on("keydown", ["which"], this._keydownPicker.bind(this, picker, calendarMonths, calendarCaption))
                 .watch("value", changeValue);
 
             this.closest("form").on("reset", this._resetForm.bind(this));
@@ -225,7 +225,7 @@
             // prevent input from loosing focus
             return false;
         },
-        _keydownPicker(picker, calendarMonths, which) {
+        _keydownPicker(picker, calendarMonths, calendarCaption, which) {
             var delta, currentDate;
             // ENTER key should submit form if calendar is hidden
             if (picker.matches(":hidden") && which === VK_ENTER) return true;
@@ -236,6 +236,8 @@
                 picker.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
                 this.empty(); // BACKSPACE, DELETE clear value
+            } else if (which === VK_SHIFT) {
+                calendarCaption.fire("click"); // SHIFT toggles calendar mode
             } else {
                 currentDate = new Date(this.value());
 
@@ -333,4 +335,4 @@
             this.value(this.get("defaultValue"));
         }
     });
-}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46));
+}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, 16));

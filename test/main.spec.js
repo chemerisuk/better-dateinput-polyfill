@@ -3,12 +3,13 @@ describe("better-dateinput-polyfill", function() {
         return value.toISOString().split("T")[0];
     }
 
-    var el, calendar, months, label;
+    var el, calendar, months, caption, label;
 
     beforeEach(function() {
         el = DOM.mock("<input type='date'>");
         calendar = DOM.mock();
         months = DOM.mock();
+        caption = DOM.mock();
         label = DOM.mock("<span>");
     });
 
@@ -17,39 +18,39 @@ describe("better-dateinput-polyfill", function() {
 
         var toggleSpy = spyOn(calendar, "toggle");
 
-        el._keydownPicker(calendar, months, 32);
+        el._keydownPicker(calendar, months, caption, 32);
         expect(toggleSpy).toHaveBeenCalled();
     });
 
     it("should hide calendar on escape key", function() {
         var spy = spyOn(calendar, "hide");
 
-        el._keydownPicker(calendar, months, 27);
+        el._keydownPicker(calendar, months, caption, 27);
         expect(spy).toHaveBeenCalled();
     });
 
     it("should prevent default action on any key except tab", function() {
-        expect(el._keydownPicker(calendar, months, 9)).not.toBe(false);
-        expect(el._keydownPicker(calendar, months, 111)).toBe(false);
+        expect(el._keydownPicker(calendar, months, caption, 9)).not.toBe(false);
+        expect(el._keydownPicker(calendar, months, caption, 111)).toBe(false);
 
         var spy = spyOn(calendar, "matches").and.returnValue(true);
 
-        expect(el._keydownPicker(calendar, months, 13)).toBe(true);
+        expect(el._keydownPicker(calendar, months, caption, 13)).toBe(true);
         expect(spy).toHaveBeenCalledWith(":hidden");
     });
 
     it("should reset calendar value on backspace or delete keys", function() {
         var spy = spyOn(el, "value");
 
-        el._keydownPicker(calendar, months, 8);
+        el._keydownPicker(calendar, months, caption, 8);
         expect(spy).toHaveBeenCalledWith("");
-        el._keydownPicker(calendar, months, 46);
+        el._keydownPicker(calendar, months, caption, 46);
         expect(spy.calls.count()).toBe(2);
     });
 
     it("should handle arrow keys with optional shiftKey", function() {
         function expectKey(key, altKey, expected) {
-            el._keydownPicker(calendar, months, key);
+            el._keydownPicker(calendar, months, caption, key);
             expect(el.value()).toBe(expected);
             el.value("2000-01-01");
         }
