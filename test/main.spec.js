@@ -48,8 +48,8 @@ describe("better-dateinput-polyfill", function() {
         expect(spy.calls.count()).toBe(2);
     });
 
-    it("should handle arrow keys with optional shiftKey", function() {
-        function expectKey(key, altKey, expected) {
+    it("should handle arrow keys", function() {
+        function expectKey(key, expected) {
             el._keydownPicker(picker, caption, key);
             expect(el.value()).toBe(expected);
             el.value("2000-01-01");
@@ -57,20 +57,21 @@ describe("better-dateinput-polyfill", function() {
 
         el.value("2000-01-01");
 
-        expectKey(74, false, "2000-01-08");
-        expectKey(40, false, "2000-01-08");
-        expectKey(75, false, "1999-12-25");
-        expectKey(38, false, "1999-12-25");
-        expectKey(76, false, "2000-01-02");
-        expectKey(39, false, "2000-01-02");
-        expectKey(72, false, "1999-12-31");
-        expectKey(37, false, "1999-12-31");
+        expectKey(74, "2000-01-08");
+        expectKey(40, "2000-01-08");
+        expectKey(75, "1999-12-25");
+        expectKey(38, "1999-12-25");
+        expectKey(76, "2000-01-02");
+        expectKey(39, "2000-01-02");
+        expectKey(72, "1999-12-31");
+        expectKey(37, "1999-12-31");
 
+        picker.set("aria-expanded", "true");
         // cases with shift key
-        // expectKey(39, true, "2000-02-01");
-        // expectKey(37, true, "1999-12-01");
-        // expectKey(40, true, "2001-01-01");
-        // expectKey(38, true, "1999-01-01");
+        expectKey(39, "2000-02-01");
+        expectKey(37, "1999-12-01");
+        expectKey(40, "2000-05-01");
+        expectKey(38, "1999-09-01");
     });
 
     describe("nav", () => {
@@ -153,7 +154,14 @@ describe("better-dateinput-polyfill", function() {
         var spy = spyOn(picker, "show");
 
         el._focusPicker(picker);
-        expect(spy).toHaveBeenCalled();
+        expect(spy.calls.count()).toBe(1);
+
+        el._focusPicker(picker);
+        expect(spy.calls.count()).toBe(2);
+
+        el.set("readonly", true);
+        el._focusPicker(picker);
+        expect(spy.calls.count()).toBe(2);
     });
 
     it("should restore initial value on form reset", function() {
