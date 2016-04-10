@@ -57,7 +57,6 @@
 
             picker
                 .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths))
-                .watch("aria-hidden", this._changePickerVisibility.bind(this, picker, calendarCaption))
                 .css("z-index", 1 + (this.css("z-index") | 0))
                 .hide(); // hide calendar to trigger show animation properly later
 
@@ -281,8 +280,12 @@
                 marginTop = -pickerOffset.height;
             }
 
-            // always recalculate picker top position
-            picker.css("margin-top", marginTop).show();
+            picker
+                // always recalculate picker top position
+                .css("margin-top", marginTop)
+                // always reset picker mode to default
+                .set("aria-expanded", "false")
+                .show();
 
             // use the trick below to reset text selection on focus
             setTimeout(() => {
@@ -313,14 +316,6 @@
             }
 
             changeValue(this.value());
-        },
-        _changePickerVisibility(picker, calendarCaption, hidden) {
-            if (hidden !== "true") {
-                if (picker.get("aria-expanded") === "true") {
-                    // restore picker state
-                    calendarCaption.fire("click");
-                }
-            }
         },
         _clickLabel() {
             this.fire("focus");
