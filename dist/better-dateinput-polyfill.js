@@ -1,11 +1,11 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 2.0.0-beta.1 Sat, 09 Apr 2016 10:37:44 GMT
+ * @version 2.0.0-beta.2 Sun, 10 Apr 2016 12:59:11 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2016 Maksim Chemerisuk
  * @license MIT
  */
-(function (DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE) {
+(function (DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_SHIFT) {
     "use strict";
 
     var HTML = DOM.get("documentElement"),
@@ -38,18 +38,13 @@
             if (this._isNative()) return false;
 
             var picker = PICKER_TEMPLATE.clone(true),
-                label = LABEL_TEMPLATE.clone(true),
-                color = this.css("color"),
-                offset = this.offset();
+                label = LABEL_TEMPLATE.clone(true);
 
             this
-            // hide original input text
-            // IE8 doesn't suport color:transparent - use background-color instead
-            .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
             // sync picker visibility on focus/blur
             .on(["focus", "click"], this._focusPicker.bind(this, picker)).on("blur", this._blurPicker.bind(this, picker)).on("change", this._syncDateValue.bind(this, label)).before(picker.hide(), label);
 
-            label.set("data-format", this.get("data-format") || "E, dd MMM yyyy").on("click", this._clickLabel.bind(this));
+            label.set("data-format", this.get("data-format") || "E, dd MMM yyyy").css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing", "border-style"])).on("click", this._clickLabel.bind(this));
 
             var calendarDaysMain = DAYS_TEMPLATE.clone(true),
                 calenderDays = calendarDaysMain.findAll("." + BASE + "-calendar-body"),
@@ -64,15 +59,17 @@
             calendarCaption.on("click", this._clickPickerCaption.bind(this, picker, calendarMonths, calendarDaysMain, calendarCaption, changeValue));
 
             // handle arrow keys, esc etc.
-            this.on("keydown", ["which"], this._keydownPicker.bind(this, picker, calendarMonths)).watch("value", changeValue);
+            this.on("keydown", ["which"], this._keydownPicker.bind(this, picker, calendarMonths, calendarCaption)).watch("value", changeValue);
 
             this.closest("form").on("reset", this._resetForm.bind(this));
             // trigger watchers to build the calendar
             changeValue(this.get("defaultValue"));
 
-            picker.on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths)).watch("aria-hidden", this._changePickerVisibility.bind(this, picker, calendarMonths, calendarCaption)).css(this._getPickerStyles(offset, picker)).hide(); // hide calendar to trigger show animation properly later
+            picker.on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths)).watch("aria-hidden", this._changePickerVisibility.bind(this, picker, calendarMonths, calendarCaption)).css("z-index", 1 + (this.css("z-index") | 0)).hide(); // hide calendar to trigger show animation properly later
 
-            label.css(this._getLabelStyles(offset, label, color));
+            // hide original input text
+            // IE8 doesn't suport color:transparent - use background-color instead
+            this.css("color", document.addEventListener ? "transparent" : this.css("background-color"));
             // display calendar for autofocused elements
             if (this.matches(":focus")) picker.show();
         },
@@ -96,32 +93,6 @@
                 // force applying the polyfill
                 return false;
             }
-        },
-        _getPickerStyles: function (offset, picker) {
-            var calOffset = picker.offset();
-            var marginTop = offset.bottom - calOffset.top;
-            // #3: move calendar to the top when passing cross browser window bounds
-            if (HTML.clientHeight < offset.bottom + calOffset.height) {
-                marginTop = calOffset.top - offset.bottom - calOffset.height;
-            }
-
-            return {
-                "margin-left": offset.left - calOffset.left + (offset.width - calOffset.width) / 2,
-                "margin-top": marginTop,
-                "z-index": 1 + (this.css("z-index") | 0)
-            };
-        },
-        _getLabelStyles: function (offset, label, color) {
-            var labelOffset = label.offset();
-            // copy input CSS to adjust visible text position
-            var styles = this.css(["width", "font", "padding-left", "padding-right", "text-align", "border-width", "box-sizing"]);
-
-            styles.color = color;
-            styles["line-height"] = offset.height + "px";
-            styles["margin-left"] = offset.left - labelOffset.left + "px";
-            styles["margin-top"] = offset.top - labelOffset.top + "px";
-
-            return styles;
         },
         _changeValue: function (caption, calendarMonths, calenderDays, picker, value, prevValue) {
             // #47: do not proceed if animation is in progress still
@@ -257,7 +228,7 @@
             // prevent input from loosing focus
             return false;
         },
-        _keydownPicker: function (picker, calendarMonths, which) {
+        _keydownPicker: function (picker, calendarMonths, calendarCaption, which) {
             var delta, currentDate;
             // ENTER key should submit form if calendar is hidden
             if (picker.matches(":hidden") && which === VK_ENTER) return true;
@@ -268,39 +239,41 @@
                     picker.hide(); // ESC, TAB or ENTER keys hide calendar
                 } else if (which === VK_BACKSPACE || which === VK_DELETE) {
                         this.empty(); // BACKSPACE, DELETE clear value
-                    } else {
-                            currentDate = new Date(this.value());
+                    } else if (which === VK_SHIFT) {
+                            calendarCaption.fire("click"); // SHIFT toggles calendar mode
+                        } else {
+                                currentDate = new Date(this.value());
 
-                            if (!currentDate.getTime()) currentDate = new Date();
+                                if (!currentDate.getTime()) currentDate = new Date();
 
-                            if (which === 74 || which === 40) {
-                                delta = 7;
-                            } else if (which === 75 || which === 38) {
-                                delta = -7;
-                            } else if (which === 76 || which === 39) {
-                                delta = 1;
-                            } else if (which === 72 || which === 37) {
-                                delta = -1;
-                            }
-
-                            if (delta) {
-                                var shiftKey = picker.contains(calendarMonths);
-
-                                if (shiftKey && (which === 40 || which === 38)) {
-                                    currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
-                                } else if (shiftKey && (which === 37 || which === 39)) {
-                                    currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 1 : -1));
-                                } else {
-                                    currentDate.setUTCDate(currentDate.getUTCDate() + delta);
+                                if (which === 74 || which === 40) {
+                                    delta = 7;
+                                } else if (which === 75 || which === 38) {
+                                    delta = -7;
+                                } else if (which === 76 || which === 39) {
+                                    delta = 1;
+                                } else if (which === 72 || which === 37) {
+                                    delta = -1;
                                 }
 
-                                var range = readDateRange(this);
+                                if (delta) {
+                                    var shiftKey = picker.contains(calendarMonths);
 
-                                if (!(currentDate < range[0] || currentDate > range[1])) {
-                                    this.value(formatISODate(currentDate));
+                                    if (shiftKey && (which === 40 || which === 38)) {
+                                        currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
+                                    } else if (shiftKey && (which === 37 || which === 39)) {
+                                        currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 1 : -1));
+                                    } else {
+                                        currentDate.setUTCDate(currentDate.getUTCDate() + delta);
+                                    }
+
+                                    var range = readDateRange(this);
+
+                                    if (!(currentDate < range[0] || currentDate > range[1])) {
+                                        this.value(formatISODate(currentDate));
+                                    }
                                 }
                             }
-                        }
             // prevent default action except if it was TAB so
             // do not allow to change the value manually
             return which === VK_TAB;
@@ -313,7 +286,17 @@
 
             if (this.get("readonly")) return false;
 
-            picker.show();
+            var offset = this.offset();
+            var pickerOffset = picker.offset();
+            var marginTop = offset.height;
+
+            // #3: move calendar to the top when passing cross browser window bounds
+            if (HTML.clientHeight < offset.bottom + pickerOffset.height) {
+                marginTop = -pickerOffset.height;
+            }
+
+            // always recalculate picker top position
+            picker.css("margin-top", marginTop).show();
 
             // use the trick below to reset text selection on focus
             setTimeout(function () {
@@ -362,5 +345,5 @@
             this.value(this.get("defaultValue"));
         }
     });
-})(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46);
-DOM.importStyles("@media screen", ".btr-dateinput-value{position:absolute;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-style:none solid;border-color:transparent;pointer-events:none}.btr-dateinput-calendar{position:absolute;visibility:hidden;cursor:default;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;color:#FFF;border-bottom:1px solid #CCC;overflow:hidden;border-radius:3px;-webkit-box-shadow:0 .25em .5em rgba(0,0,0,.2);box-shadow:0 .25em .5em rgba(0,0,0,.2);font-family:Helvetica Neue,Helvetica,Arial,sans-serif;text-align:center;opacity:1;-webkit-transform:scale(1,1) translate3d(0,0,0);transform:scale(1,1) translate3d(0,0,0);-webkit-transform-origin:50% 0;-ms-transform-origin:50% 0;transform-origin:50% 0;-webkit-transition:.1s ease-out;transition:.1s ease-out;width:15em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.btr-dateinput-calendar[aria-hidden=true]{opacity:0;-webkit-transform:scale(.75,.75) translate3d(0,0,0);transform:scale(.75,.75) translate3d(0,0,0)}.btr-dateinput-calendar-header{position:relative;margin:0;height:2.5em;line-height:2.5em;font-weight:700;white-space:nowrap;background:#2da4d6;text-shadow:0 1px 0 #555;border-bottom:1px solid #207fb1}.btr-dateinput-calendar-header>a{width:2.5em;height:2.5em;position:absolute;left:0;top:0;color:inherit}.btr-dateinput-calendar-header>time{display:block}.btr-dateinput-calendar-header>a:before{content:'\\25C4'}.btr-dateinput-calendar-header>a:before{font-size:.85em}.btr-dateinput-calendar-header>a+a{left:auto;right:0}.btr-dateinput-calendar-header>a+a:before{content:'\\25BA'}.btr-dateinput-calendar-days,.btr-dateinput-calendar-months{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;color:#555;background:#FFF;border-radius:3px;border:1px solid #CCC;border-bottom:0}.btr-dateinput-calendar-days>thead{border-top:1px solid #EEE;border-bottom:1px solid #CCC;font-size:.75em;background:#DDD;font-weight:700;text-shadow:0 1px 0 #f3f3f3}.btr-dateinput-calendar-body{-webkit-transform:translateX(0);-ms-transform:translateX(0);transform:translateX(0);-webkit-transition:-webkit-transform .1s linear;transition:-webkit-transform .1s linear;transition:transform .1s linear;transition:transform .1s linear,-webkit-transform .1s linear}.btr-dateinput-calendar-body[aria-hidden=true]{-webkit-transform:translateX(-100%);-ms-transform:translateX(-100%);transform:translateX(-100%)}.btr-dateinput-calendar-body+.btr-dateinput-calendar-body{position:absolute;bottom:0}.btr-dateinput-calendar-body+.btr-dateinput-calendar-body[aria-hidden=true]{-webkit-transform:translateX(100%);-ms-transform:translateX(100%);transform:translateX(100%)}.btr-dateinput-calendar td,.btr-dateinput-calendar th{width:2em;height:2em;line-height:2;padding:0;text-align:center}.btr-dateinput-calendar-months td{line-height:4;height:4em}.btr-dateinput-calendar-months time{display:block}.btr-dateinput-calendar-past,.btr-dateinput-calendar-future{color:#DDD}.btr-dateinput-calendar-out{color:#CCC;text-shadow:0 1px 0 #FFF}.btr-dateinput-calendar-today{color:#FFF;background-color:#2da4d6;text-shadow:0 1px 0 #555;font-weight:700}.btr-dateinput-calendar-out,.btr-dateinput-calendar td:hover{background-color:#f3f3f3;background-color:rgba(0,0,0,.05)}.btr-dateinput-calendar-header>a:hover,td.btr-dateinput-calendar-today:hover{background-color:#207fb1;text-decoration:none}.btr-dateinput-value+input::-moz-placeholder{color:initial}");
+})(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, 16);
+DOM.importStyles("@media screen", ".btr-dateinput-value{position:absolute;display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-style:none solid;border-color:transparent;pointer-events:none}.btr-dateinput-calendar{position:absolute;visibility:hidden;display:inline-block;cursor:default;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;color:#FFF;border-bottom:1px solid #CCC;overflow:hidden;border-radius:3px;-webkit-box-shadow:0 .25em .5em rgba(0,0,0,.2);box-shadow:0 .25em .5em rgba(0,0,0,.2);font-family:Helvetica Neue,Helvetica,Arial,sans-serif;text-align:center;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;-ms-transform-origin:0 0;transform-origin:0 0;-webkit-transition:.1s ease-out;transition:.1s ease-out;width:17em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.btr-dateinput-calendar[aria-hidden=true]{opacity:0;-webkit-transform:skew(-10deg) scaleX(.75);-ms-transform:skew(-10deg) scaleX(.75);transform:skew(-10deg) scaleX(.75)}.btr-dateinput-calendar-header{position:relative;margin:0;height:2.5em;line-height:2.5em;font-weight:700;white-space:nowrap;background:#2da4d6;text-shadow:0 1px 0 #555;border-bottom:1px solid #207fb1}.btr-dateinput-calendar-header>a{width:2.5em;height:2.5em;position:absolute;left:0;top:0;color:inherit}.btr-dateinput-calendar-header>time{display:block}.btr-dateinput-calendar-header>a:before{content:'\\25C4'}.btr-dateinput-calendar-header>a:before{font-size:.85em}.btr-dateinput-calendar-header>a+a{left:auto;right:0}.btr-dateinput-calendar-header>a+a:before{content:'\\25BA'}.btr-dateinput-calendar-days,.btr-dateinput-calendar-months{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;color:#555;background:#FFF;border-radius:3px;border:1px solid #CCC;border-bottom:0}.btr-dateinput-calendar-days>thead{border-top:1px solid #EEE;border-bottom:1px solid #CCC;font-size:.75em;background:#DDD;font-weight:700;text-shadow:0 1px 0 #f3f3f3}.btr-dateinput-calendar-body{-webkit-transform:translateX(0);-ms-transform:translateX(0);transform:translateX(0);-webkit-transition:-webkit-transform .1s linear;transition:-webkit-transform .1s linear;transition:transform .1s linear;transition:transform .1s linear,-webkit-transform .1s linear}.btr-dateinput-calendar-body[aria-hidden=true]{-webkit-transform:translateX(-100%);-ms-transform:translateX(-100%);transform:translateX(-100%)}.btr-dateinput-calendar-body+.btr-dateinput-calendar-body{position:absolute;bottom:0}.btr-dateinput-calendar-body+.btr-dateinput-calendar-body[aria-hidden=true]{-webkit-transform:translateX(100%);-ms-transform:translateX(100%);transform:translateX(100%)}.btr-dateinput-calendar td,.btr-dateinput-calendar th{width:2.5em;height:2.25em;line-height:2.25;padding:0;text-align:center}.btr-dateinput-calendar-months td{line-height:4;height:4em}.btr-dateinput-calendar-months time{display:block}.btr-dateinput-calendar-past,.btr-dateinput-calendar-future{color:#DDD}.btr-dateinput-calendar-out{color:#CCC;text-shadow:0 1px 0 #FFF}.btr-dateinput-calendar-today{color:#FFF;background-color:#2da4d6;text-shadow:0 1px 0 #555;font-weight:700}.btr-dateinput-calendar-out,.btr-dateinput-calendar td:hover{background-color:#f3f3f3;background-color:rgba(0,0,0,.05)}.btr-dateinput-calendar-header>a:hover,td.btr-dateinput-calendar-today:hover{background-color:#207fb1;text-decoration:none}.btr-dateinput-value+input::-moz-placeholder{color:initial}");
