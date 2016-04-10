@@ -18,12 +18,18 @@
         time.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
     });
 
+    PICKER_TEMPLATE.append(DAYS_TEMPLATE).append(MONTHS_TEMPLATE);
+
     DOM.extend("input[type=date]", {
         constructor() {
             if (this._isNative()) return false;
 
             var picker = PICKER_TEMPLATE.clone(true),
-                label = LABEL_TEMPLATE.clone(true);
+                label = LABEL_TEMPLATE.clone(true),
+                calenderDays = picker.findAll(`.${BASE}-calendar-body`),
+                calendarMonths = picker.find(`.${BASE}-calendar-months`),
+                calendarCaption = picker.find(`.${BASE}-calendar-caption`),
+                changeValue = this._changeValue.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
 
             this
                 // sync picker visibility on focus/blur
@@ -37,22 +43,12 @@
                 .css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing"]))
                 .on("click", this._clickLabel.bind(this));
 
-            var calendarDaysMain = DAYS_TEMPLATE.clone(true),
-                calenderDays = calendarDaysMain.findAll(`.${BASE}-calendar-body`),
-                calendarMonths = MONTHS_TEMPLATE.clone(true),
-                calendarCaption = picker.find(`.${BASE}-calendar-caption`),
-                changeValue = this._changeValue.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
-
-            picker.append(calendarDaysMain);
-
             calenderDays[1].hide().remove();
-
-            calendarCaption.on("click", this._clickPickerCaption.bind(this,
-                picker, calendarMonths, calendarDaysMain, calendarCaption, changeValue));
+            calendarCaption.on("click", this._clickPickerCaption.bind(this, picker, calendarCaption, changeValue));
 
             // handle arrow keys, esc etc.
             this
-                .on("keydown", ["which"], this._keydownPicker.bind(this, picker, calendarMonths, calendarCaption))
+                .on("keydown", ["which"], this._keydownPicker.bind(this, picker, calendarCaption))
                 .watch("value", changeValue);
 
             this.closest("form").on("reset", this._resetForm.bind(this));
@@ -61,7 +57,7 @@
 
             picker
                 .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths))
-                .watch("aria-hidden", this._changePickerVisibility.bind(this, picker, calendarMonths, calendarCaption))
+                .watch("aria-hidden", this._changePickerVisibility.bind(this, picker, calendarCaption))
                 .css("z-index", 1 + (this.css("z-index") | 0))
                 .hide(); // hide calendar to trigger show animation properly later
 
@@ -114,7 +110,7 @@
 
             var range = readDateRange(this);
 
-            if (picker.contains(calendarMonths)) {
+            if (picker.get("aria-expanded") === "true") {
                 calendarMonths.findAll("td").forEach((day, index) => {
                     iterDate.setUTCMonth(index);
 
@@ -190,7 +186,7 @@
 
                 var sign = target.next("a")[0] ? -1 : 1;
 
-                if (picker.contains(calendarMonths)) {
+                if (picker.get("aria-expanded") === "true") {
                     targetDate.setUTCFullYear(targetDate.getUTCFullYear() + sign);
                 } else {
                     targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
@@ -225,7 +221,7 @@
             // prevent input from loosing focus
             return false;
         },
-        _keydownPicker(picker, calendarMonths, calendarCaption, which) {
+        _keydownPicker(picker, calendarCaption, which) {
             var delta, currentDate;
             // ENTER key should submit form if calendar is hidden
             if (picker.matches(":hidden") && which === VK_ENTER) return true;
@@ -249,11 +245,11 @@
                 else if (which === 72 || which === 37) { delta = -1; }
 
                 if (delta) {
-                    var shiftKey = picker.contains(calendarMonths);
+                    var expanded = picker.get("aria-expanded") === "true";
 
-                    if (shiftKey && (which === 40 || which === 38)) {
+                    if (expanded && (which === 40 || which === 38)) {
                         currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
-                    } else if (shiftKey && (which === 37 || which === 39)) {
+                    } else if (expanded && (which === 37 || which === 39)) {
                         currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 1 : -1));
                     } else {
                         currentDate.setUTCDate(currentDate.getUTCDate() + delta);
@@ -305,24 +301,22 @@
                 }
             }, 0);
         },
-        _clickPickerCaption(picker, calendarMonths, calendarDaysMain, calendarCaption, changeValue) {
-            if (picker.contains(calendarMonths)) {
-                calendarMonths.remove();
-                picker.append(calendarDaysMain);
-
+        _clickPickerCaption(picker, calendarCaption, changeValue) {
+            if (picker.get("aria-expanded") === "true") {
                 calendarCaption.set("data-format", "MMMM yyyy");
-            } else {
-                calendarDaysMain.remove();
-                picker.append(calendarMonths);
 
+                picker.set("aria-expanded", "false");
+            } else {
                 calendarCaption.set("data-format", "yyyy");
+
+                picker.set("aria-expanded", "true");
             }
 
             changeValue(this.value());
         },
-        _changePickerVisibility(picker, calendarMonths, calendarCaption, hidden) {
+        _changePickerVisibility(picker, calendarCaption, hidden) {
             if (hidden !== "true") {
-                if (picker.contains(calendarMonths)) {
+                if (picker.get("aria-expanded") === "true") {
                     // restore picker state
                     calendarCaption.fire("click");
                 }

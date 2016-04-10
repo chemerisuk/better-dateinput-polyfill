@@ -48,10 +48,28 @@
         transition: 0.1s ease-out;
 
         width: 17em;
+        max-height: 18.25em;
 
         /* improve font on OSX */
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+    }
+
+    .btr-dateinput-calendar-months {
+        position: absolute;
+        margin-top: 1px;
+        top: 2.5em;
+        left: 0;
+        opacity: 0;
+        transition: opacity 0.1s ease-out;
+    }
+
+    .btr-dateinput-calendar[aria-expanded=true] {
+        max-height: 14.5em;
+    }
+
+    .btr-dateinput-calendar[aria-expanded=true] .btr-dateinput-calendar-months {
+        opacity: 1;
     }
 
     .btr-dateinput-calendar[aria-hidden=true] {
