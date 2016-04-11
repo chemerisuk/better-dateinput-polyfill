@@ -64,7 +64,7 @@
     }
 
     .btr-dateinput-calendar[aria-expanded=true] {
-        max-height: 14.5em;
+        max-height: 14.25em;
     }
 
     .btr-dateinput-calendar[aria-expanded=true] .btr-dateinput-calendar-months {
