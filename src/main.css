@@ -68,7 +68,7 @@
     }
 
     .btr-dateinput-calendar[aria-expanded=true] .btr-dateinput-calendar-months {
-        visibility: visible;
+        visibility: inherit;
     }
 
     .btr-dateinput-calendar[aria-hidden=true] {
