@@ -100,7 +100,7 @@
             year = value.getUTCFullYear();
 
             var range = readDateRange(this);
-            var iterDate = new Date(Date.UTC(year, month, 1));
+            var iterDate = new Date(Date.UTC(year, month, 0));
 
             if (expanded) {
                 calendarMonths.findAll("td").forEach((day, index) => {
@@ -212,7 +212,8 @@
             if (picker.matches(":hidden") && which === VK_ENTER) return true;
 
             if (which === VK_SPACE) {
-                picker.toggle(); // SPACE key toggles calendar visibility
+                // SPACE key toggles calendar visibility
+                picker.set("aria-expanded", "false").toggle();
             } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
                 picker.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
@@ -273,6 +274,7 @@
                 .css("margin-top", marginTop)
                 // always reset picker mode to default
                 .set("aria-expanded", "false")
+                // display the date picker
                 .show();
 
             // use the trick below to reset text selection on focus

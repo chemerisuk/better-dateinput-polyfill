@@ -148,24 +148,6 @@
         text-shadow: var(--shadow-text) var(--bkg-graytext);
     }
 
-    .btr-dateinput-calendar-body {
-        transform: translateX(0);
-        transition: transform 0.1s linear;
-    }
-
-    .btr-dateinput-calendar-body[aria-hidden=true] {
-        transform: translateX(-100%);
-    }
-
-    .btr-dateinput-calendar-body + .btr-dateinput-calendar-body {
-        position: absolute;
-        bottom: 0;
-    }
-
-    .btr-dateinput-calendar-body + .btr-dateinput-calendar-body[aria-hidden=true] {
-        transform: translateX(100%);
-    }
-
     .btr-dateinput-calendar td,
     .btr-dateinput-calendar th {
         width: 2.5em;
