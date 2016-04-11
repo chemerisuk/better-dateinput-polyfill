@@ -1,13 +1,14 @@
 (function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
     "use strict";
 
-    var HTML = DOM.get("documentElement"),
+    var emmet = DOM.emmetLiteral,
+        HTML = DOM.get("documentElement"),
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TEMPLATE = DOM.create(DOM.emmet(`div.${BASE}-calendar>(p.${BASE}-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE}-calendar-caption)`)),
-        DAYS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE}-calendar-body>tr*6>td*7)`)),
-        MONTHS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-months>tbody>tr*3>td*4>time[is=local-time data-format=MMM])`)),
-        LABEL_TEMPLATE = DOM.create(DOM.emmet(`time[is=local-time aria-hidden=true].${BASE}-value`)),
+        PICKER_TEMPLATE = DOM.create(emmet `div.${BASE}-calendar>(p.${BASE}-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE}-calendar-caption)`),
+        DAYS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE}-calendar-body>tr*6>td*7)`),
+        MONTHS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE}-calendar-months>tbody>tr*3>td*4>time[is=local-time data-format=MMM])`),
+        LABEL_TEMPLATE = DOM.create(emmet `time[is=local-time aria-hidden=true].${BASE}-value`),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
     MONTHS_TEMPLATE.findAll("time").forEach((time, index) => {

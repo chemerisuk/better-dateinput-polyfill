@@ -11,7 +11,7 @@
   },
   "peerDependencies": {
     "better-dom": "^3.0.0-rc.1",
-    "better-emmet-plugin": "^1.0.0-beta.2",
+    "better-emmet-plugin": "^1.0.0-rc.1",
     "better-i18n-plugin": "^2.0.0-rc.1",
     "better-time-element": "^1.0.0-rc.3"
   },
