@@ -197,6 +197,15 @@
 
     /* fix firefox issue with color:transparent */
     .btr-dateinput-value + input::-moz-placeholder {
-        color: initial;
+        color: var(--color-graytext);
+    }
+
+    /* #66: IE Placeholders disappearing */
+    .btr-dateinput-value + input:-ms-input-placeholder {
+        color: var(--color-graytext) !important;
+    }
+
+    .btr-dateinput-value + input::-webkit-input-placeholder {
+        color: var(--color-graytext);
     }
 }
