@@ -40,12 +40,14 @@
 
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
+                .watch("datetime", changeValue)
+                .watch("data-format", changeValue)
                 .css(this.css(["width", "font", "padding", "text-align", "border-width", "box-sizing"]))
                 .css("line-height", "") // IE10 returns invalid line-height for hidden elements
                 .on("click", this._clickLabel.bind(this));
 
             calenderDays[1].hide().remove();
-            calendarCaption.on("click", this._clickPickerCaption.bind(this, picker, calendarCaption, changeValue));
+            calendarCaption.on("click", this._clickPickerCaption.bind(this, picker, calendarCaption));
 
             // handle arrow keys, esc etc.
             this
@@ -55,6 +57,8 @@
             this.closest("form").on("reset", this._resetForm.bind(this));
             // trigger watchers to build the calendar
             changeValue(this.get("defaultValue"));
+
+            this._syncDateValue(label);
 
             picker
                 .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths))
@@ -169,9 +173,6 @@
                     targetDays.show();
                 }
             }
-
-            // trigger event manually to notify about changes
-            this.fire("change");
         },
         _syncDateValue(time) {
             time.set("datetime", this.value());
@@ -216,7 +217,7 @@
                     targetDate = range[1];
                 }
 
-                this.value(formatISODate(targetDate));
+                this.value(formatISODate(targetDate)).fire("change");
             }
             // prevent input from loosing focus
             return false;
@@ -231,7 +232,7 @@
             } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
                 picker.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
-                this.value(""); // BACKSPACE, DELETE clear value
+                this.value("").fire("change"); // BACKSPACE, DELETE clear value
             } else if (which === VK_CONTROL) {
                 calendarCaption.fire("click"); // CONTROL toggles calendar mode
             } else {
@@ -258,7 +259,7 @@
                     var range = readDateRange(this);
 
                     if (!(currentDate < range[0] || currentDate > range[1])) {
-                        this.value(formatISODate(currentDate));
+                        this.value(formatISODate(currentDate)).fire("change");
                     }
                 }
             }
@@ -306,13 +307,11 @@
                 }
             }, 0);
         },
-        _clickPickerCaption(picker, calendarCaption, changeValue) {
+        _clickPickerCaption(picker, calendarCaption) {
             var expanded = picker.get("aria-expanded") === "true";
 
             picker.set("aria-expanded", String(!expanded));
             calendarCaption.set("data-format", expanded ? "MMMM yyyy" : "yyyy");
-
-            changeValue(this.value());
         },
         _clickLabel() {
             this.fire("focus");
