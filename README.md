@@ -8,14 +8,14 @@ Why another date picker? The problem is that most of existing solutions do not f
 ## Features
 
 * normalizes `input[type=date]` presentation for desktop browsers
-* skips mobile browsers, they have good UI widget and correct `value` format
 * submitted value always has `yyyy-MM-dd` [RFC 3339] format
 * [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for current and future content
 * `placeholder` attribute works as expected in browsers that support it
-* fully customizable date picker, including [date format](https://github.com/chemerisuk/better-time-element#custom-formats) via `data-format` attribute
-* keyboard and accessibility support
+* fully customizable date picker, including [displayed value format](https://github.com/chemerisuk/better-time-element#custom-formats) via `data-format` attribute
+* control when to apply the polyfill using [data-polyfill](#forcing-the-polyfill) attribute
 * [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions)
 * US variant for days of week is supported (use `<html lang="en-US">`)
+* * keyboard and accessibility friendly
 
 ## Installation
 The simplest way is to use [bower](http://bower.io/):
