@@ -24,50 +24,46 @@
         constructor() {
             if (this._isNative()) return false;
 
-            var picker = PICKER_TEMPLATE.clone(true),
+            var defaultValue = this.get("defaultValue"),
+                picker = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
                 calenderDays = picker.findAll(`.${BASE}-calendar-body`),
                 calendarMonths = picker.find(`.${BASE}-calendar-months`),
                 calendarCaption = picker.find(`.${BASE}-calendar-caption`),
-                changeValue = this._changeValue.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
+                invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
 
-            this
+            calenderDays[1].hide().remove();
+
+            this// hide original input text
+                // IE8 doesn't suport color:transparent - use background-color instead
+                .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this._focusPicker.bind(this, picker))
                 .on("blur", this._blurPicker.bind(this, picker))
                 .on("change", this._syncDateValue.bind(this, label))
-                .before(picker.hide(), label);
+                .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
+                .value(defaultValue); // restore initial value
 
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
-                .watch("datetime", changeValue)
-                .watch("data-format", changeValue)
                 .css(this.css(["width", "font", "padding", "text-align", "border-width", "box-sizing"]))
                 .css("line-height", "") // IE10 returns invalid line-height for hidden elements
-                .on("click", this._clickLabel.bind(this));
+                .on("click", this._clickLabel.bind(this))
+                .watch("datetime", invalidatePicker)
+                .set("datetime", defaultValue);
 
-            calenderDays[1].hide().remove();
-            calendarCaption.on("click", this._clickPickerCaption.bind(this, picker, calendarCaption));
-
-            // handle arrow keys, esc etc.
             this
-                .on("keydown", ["which"], this._keydownPicker.bind(this, picker, calendarCaption))
-                .watch("value", changeValue);
-
-            this.closest("form").on("reset", this._resetForm.bind(this));
-            // trigger watchers to build the calendar
-            changeValue(this.get("defaultValue"));
-
-            this._syncDateValue(label);
+                .before(picker.hide(), label)
+                .closest("form").on("reset", this._resetForm.bind(this));
 
             picker
+                .watch("aria-expanded", invalidatePicker)
                 .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths))
-                .css("z-index", 1 + (this.css("z-index") | 0))
-                .hide(); // hide calendar to trigger show animation properly later
+                .css("z-index", 1 + (this.css("z-index") | 0));
 
-            // hide original input text
-            // IE8 doesn't suport color:transparent - use background-color instead
-            this.css("color", document.addEventListener ? "transparent" : this.css("background-color"));
+            calendarCaption
+                .on("click", this._clickPickerCaption.bind(this, picker));
+
             // display calendar for autofocused elements
             if (this.matches(":focus")) picker.show();
         },
@@ -92,9 +88,11 @@
                 return false;
             }
         },
-        _changeValue(caption, calendarMonths, calenderDays, picker, value, prevValue) {
+        _invalidatePicker(caption, calendarMonths, calenderDays, picker, value, prevValue) {
             // #47: do not proceed if animation is in progress still
             if (calenderDays.every((days) => picker.contains(days))) return false;
+
+            var expanded = picker.get("aria-expanded") === "true";
 
             var year, month, date, iterDate;
 
@@ -108,13 +106,15 @@
             date = value.getUTCDate();
             year = value.getUTCFullYear();
             // update calendar caption
-            caption.set("datetime", new Date(year, month).toISOString());
+            caption
+                .set("data-format", expanded ? "yyyy" : "MMMM yyyy")
+                .set("datetime", new Date(year, month).toISOString());
             // update calendar content
             iterDate = new Date(Date.UTC(year, month, 1));
 
             var range = readDateRange(this);
 
-            if (picker.get("aria-expanded") === "true") {
+            if (expanded) {
                 calendarMonths.findAll("td").forEach((day, index) => {
                     iterDate.setUTCMonth(index);
 
@@ -222,7 +222,7 @@
             // prevent input from loosing focus
             return false;
         },
-        _keydownPicker(picker, calendarCaption, which) {
+        _keydownPicker(picker, which) {
             var delta, currentDate;
             // ENTER key should submit form if calendar is hidden
             if (picker.matches(":hidden") && which === VK_ENTER) return true;
@@ -234,7 +234,9 @@
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
                 this.value("").fire("change"); // BACKSPACE, DELETE clear value
             } else if (which === VK_CONTROL) {
-                calendarCaption.fire("click"); // CONTROL toggles calendar mode
+                // CONTROL toggles calendar mode
+                picker.set("aria-expanded",
+                    String(picker.get("aria-expanded") !== "true"));
             } else {
                 currentDate = new Date(this.value());
 
@@ -307,11 +309,9 @@
                 }
             }, 0);
         },
-        _clickPickerCaption(picker, calendarCaption) {
-            var expanded = picker.get("aria-expanded") === "true";
-
-            picker.set("aria-expanded", String(!expanded));
-            calendarCaption.set("data-format", expanded ? "MMMM yyyy" : "yyyy");
+        _clickPickerCaption(picker) {
+            picker.set("aria-expanded",
+                String(picker.get("aria-expanded") !== "true"));
         },
         _clickLabel() {
             this.fire("focus");
