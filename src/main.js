@@ -40,7 +40,7 @@
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this._focusPicker.bind(this, picker))
                 .on("blur", this._blurPicker.bind(this, picker))
-                .on("change", this._syncDateValue.bind(this, label))
+                .on("change", this._syncValue.bind(this, "value", label))
                 .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
                 .value(defaultValue); // restore initial value
 
@@ -54,7 +54,7 @@
 
             this
                 .before(picker.hide(), label)
-                .closest("form").on("reset", this._resetForm.bind(this));
+                .closest("form").on("reset", this._syncValue.bind(this, "defaultValue", label));
 
             picker
                 .watch("aria-expanded", invalidatePicker)
@@ -174,8 +174,11 @@
                 }
             }
         },
-        _syncDateValue(time) {
-            time.set("datetime", this.value());
+        _syncValue(propName, label) {
+            var value = this.get(propName);
+
+            this.value(value);
+            label.set("datetime", value);
         },
         _clickPicker(picker, calendarMonths, target) {
             var targetDate;
@@ -315,9 +318,6 @@
         },
         _clickLabel() {
             this.fire("focus");
-        },
-        _resetForm() {
-            this.value(this.get("defaultValue"));
         }
     });
 }(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, 17));

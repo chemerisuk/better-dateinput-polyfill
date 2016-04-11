@@ -44,18 +44,21 @@ describe("better-dateinput-polyfill", function() {
 
         el._keydownPicker(picker, 8);
         expect(spy).toHaveBeenCalledWith("");
+
+        spy.calls.reset();
+
         el._keydownPicker(picker, 46);
-        expect(spy.calls.count()).toBe(2);
+        expect(spy).toHaveBeenCalledWith("");
     });
 
     it("toggles calendar mode on control key", function() {
-        var spy = spyOn(caption, "fire");
+        expect(picker.get("aria-expanded")).not.toBe("true");
 
         el._keydownPicker(picker, 17);
-        expect(spy.calls.count()).toBe(1);
+        expect(picker.get("aria-expanded")).toBe("true");
 
         el._keydownPicker(picker, 17);
-        expect(spy.calls.count()).toBe(2);
+        expect(picker.get("aria-expanded")).not.toBe("true");
     });
 
     it("should handle arrow keys", function() {
@@ -88,21 +91,21 @@ describe("better-dateinput-polyfill", function() {
         var target = DOM.mock("<a>");
 
         el.value("2000-01-01");
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2000-02-01");
 
         picker.set("aria-expanded", "true");
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2001-02-01");
 
         spyOn(target, "next").and.returnValue(el);
 
         el.value("2000-01-01");
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("1999-01-01");
 
         picker.set("aria-expanded", "true");
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("1998-01-01");
     });
 
@@ -114,11 +117,11 @@ describe("better-dateinput-polyfill", function() {
         el.value("2000-01-01");
 
         target.set("datetime", "2000-06-09");
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2000-06-01");
 
         target.set("datetime", "2000-10-09");
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2000-10-01");
     });
 
@@ -131,11 +134,11 @@ describe("better-dateinput-polyfill", function() {
         });
 
         el.value("2000-01-01");
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2000-01-01");
 
         spyOn(target, "data").and.returnValue(now.getTime());
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2011-07-13");
     });
 
@@ -149,13 +152,13 @@ describe("better-dateinput-polyfill", function() {
     it("should use current date for calendar if value is empty", function() {
         var now = new Date(),
             getSpy = spyOn(el, "get").and.returnValue(""),
-            setSpy = spyOn(el, "value"),
+            setSpy = spyOn(el, "value").and.returnValue(el),
             months = DOM.mock("<table>"),
             target = DOM.mock("<a>");
 
         now.setMonth(now.getMonth() + 1);
 
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
 
@@ -163,7 +166,7 @@ describe("better-dateinput-polyfill", function() {
 
         now.setMonth(now.getMonth() - 2);
 
-        el._invalidatePicker(picker, months, target);
+        el._clickPicker(picker, months, target);
         expect(getSpy).toHaveBeenCalled();
         expect(setSpy).toHaveBeenCalledWith(formatDateISO(now));
     });
@@ -182,14 +185,14 @@ describe("better-dateinput-polyfill", function() {
         expect(spy.calls.count()).toBe(2);
     });
 
-    it("should restore initial value on form reset", function() {
-        el.set("defaultValue", "2000-10-20");
-        el.value("2000-10-2");
+    // it("should restore initial value on form reset", function() {
+    //     el.set("defaultValue", "2000-10-20");
+    //     el.value("2000-10-2");
 
-        el._resetForm();
+    //     el._resetForm();
 
-        expect(el.value()).toBe("2000-10-20");
-    });
+    //     expect(el.value()).toBe("2000-10-20");
+    // });
 
     describe("caption", () => {
         var pickerCaption;
