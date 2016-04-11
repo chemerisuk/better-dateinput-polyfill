@@ -12,9 +12,9 @@ Why another date picker? The problem is that most of existing solutions do not f
 * submitted value always has `yyyy-MM-dd` [RFC 3339] format
 * [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for current and future content
 * `placeholder` attribute works as expected in browsers that support it
-* fully customizable date picker, including date format displayed to the user
+* fully customizable date picker, including [date format](https://github.com/chemerisuk/better-time-element#custom-formats) via `data-format` attribute
 * keyboard and accessibility support
-* [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions) (if your language is missed - just translate strings from `i18n` folder and include a new file in your project)
+* [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions)
 * US variant for days of week is supported (use `<html lang="en-US">`)
 
 ## Installation
@@ -31,50 +31,22 @@ Then append the following script on your page:
 ```html
 <script src="bower_components/better-dom/dist/better-dom.js"></script>
 <script src="bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"></script>
+<script src="bower_components/better-time-element/dist/better-time-element.js"></script>
 <script src="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
 ```
 
-## Custom formats
-Displayed date can be formatted using a `data-format` attribute on the `<input type="date">`. For example:
-
-```html
-<input type="date" data-format="EE, MMMM dd'th' yyyy">
-```
-
-This will display the selected date like "Monday, December 8th 2014" on the input.
-
-If `data-format` is not specified, date is formatted using the pattern "E, dd MMM yyyy".
-
-Possible parameters for the format are:
-
-|Letter |Date Component                                   |Presentation |Examples         |
-|-------|-------------------------------------------------|-------------|-----------------|
-|y      |Year                                             |Year         |2002; 02; 2      |
-|M      |Month in year                                    |Month        |July; Jul; 07; 7 |
-|w      |Week in year                                     |Number       |07; 7            |
-|W      |Week in month                                    |Number       |2                |
-|D      |Day in year                                      |Number       |009; 9           |
-|d      |Day in month                                     |Number       |08; 8            |
-|F      |Day of week in month (1st, 2nd, 3rd Tuesday)     |Number       |2                |
-|E      |Day name in week                                 |Text         |Tuesday; Tu.     |
-|u      |Day number of week (1 = Monday, ..., 7 = Sunday) |Number       |1                |
-
-Number of letters in the parameter name specifies form of the output value, for instance:
-
-```
-"M" yields "1"
-"MM" yields "01"
-"MMM" yields "Jan"
-"MMMM" yields "January"
-```
-
 ## Forcing the polyfill
-Sometimes it's useful to override browser implemetation with the consistent control implemented by the polyfill. In order to suppress feature detection you can use the `data-native` attribute. Possible values are `desktop` and `mobile`. They allow to limit type of devices where you want to see a native control.
+Sometimes it's useful to override browser implemetation with the consistent control implemented by the polyfill. In order to suppress feature detection you can use the `data-polyfill` attribute. Possible values are `desktop`, `mobile`, `all`, `none`. They allow to limit type of devices where you want to see a native control.
 
 For example, the code below defines a dateinput that uses a native implementation on mobile phones, but ALL desktop browsers (even Chrome desktop) will have a consistent widget created by the polyfill.
 
 ```html
-<input type="date" data-native="mobile" name="foo" value="bar">
+<!-- force polyfill only on mobile devices -->
+<input type="date" data-polyfill="mobile">
+<!-- does not polyfill any element -->
+<input type="date" data-polyfill="none">
+<!-- force polyfill everywhere -->
+<input type="date" data-polyfill="all">
 ```
 
 ## Contributing
