@@ -5,7 +5,7 @@
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         PICKER_TEMPLATE = DOM.create(DOM.emmet(`div.${BASE}-calendar>(p.${BASE}-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE}-calendar-caption)`)),
-        DAYS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE}-calendar-body*2>tr*6>td*7)`)),
+        DAYS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE}-calendar-body>tr*6>td*7)`)),
         MONTHS_TEMPLATE = DOM.create(DOM.emmet(`table[aria-hidden=true].${BASE}-calendar-months>tbody>tr*3>td*4>time[is=local-time data-format=MMM])`)),
         LABEL_TEMPLATE = DOM.create(DOM.emmet(`time[is=local-time aria-hidden=true].${BASE}-value`)),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
@@ -27,12 +27,10 @@
             var defaultValue = this.get("defaultValue"),
                 picker = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
-                calenderDays = picker.findAll(`.${BASE}-calendar-body`),
+                calenderDays = picker.find(`.${BASE}-calendar-body`),
                 calendarMonths = picker.find(`.${BASE}-calendar-months`),
                 calendarCaption = picker.find(`.${BASE}-calendar-caption`),
                 invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
-
-            calenderDays[1].hide().remove();
 
             this// hide original input text
                 // IE8 doesn't suport color:transparent - use background-color instead
@@ -88,15 +86,10 @@
                 return false;
             }
         },
-        _invalidatePicker(caption, calendarMonths, calenderDays, picker, value, prevValue) {
-            // #47: do not proceed if animation is in progress still
-            if (calenderDays.every((days) => picker.contains(days))) return false;
-
+        _invalidatePicker(caption, calendarMonths, calenderDays, picker) {
             var expanded = picker.get("aria-expanded") === "true";
-
-            var year, month, date, iterDate;
-
-            value = new Date(value);
+            var value = new Date(this.value());
+            var year, month, date;
 
             if (!value.getTime()) {
                 value = new Date();
@@ -105,14 +98,9 @@
             month = value.getUTCMonth();
             date = value.getUTCDate();
             year = value.getUTCFullYear();
-            // update calendar caption
-            caption
-                .set("data-format", expanded ? "yyyy" : "MMMM yyyy")
-                .set("datetime", new Date(year, month).toISOString());
-            // update calendar content
-            iterDate = new Date(Date.UTC(year, month, 1));
 
             var range = readDateRange(this);
+            var iterDate = new Date(Date.UTC(year, month, 1));
 
             if (expanded) {
                 calendarMonths.findAll("td").forEach((day, index) => {
@@ -132,16 +120,10 @@
                     day.set("class", className);
                 });
             } else {
-                // move to beginning of current month week
+                // move to beginning of the first week in current month
                 iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
-
-                prevValue = new Date(prevValue);
-
-                var delta = value.getUTCMonth() - prevValue.getUTCMonth() + 100 * (value.getUTCFullYear() - prevValue.getUTCFullYear());
-                var currenDays = calenderDays[picker.contains(calenderDays[0]) ? 0 : 1];
-                var targetDays = delta ? calenderDays[calenderDays[0] === currenDays ? 1 : 0] : currenDays;
-                // update days
-                targetDays.findAll("td").forEach((day) => {
+                // update days picker
+                calenderDays.findAll("td").forEach((day) => {
                     iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                     var mDiff = month - iterDate.getUTCMonth(),
@@ -166,13 +148,12 @@
                         .data("ts", iterDate.getTime())
                         .value(iterDate.getUTCDate());
                 });
-
-                if (delta) {
-                    currenDays[delta > 0 ? "after" : "before"](targetDays);
-                    currenDays.hide(() => { currenDays.remove() });
-                    targetDays.show();
-                }
             }
+
+            // update calendar caption
+            caption
+                .set("data-format", expanded ? "yyyy" : "MMMM yyyy")
+                .set("datetime", new Date(year, month).toISOString());
         },
         _syncValue(propName, label) {
             var value = this.get(propName);
