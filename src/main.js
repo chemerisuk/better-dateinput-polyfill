@@ -231,7 +231,7 @@
             } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
                 picker.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
-                this.empty(); // BACKSPACE, DELETE clear value
+                this.value(""); // BACKSPACE, DELETE clear value
             } else if (which === VK_CONTROL) {
                 calendarCaption.fire("click"); // CONTROL toggles calendar mode
             } else {
