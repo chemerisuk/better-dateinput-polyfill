@@ -1,4 +1,4 @@
-# better-i18n-plugin<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
+# better-i18n-plugin<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 > Internationalization plugin for [better-dom](https://github.com/chemerisuk/better-dom)
 
 The project aims to solve the internationalization problem __on front-end side__. The technique used behind the scenes I call “CSS-driven internationalization” and there is a [deep article](http://www.smashingmagazine.com/2014/06/23/css-driven-internationalization-in-javascript/) about it.
@@ -88,16 +88,18 @@ button.l10n("Hello {0}", ["Maksim"]);          // displays "Hello Maksim"
 ```
 
 ## Backend integration
-Often you need to grab localized strings from backend. This is very easy to do using `DOM.importStrings`. In the example below I'll use [Handlebars](http://handlebarsjs.com) as a templating language and [i18n-node](https://github.com/mashpie/i18n-node).
+Often you need to grab localized strings from backend. This is very easy to do using `DOM.importStrings`. In the example below I'll use [Handlebars](http://handlebarsjs.com) as a templating language and [i18n-node](https://github.com/mashpie/i18n-node) for I18N support.
 
-Assume you stored web page language in `res.locals.locale`. Then you need to add another variable that stores all backend strings map passed into `JSON.stringify` call:
+Assume you've stored web page language in `res.locals.locale`. Then you need to add another variable that stores all backend strings map passed into `JSON.stringify` call:
 
 ```js
-res.locals.locale = "ru"; // language of your web page
-res.locals.catalog = JSON.stringify(i18n.getCatalog(res.locals.locale));
+// remember language of your web page
+res.locals.locale = "ru";
+// generate string bundle for client side
+res.locals.bundle = JSON.stringify(i18n.getCatalog(res.locals.locale));
 ```
 
-After that add extra `script` element that will populate all backend strings on froentend side:
+After that just generate extra `<script>` element that will populate all backend strings in browser:
 
 ```html
 <!DOCTYPE html>
@@ -108,7 +110,7 @@ After that add extra `script` element that will populate all backend strings on 
     <script src="bower_components/better-dom/dist/better-dom.js"></script>
     <script src="build/better-i18n-plugin.js"></script>
     <!-- populate strings from backend -->
-    <script>DOM.importStrings("{{locale}}",{{{catalog}}})</script>
+    <script>DOM.importStrings("{{locale}}",{{{bundle}}})</script>
 </body>
 </html>
 ```
@@ -151,6 +153,10 @@ In order to add support or use multiple languages of a live extension follow the
 * iOS Safari 6+
 * Android 2.3+
 * Chrome for Android
+
+[npm-url]: https://www.npmjs.com/package/better-i18n-plugin
+[npm-version]: https://img.shields.io/npm/v/better-i18n-plugin.svg
+[npm-downloads]: https://img.shields.io/npm/dt/better-i18n-plugin.svg
 
 [travis-url]: http://travis-ci.org/chemerisuk/better-i18n-plugin
 [travis-image]: http://img.shields.io/travis/chemerisuk/better-i18n-plugin/master.svg

@@ -46,11 +46,23 @@
         </p>
         <p>
             <label>Start date<br></label>
-            <input type="date" name="start" required value="2000-01-01" placeholder="Party begins">
+            <input type="date" name="start" required value="2000-01-01" placeholder="Party begins" data-polyfill="mobile">
         </p>
         <p>
             <label>End date<br></label>
             <input type="date" name="end" placeholder="Party ends" min="2014-11-01" max="2016-01-15" data-format="'Ends at' MMM dd yyyy">
+        </p>
+        <p>
+            <label>This field is disabled<br></label>
+            <input type="date" data-polyfill="none" disabled>
+        </p>
+        <p>
+            <label>This field is readonly<br></label>
+            <input type="date" data-polyfill="all" readonly>
+        </p>
+        <p>
+            <label>This field is hidden<br></label>
+            <input type="date" data-polyfill="all" placeholder="Force starts" style="display:none"><button type="button" onclick="this.style.display='none';this.previousSibling.style.display=''">Show dateinput</button>
         </p>
         <p>
             <input type="checkbox" name="accept" required/>
@@ -61,7 +73,8 @@
     </form>
     <script src="bower_components/better-dom/dist/better-dom.js"></script>
     <script src="bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"></script>
+    <script src="bower_components/better-time-element/dist/better-time-element.js"></script>
+    <script src="bower_components/better-emmet-plugin/dist/better-emmet-plugin.js"></script>
     <script src="build/better-dateinput-polyfill.js"></script>
-    <script src="i18n/better-dateinput-polyfill.ru.js"></script>
 </body>
 </html>

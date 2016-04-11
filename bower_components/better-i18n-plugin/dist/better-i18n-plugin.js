@@ -1,19 +1,70 @@
 /**
  * better-i18n-plugin: Internationalization plugin for better-dom
- * @version 1.0.2 Tue, 28 Oct 2014 17:19:30 GMT
- * @link https://github.com/chemerisuk/better-i18n-plugin
- * @copyright 2014 Maksim Chemerisuk
+ * @version 2.0.0-rc.1 Mon, 11 Apr 2016 10:16:21 GMT
+ * @link https://github.com/chemerisuk/better-emmet-plugin
+ * @copyright 2016 Maksim Chemerisuk
  * @license MIT
  */
-/* jshint -W053 */
-(function(DOM) {
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+(function (DOM) {
     "use strict";
 
     var strings = [],
-        languages = [];
+        languages = [],
+        HTML = DOM.get("documentElement");
 
-    DOM.importStrings = function(lang, key, value) {
-        if (typeof lang !== "string") throw new TypeError("lang argument must be a string");
+    function formatKey(key, args) {
+        var start = arguments.length <= 2 || arguments[2] === undefined ? 0 : arguments[2];
+
+        return key.replace(/%s/g, function (str) {
+            return args[start++] || str;
+        });
+    }
+
+    var Entry = function () {
+        function Entry(key, args) {
+            var _this = this;
+
+            _classCallCheck(this, Entry);
+
+            languages.forEach(function (lang, index) {
+                var value = strings[index][key];
+
+                if (value) {
+                    _this[lang] = args ? formatKey(value, args) : value;
+                }
+            });
+
+            this._ = args ? formatKey(key, args) : key;
+        }
+
+        Entry.prototype.toString = function toString() {
+            var _this2 = this;
+
+            // "_" key should always be the last one
+            return Object.keys(this).sort(function (key) {
+                return key === "_" ? 1 : -1;
+            }).map(function (key) {
+                return "<span lang=\"" + key + "\">" + _this2[key] + "</span>";
+            }).join("");
+        };
+
+        Entry.prototype.toLocaleString = function toLocaleString(lang) {
+            return this[lang || HTML.lang] || this._;
+        };
+
+        Entry.prototype.valueOf = function valueOf() {
+            return "<span>" + this.toString() + "</span>";
+        };
+
+        return Entry;
+    }();
+
+    DOM.importStrings = function (lang, key, value) {
+        if (typeof lang !== "string") {
+            throw new TypeError("lang argument must be a string");
+        }
 
         var langIndex = languages.indexOf(lang),
             stringsMap = strings[langIndex];
@@ -25,63 +76,41 @@
             // add global rules to to able to switch to new language
 
             // by default localized strings should be hidden
-            DOM.importStyles((("[data-l10n=\"" + lang) + "\"]"), "display:none");
+            DOM.importStyles("span[lang=\"" + lang + "\"]", "display:none");
             // ... except current page language is `lang`
-            DOM.importStyles(((":lang(" + lang) + (") > [data-l10n=\"" + lang) + "\"]"), "display:inline !important");
+            DOM.importStyles(":lang(" + lang + ") > span[lang=\"" + lang + "\"]", "display:inline !important");
             // ... in such case hide default value too
-            DOM.importStyles(((":lang(" + lang) + (") > [data-l10n=\"" + lang) + "\"] ~ [data-l10n]"), "display:none");
+            DOM.importStyles(":lang(" + lang + ") > span[lang=\"" + lang + "\"] ~ span[lang]", "display:none");
         }
 
         if (typeof key === "string") {
             stringsMap[key] = value;
         } else {
-            Object.keys(key).forEach(function(x)  {
+            Object.keys(key).forEach(function (x) {
                 stringsMap[x] = key[x];
             });
         }
     };
 
-    DOM.extend("*", {
-        l10n: function(key, varMap) {
-            // unwrap outer <span> from toHTMLString call
-            return this.set(new Entry(key, varMap).toHTMLString().slice(6, -7));
+    DOM.__ = function (key) {
+        for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+            args[_key - 1] = arguments[_key];
         }
-    });
 
-    DOM.__ = function(key, varMap)  {return new Entry(key, varMap)};
-
-    function Entry(key, varMap) {var this$0 = this;
-        languages.forEach(function(lang, index)  {
-            var value = strings[index][key];
-
-            if (value) {
-                if (varMap) value = DOM.format(value, varMap);
-
-                this$0[lang] = value;
-            }
-        });
-
-        this._ = varMap ? DOM.format(key, varMap) : key;
-    }
-
-    // grab all methods from String.prototype
-    Entry.prototype = new String();
-    Entry.prototype.constructor = Entry;
-
-    Entry.prototype.toString = Entry.prototype.valueOf = function() {
-        return this[DOM.get("lang")] || this._;
+        if (Array.isArray(key)) {
+            return key.map(function (key) {
+                return new Entry(key, args);
+            });
+        } else {
+            return new Entry(key, args);
+        }
     };
 
-    Entry.prototype.toLocaleString = function(lang) {
-        return lang ? this[lang] || this._ : this.toString();
-    };
+    DOM.__.esliteral = function (parts) {
+        for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+            args[_key2 - 1] = arguments[_key2];
+        }
 
-    Entry.prototype.toHTMLString = function() {var this$0 = this;
-        // "_" key should always be the last one
-        var keys = Object.keys(this).sort(function(k)  {return k === "_" ? 1 : -1});
-
-        return DOM.emmet("span>" + keys.map(function(key)  {
-            return "span[data-l10n=`" + key + "`]>`" + this$0[key] + "`";
-        }).join("^"));
+        return new Entry(parts.join("%s"), args).toLocaleString();
     };
-}(window.DOM));
+})(window.DOM);

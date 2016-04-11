@@ -1,4 +1,4 @@
-# [better-dom](https://github.com/chemerisuk/better-dom): Live extension playground<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
+# [better-dom](https://github.com/chemerisuk/better-dom): Live extension playground<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 
 [API DOCUMENTATION](http://chemerisuk.github.io/better-dom/)
 
@@ -40,13 +40,13 @@ If you need to support IE8-9 please read [the section below](#notes-about-old-ie
 * Walk through the sorce code of existing [projects that use better-dom](http://bower.io/search/?q=better-dom).
 
 ## Contributing
-In order to modify the source code you have to have [gulp](http://gulpjs.com) installed globally:
+In order to modify the source code you have to install [gulp](http://gulpjs.com) globally:
 
 ```sh
 $ npm install -g gulp
 ```
 
-The project uses set of ES6 transpilers to compile an output file. You can use the command below to start development: 
+The project uses set of ES6 transpilers to compile the output file. You can use command below to start development: 
 
 ```sh
 $ npm start
@@ -102,6 +102,10 @@ Later the library downloads `better-dom-legacy.htc` file. This file helps to imp
 * Chrome for Android
 
 Opera Mini is out of the scope because of lack of support for CSS3 Animations.
+
+[npm-url]: https://www.npmjs.com/package/better-dom
+[npm-version]: https://img.shields.io/npm/v/better-dom.svg
+[npm-downloads]: https://img.shields.io/npm/dt/better-dom.svg
 
 [travis-url]: http://travis-ci.org/chemerisuk/better-dom
 [travis-image]: http://img.shields.io/travis/chemerisuk/better-dom/master.svg

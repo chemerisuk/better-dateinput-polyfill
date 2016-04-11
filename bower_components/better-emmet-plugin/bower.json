@@ -1,14 +1,13 @@
 {
-  "name": "better-i18n-plugin",
-  "version": "2.0.0-rc.1",
+  "name": "better-emmet-plugin",
+  "version": "1.0.0-rc.1",
   "main": [
-    "dist/better-i18n-plugin.js"
+    "dist/better-emmet-plugin.js"
   ],
   "ignore": [
     ".*",
-    "src",
     "test",
-    "index.html",
+    "src",
     "package.json",
     "bower.json"
   ],
@@ -16,6 +15,6 @@
     "better-dom"
   ],
   "dependencies": {
-    "better-dom": "^3.0.0"
+    "better-dom": "~3.0.0"
   }
 }

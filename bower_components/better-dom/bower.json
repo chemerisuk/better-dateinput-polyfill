@@ -1,6 +1,6 @@
 {
   "name": "better-dom",
-  "version": "2.1.3",
+  "version": "3.0.0-rc.1",
   "main": [
     "dist/better-dom.js",
     "dist/better-dom-legacy.js",
@@ -14,10 +14,5 @@
     "task",
     "gulpfile.js",
     "package.json"
-  ],
-  "devDependencies": {
-    "jquery": "latest",
-    "html5shiv": "latest",
-    "es5-shim": "latest"
-  }
+  ]
 }
