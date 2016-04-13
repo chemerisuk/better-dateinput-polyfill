@@ -9,6 +9,10 @@
     "type": "git",
     "url": "https://github.com/chemerisuk/better-dateinput-polyfill"
   },
+  "keywords": [
+    "ecosystem:better-dom",
+    "web-components"
+  ],
   "peerDependencies": {
     "better-dom": "^3.0.0-rc.1",
     "better-emmet-plugin": "^1.0.0-rc.1",

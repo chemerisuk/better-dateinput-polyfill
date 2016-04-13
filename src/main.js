@@ -1,14 +1,15 @@
-(function(DOM, BASE, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
+(function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
     "use strict";
 
     var emmet = DOM.emmetLiteral,
         HTML = DOM.get("documentElement"),
+        BASE_CLASS = "btr-dateinput-calendar",
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TEMPLATE = DOM.create(emmet `div.${BASE}-calendar>(p.${BASE}-calendar-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE}-calendar-caption)`),
-        DAYS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE}-calendar-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE}-calendar-body>tr*6>td*7)`),
-        MONTHS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE}-calendar-months>tbody>tr*3>td*4>time[is=local-time data-format=MMM])`),
-        LABEL_TEMPLATE = DOM.create(emmet `time[is=local-time aria-hidden=true].${BASE}-value`),
+        PICKER_TEMPLATE = DOM.create(emmet `div.${BASE_CLASS}>(p.${BASE_CLASS}-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE_CLASS}-caption)`),
+        DAYS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE_CLASS}-body>tr*6>td*7)`),
+        MONTHS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-months>tbody>tr*3>td*4>time[is=local-time data-format=MMM])`),
+        LABEL_TEMPLATE = DOM.create(emmet `time[is=local-time aria-hidden=true].btr-dateinput-value`),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
     MONTHS_TEMPLATE.findAll("time").forEach((time, index) => {
@@ -28,9 +29,9 @@
             var defaultValue = this.get("defaultValue"),
                 picker = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
-                calenderDays = picker.find(`.${BASE}-calendar-body`),
-                calendarMonths = picker.find(`.${BASE}-calendar-months`),
-                calendarCaption = picker.find(`.${BASE}-calendar-caption`),
+                calenderDays = picker.find(`.${BASE_CLASS}-body`),
+                calendarMonths = picker.find(`.${BASE_CLASS}-months`),
+                calendarCaption = picker.find(`.${BASE_CLASS}-caption`),
                 invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
 
             this// hide original input text
@@ -108,12 +109,12 @@
                     iterDate.setUTCMonth(index);
 
                     var mDiff = month - iterDate.getUTCMonth(),
-                        className = `${BASE}-calendar-`;
+                        className = BASE_CLASS;
 
                     if (iterDate < range[0] || iterDate > range[1]) {
-                        className += "out";
+                        className += "-out";
                     } else if (!mDiff) {
-                        className += "today";
+                        className += "-today";
                     } else {
                         className = "";
                     }
@@ -128,18 +129,18 @@
                     iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                     var mDiff = month - iterDate.getUTCMonth(),
-                        className = `${BASE}-calendar-`;
+                        className = BASE_CLASS;
 
                     if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
                     if (iterDate < range[0] || iterDate > range[1]) {
-                        className += "out";
+                        className += "-out";
                     } else if (mDiff > 0) {
-                        className += "past";
+                        className += "-past";
                     } else if (mDiff < 0) {
-                        className += "future";
+                        className += "-future";
                     } else if (date === iterDate.getUTCDate()) {
-                        className += "today";
+                        className += "-today";
                     } else {
                         className = "";
                     }
@@ -304,4 +305,4 @@
             this.fire("focus");
         }
     });
-}(window.DOM, "btr-dateinput", 32, 9, 13, 27, 8, 46, 17));
+}(window.DOM, 32, 9, 13, 27, 8, 46, 17));
