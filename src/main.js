@@ -25,6 +25,7 @@
             var defaultValue = this.get("defaultValue"),
                 picker = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
+                textColor = this.css("color"),
                 calenderDays = picker.find(`.${BASE_CLASS}-body`),
                 calendarMonths = picker.find(`.${BASE_CLASS}-months`),
                 calendarCaption = picker.find(`.${BASE_CLASS}-caption`),
@@ -43,7 +44,7 @@
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
                 .css(this.css(["width", "font", "padding", "text-align", "border-width", "box-sizing"]))
-                .css("line-height", "") // IE10 returns invalid line-height for hidden elements
+                .css({color: textColor, "line-height": ""}) // IE10 returns invalid line-height for hidden elements
                 .on("click", this._clickLabel.bind(this))
                 .watch("datetime", invalidatePicker)
                 .set("datetime", defaultValue);
