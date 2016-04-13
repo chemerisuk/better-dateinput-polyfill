@@ -7,17 +7,13 @@
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         PICKER_TEMPLATE = DOM.create(emmet `div.${BASE_CLASS}>(p.${BASE_CLASS}-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE_CLASS}-caption)`),
-        DAYS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-days>(thead>(tr>th[unselectable=on]*7>time[is=local-time data-format=E]))+(tbody.${BASE_CLASS}-body>tr*6>td*7)`),
+        DAYS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-days>(thead>(tr>(th[unselectable=on]>time[is=local-time datetime='${ampm(2001,2002)}-01-$$@6T21:00:00.000Z' data-format=E])*7)+(tbody.${BASE_CLASS}-body>tr*6>td*7))`),
         MONTHS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-months>tbody>tr*3>td*4>time[is=local-time data-format=MMM])`),
         LABEL_TEMPLATE = DOM.create(emmet `time[is=local-time aria-hidden=true].btr-dateinput-value`),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
     MONTHS_TEMPLATE.findAll("time").forEach((time, index) => {
-        time.set("datetime", new Date(2001, index, 9).toISOString());
-    });
-
-    DAYS_TEMPLATE.findAll("time").forEach((time, index) => {
-        time.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
+        time.set("datetime", new Date(2001, index, 1, 12).toISOString());
     });
 
     PICKER_TEMPLATE.append(DAYS_TEMPLATE).append(MONTHS_TEMPLATE);
