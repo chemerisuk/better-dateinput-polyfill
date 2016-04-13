@@ -212,7 +212,9 @@
 
             if (which === VK_SPACE) {
                 // SPACE key toggles calendar visibility
-                picker.set("aria-expanded", "false").toggle();
+                if (!this.get("readonly")) {
+                    picker.set("aria-expanded", "false").toggle();
+                }
             } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
                 picker.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
