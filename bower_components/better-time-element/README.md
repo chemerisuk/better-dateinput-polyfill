@@ -5,6 +5,7 @@
 
 ## Features
 * represents time in local format via `time[is=local-time]`
+* [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for current and future content
 * [custom formats](#custom-formats) support via `data-format`
 * [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions) (if your language is missed - just translate strings from `i18n` folder and include a new file in your project)
 
@@ -63,9 +64,17 @@ Number of letters in the parameter name specifies form of the output value, for 
 ```
 
 ## Browser support
-![Chrome](https://raw.github.com/alrra/browser-logos/master/chrome/chrome_48x48.png) | ![Firefox](https://raw.github.com/alrra/browser-logos/master/firefox/firefox_48x48.png) | ![IE](https://raw.github.com/alrra/browser-logos/master/internet-explorer/internet-explorer_48x48.png) | ![Opera](https://raw.github.com/alrra/browser-logos/master/opera/opera_48x48.png) | ![Safari](https://raw.github.com/alrra/browser-logos/master/safari/safari_48x48.png) | ![Android](https://raw.github.com/alrra/browser-logos/master/android/android_48x48.png) 
---- | --- | --- | --- | --- | --- |
-Latest ✔ | Latest ✔ | 8+ ✔ (see [notes](https://github.com/chemerisuk/better-dom#notes-about-old-ies)) | 12.10+ ✔ | 6.0+ ✔ | 2.3+ ✔ |
+#### Desktop
+* Chrome
+* Safari 6.0+
+* Firefox 16+
+* Opera 12.10+
+* Internet Explorer 8+ (see [notes](https://github.com/chemerisuk/better-dom#notes-about-old-ies))
+
+#### Mobile
+* iOS Safari 6+
+* Android 2.3+
+* Chrome for Android
 
 [npm-url]: https://www.npmjs.com/package/better-time-element
 [npm-version]: https://img.shields.io/npm/v/better-time-element.svg

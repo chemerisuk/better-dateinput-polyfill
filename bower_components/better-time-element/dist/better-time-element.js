@@ -1,6 +1,6 @@
 /**
  * better-time-element: Useful <time> element extensions
- * @version 1.0.0-rc.3 Mon, 11 Apr 2016 10:28:20 GMT
+ * @version 1.0.0-rc.4 Sun, 17 Apr 2016 13:00:46 GMT
  * @link https://github.com/chemerisuk/better-time-element
  * @copyright 2016 Maksim Chemerisuk
  * @license MIT
@@ -27,9 +27,7 @@
             var datetimeText = this.get("datetime");
 
             if (!datetimeText) {
-                this.value("");
-
-                return;
+                return this.value("");
             }
 
             var value = new Date(datetimeText),
