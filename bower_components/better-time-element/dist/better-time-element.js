@@ -26,7 +26,11 @@
         _changeValue: function () {
             var datetimeText = this.get("datetime");
 
-            if (!datetimeText) return;
+            if (!datetimeText) {
+                this.value("");
+
+                return;
+            }
 
             var value = new Date(datetimeText),
                 formattedValue = "";
