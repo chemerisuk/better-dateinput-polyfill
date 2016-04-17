@@ -16,10 +16,11 @@
 
     DOM.extend("input[type=date]", {
         constructor() {
+            var initialValue = this.value();
+
             if (this._isNative()) return false;
 
-            var defaultValue = this.get("defaultValue"),
-                picker = PICKER_TEMPLATE.clone(true),
+            var picker = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
                 textColor = this.css("color"),
                 calenderDays = picker.find(`.${BASE_CLASS}-body`),
@@ -35,7 +36,7 @@
                 .on("blur", this._blurPicker.bind(this, picker))
                 .on("change", this._syncValue.bind(this, "value", label))
                 .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
-                .value(defaultValue); // restore initial value
+                .value(initialValue); // restore initial value
 
             label
                 .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
@@ -43,7 +44,7 @@
                 .css({color: textColor, "line-height": ""}) // IE10 returns invalid line-height for hidden elements
                 .on("click", this._clickLabel.bind(this))
                 .watch("datetime", invalidatePicker)
-                .set("datetime", defaultValue);
+                .set("datetime", initialValue);
 
             this
                 .before(picker.hide(), label)
