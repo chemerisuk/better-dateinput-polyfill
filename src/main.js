@@ -66,7 +66,7 @@
 
             if (polyfillType === "none") return true;
 
-            if (!polyfillType || polyfillType === deviceType && polyfillType !== "all") {
+            if (!polyfillType || polyfillType !== deviceType && polyfillType !== "all") {
                 // use a stronger type support detection that handles old WebKit browsers:
                 // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
                 if (this[0].type === "date") return true;

@@ -235,5 +235,11 @@ describe("better-dateinput-polyfill", function() {
             expect(el._isNative()).toBe(false);
             expect(el.get("type")).toBe("text");
         });
+
+        it("supports desktop value", () => {
+            el.set("data-polyfill", "desktop");
+            expect(el._isNative()).toBe(false);
+            expect(el.get("type")).toBe("text");
+        });
     });
 });
