@@ -8,7 +8,7 @@
         formatISODate = (value) => value.toISOString().split("T")[0],
         PICKER_TEMPLATE = DOM.create(emmet `div.${BASE_CLASS}>(p.${BASE_CLASS}-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE_CLASS}-caption)`),
         DAYS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-days>(thead>(tr>(th[unselectable=on]>time[is=local-time datetime='${ampm(2001,2002)}-01-$$@6T21:00:00.000Z' data-format=E])*7)+(tbody.${BASE_CLASS}-body>tr*6>td*7))`),
-        MONTHS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-months>tbody>(tr>(td>time[is=local-time datetime=2001-$$-2 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@5-2 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@9-2 data-format=MMM])*4))`),
+        MONTHS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-months>tbody>(tr>(td>time[is=local-time datetime=2001-$$-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@5-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@9-02 data-format=MMM])*4))`),
         LABEL_TEMPLATE = DOM.create(emmet `time[is=local-time aria-hidden=true].btr-dateinput-value`),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
