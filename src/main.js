@@ -22,11 +22,18 @@
 
             var picker = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
-                textColor = this.css("color"),
                 calenderDays = picker.find(`.${BASE_CLASS}-body`),
                 calendarMonths = picker.find(`.${BASE_CLASS}-months`),
                 calendarCaption = picker.find(`.${BASE_CLASS}-caption`),
                 invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
+
+            label
+                .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
+                .css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing"]))
+                .css({"line-height": ""}) // IE10 returns invalid line-height for hidden elements
+                .on("click", this._clickLabel.bind(this))
+                .watch("datetime", invalidatePicker)
+                .set("datetime", initialValue);
 
             this// hide original input text
                 // IE8 doesn't suport color:transparent - use background-color instead
@@ -36,17 +43,7 @@
                 .on("blur", this._blurPicker.bind(this, picker))
                 .on("change", this._syncValue.bind(this, "value", label))
                 .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
-                .value(initialValue); // restore initial value
-
-            label
-                .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
-                .css(this.css(["width", "font", "padding", "text-align", "border-width", "box-sizing"]))
-                .css({color: textColor, "line-height": ""}) // IE10 returns invalid line-height for hidden elements
-                .on("click", this._clickLabel.bind(this))
-                .watch("datetime", invalidatePicker)
-                .set("datetime", initialValue);
-
-            this
+                .value(initialValue) // restore initial value
                 .before(picker.hide(), label)
                 .closest("form").on("reset", this._syncValue.bind(this, "defaultValue", label));
 
