@@ -9,8 +9,13 @@
         <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
     <![endif]-->
     <style>
+    body {
+        background: #EFEFEF;
+    }
+
     body, input {
-        font: 14px / 1  Arial;
+        font-family: sans-serif;
+        font-size: 1em;
     }
 
     .test-form {
@@ -24,14 +29,10 @@
         border: 2px solid #555;
         margin: 0;
         vertical-align: baseline;
-    }
-
-    .test-form input[name=start],
-    .test-form input[name=end] {
         width: 10em;
     }
 
-    .test-form input[name=end] {
+    .test-form input[name=start] {
         text-align: center;
         background: yellow;
     }
