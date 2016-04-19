@@ -173,6 +173,9 @@
                 target = target.closest("time");
 
                 targetDate = new Date(this.value());
+
+                if (!targetDate.getTime()) targetDate = new Date();
+
                 targetDate.setUTCMonth(new Date(target.get("datetime")).getUTCMonth());
 
                 picker.hide();
