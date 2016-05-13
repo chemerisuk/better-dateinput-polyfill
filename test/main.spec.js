@@ -107,6 +107,10 @@ describe("better-dateinput-polyfill", function() {
         picker.set("aria-expanded", "true");
         el._clickPicker(picker, months, target);
         expect(el.value()).toBe("1998-01-01");
+
+        el.value("1970-01-01");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("1969-01-01");
     });
 
     it("changes month in month picker mode", function() {
@@ -123,6 +127,11 @@ describe("better-dateinput-polyfill", function() {
         target.set("datetime", "2000-10-09");
         el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2000-10-01");
+
+        el.value("1970-09-01");
+        target.set("datetime", "1970-01-01");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("1970-01-01");
     });
 
     it("should select appropriate day on calendar click", function() {
@@ -140,6 +149,12 @@ describe("better-dateinput-polyfill", function() {
         spyOn(target, "data").and.returnValue(now.getTime());
         el._clickPicker(picker, months, target);
         expect(el.value()).toBe("2011-07-13");
+
+        // 0 is for unix time 1970-01-01
+        el.value("2013-01-01");
+        target.data = () => { return 0; };
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("1970-01-01");
     });
 
     it("should hide calendar on blur", function() {
