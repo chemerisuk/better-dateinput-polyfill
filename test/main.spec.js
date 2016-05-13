@@ -107,6 +107,10 @@ describe("better-dateinput-polyfill", function() {
         picker.set("aria-expanded", "true");
         el._clickPicker(picker, months, target);
         expect(el.value()).toBe("1998-01-01");
+
+        el.value("1970-01-01");
+        el._clickPicker(picker, months, target);
+        expect(el.value()).toBe("1969-01-01");
     });
 
     it("changes month in month picker mode", function() {
