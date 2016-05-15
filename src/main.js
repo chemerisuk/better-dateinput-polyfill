@@ -16,8 +16,6 @@
 
     DOM.extend("input[type=date]", {
         constructor() {
-            var initialValue = this.value();
-
             if (this._isNative()) return false;
 
             var picker = PICKER_TEMPLATE.clone(true),
@@ -32,8 +30,7 @@
                 .css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing"]))
                 .css({"line-height": ""}) // IE10 returns invalid line-height for hidden elements
                 .on("click", this._clickLabel.bind(this))
-                .watch("datetime", invalidatePicker)
-                .set("datetime", initialValue);
+                .watch("datetime", invalidatePicker);
 
             this// hide original input text
                 // IE8 doesn't suport color:transparent - use background-color instead
@@ -43,7 +40,6 @@
                 .on("blur", this._blurPicker.bind(this, picker))
                 .on("change", this._syncValue.bind(this, "value", label))
                 .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
-                .value(initialValue) // restore initial value
                 .before(picker.hide(), label)
                 .closest("form").on("reset", this._syncValue.bind(this, "defaultValue", label));
 
@@ -54,6 +50,8 @@
 
             calendarCaption
                 .on("click", this._clickPickerCaption.bind(this, picker));
+
+            this._syncValue("defaultValue", label); // restore initial value
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) picker.show();
@@ -150,9 +148,14 @@
         },
         _syncValue(propName, label) {
             var value = this.get(propName);
+            var date = new Date(value);
 
             this.value(value);
-            label.set("datetime", value);
+
+            if (!isNaN(date)) {
+                // #72: visible value must adjust timezone offset
+                label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
+            }
         },
         _clickPicker(picker, calendarMonths, target) {
             var targetDate;
