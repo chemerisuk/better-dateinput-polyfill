@@ -1,7 +1,7 @@
 /**
  * better-i18n-plugin: Internationalization plugin for better-dom
- * @version 2.0.0-rc.1 Mon, 11 Apr 2016 10:16:21 GMT
- * @link https://github.com/chemerisuk/better-emmet-plugin
+ * @version 2.0.0-rc.2 Sun, 15 May 2016 11:43:41 GMT
+ * @link https://github.com/chemerisuk/better-i18n-plugin
  * @copyright 2016 Maksim Chemerisuk
  * @license MIT
  */
@@ -12,14 +12,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var strings = [],
         languages = [],
+        reParam = /%s/g,
         HTML = DOM.get("documentElement");
 
     function formatKey(key, args) {
         var start = arguments.length <= 2 || arguments[2] === undefined ? 0 : arguments[2];
 
-        return key.replace(/%s/g, function (str) {
-            return args[start++] || str;
-        });
+        if (args) {
+            return key.replace(reParam, function (str) {
+                return args[start++] || str;
+            });
+        } else {
+            return key;
+        }
     }
 
     var Entry = function () {
@@ -32,11 +37,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var value = strings[index][key];
 
                 if (value) {
-                    _this[lang] = args ? formatKey(value, args) : value;
+                    _this[lang] = formatKey(value, args);
                 }
             });
 
-            this._ = args ? formatKey(key, args) : key;
+            this._ = formatKey(key, args);
         }
 
         Entry.prototype.toString = function toString() {
@@ -106,7 +111,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
     };
 
-    DOM.__.esliteral = function (parts) {
+    DOM.i18nLiteral = function (parts) {
         for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
             args[_key2 - 1] = arguments[_key2];
         }

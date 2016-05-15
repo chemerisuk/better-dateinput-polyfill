@@ -32,21 +32,22 @@ Then append the following script on your page:
 <script src="bower_components/better-dom/dist/better-dom.js"></script>
 <script src="bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"></script>
 <script src="bower_components/better-time-element/dist/better-time-element.js"></script>
+<script src="bower_components/better-emmet-plugin/dist/better-emmet-plugin.js"></script>
 <script src="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
 ```
 
 ## Forcing the polyfill
-Sometimes it's useful to override browser implemetation with the consistent control implemented by the polyfill. In order to suppress feature detection you can use the `data-polyfill` attribute. Possible values are `desktop`, `mobile`, `all`, `none`. They allow to limit type of devices where you want to see a native control.
-
-For example, the code below defines a dateinput that uses a native implementation on mobile phones, but ALL desktop browsers (even Chrome desktop) will have a consistent widget created by the polyfill.
+Sometimes it's useful to override browser implemetation with the consistent control implemented by the polyfill. In order to suppress feature detection you can use the `data-polyfill` attribute. Possible values are `desktop`, `mobile`, `all`, `none`. They allow to limit type of devices where you want to see the native control.
 
 ```html
 <!-- force polyfill only on mobile devices -->
 <input type="date" data-polyfill="mobile">
-<!-- does not polyfill any element -->
-<input type="date" data-polyfill="none">
-<!-- force polyfill everywhere -->
+
+<!-- force polyfill on any device -->
 <input type="date" data-polyfill="all">
+
+<!-- does not polyfill anywhere -->
+<input type="date" data-polyfill="none">
 ```
 
 ## Contributing

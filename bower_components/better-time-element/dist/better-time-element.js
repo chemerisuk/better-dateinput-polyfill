@@ -1,6 +1,6 @@
 /**
  * better-time-element: Useful <time> element extensions
- * @version 1.0.0-rc.4 Sun, 17 Apr 2016 13:00:46 GMT
+ * @version 1.0.0-rc.5 Sun, 15 May 2016 11:52:22 GMT
  * @link https://github.com/chemerisuk/better-time-element
  * @copyright 2016 Maksim Chemerisuk
  * @license MIT
@@ -33,7 +33,7 @@
             var value = new Date(datetimeText),
                 formattedValue = "";
 
-            if (!value.getTime()) {
+            if (isNaN(value)) {
                 // IE returns weird strings for invalid dates, so use a hardcoded value
                 formattedValue = "Invalid Date";
             } else {

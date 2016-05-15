@@ -1,6 +1,6 @@
 {
   "name": "better-i18n-plugin",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0-rc.2",
   "main": [
     "dist/better-i18n-plugin.js"
   ],
