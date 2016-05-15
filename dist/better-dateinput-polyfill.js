@@ -1,12 +1,12 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 2.0.0-rc.4 Tue, 19 Apr 2016 11:29:07 GMT
+ * @version 2.0.0 Sun, 15 May 2016 13:31:08 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2016 Maksim Chemerisuk
  * @license MIT
  */
 var _templateObject = _taggedTemplateLiteralLoose(["div.", ">(p.", "-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].", "-caption)"], ["div.", ">(p.", "-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].", "-caption)"]),
-    _templateObject2 = _taggedTemplateLiteralLoose(["table[aria-hidden=true].", "-days>(thead>(tr>(th[unselectable=on]>time[is=local-time datetime='", "-01-$$@6T21:00:00.000Z' data-format=E])*7)+(tbody.", "-body>tr*6>td*7))"], ["table[aria-hidden=true].", "-days>(thead>(tr>(th[unselectable=on]>time[is=local-time datetime='", "-01-$$@6T21:00:00.000Z' data-format=E])*7)+(tbody.", "-body>tr*6>td*7))"]),
+    _templateObject2 = _taggedTemplateLiteralLoose(["table[aria-hidden=true].", "-days>(thead>(tr>(th[unselectable=on]>time[is=local-time data-format=E])*7)+(tbody.", "-body>tr*6>td*7))"], ["table[aria-hidden=true].", "-days>(thead>(tr>(th[unselectable=on]>time[is=local-time data-format=E])*7)+(tbody.", "-body>tr*6>td*7))"]),
     _templateObject3 = _taggedTemplateLiteralLoose(["table[aria-hidden=true].", "-months>tbody>(tr>(td>time[is=local-time datetime=2001-$$-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@5-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@9-02 data-format=MMM])*4))"], ["table[aria-hidden=true].", "-months>tbody>(tr>(td>time[is=local-time datetime=2001-$$-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@5-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@9-02 data-format=MMM])*4))"]),
     _templateObject4 = _taggedTemplateLiteralLoose(["time[is=local-time aria-hidden=true].btr-dateinput-value"], ["time[is=local-time aria-hidden=true].btr-dateinput-value"]);
 
@@ -19,13 +19,13 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
         HTML = DOM.get("documentElement"),
         BASE_CLASS = "btr-dateinput-calendar",
         ampm = function (pos, neg) {
-        return HTML.lang === "en-US" ? pos : neg;
+        return HTML.lang === "en_US" ? pos : neg;
     },
         formatISODate = function (value) {
         return value.toISOString().split("T")[0];
     },
         PICKER_TEMPLATE = DOM.create(emmet(_templateObject, BASE_CLASS, BASE_CLASS, BASE_CLASS)),
-        DAYS_TEMPLATE = DOM.create(emmet(_templateObject2, BASE_CLASS, ampm(2001, 2002), BASE_CLASS)),
+        DAYS_TEMPLATE = DOM.create(emmet(_templateObject2, BASE_CLASS, BASE_CLASS)),
         MONTHS_TEMPLATE = DOM.create(emmet(_templateObject3, BASE_CLASS)),
         LABEL_TEMPLATE = DOM.create(emmet(_templateObject4)),
         readDateRange = function (el) {
@@ -34,12 +34,14 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
         });
     };
 
+    DAYS_TEMPLATE.findAll("time").forEach(function (dayOfWeek, index) {
+        dayOfWeek.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
+    });
+
     PICKER_TEMPLATE.append(DAYS_TEMPLATE).append(MONTHS_TEMPLATE);
 
     DOM.extend("input[type=date]", {
         constructor: function () {
-            var initialValue = this.value();
-
             if (this._isNative()) return false;
 
             var picker = PICKER_TEMPLATE.clone(true),
@@ -50,18 +52,19 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
                 invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
 
             label.set("data-format", this.get("data-format") || "E, dd MMM yyyy").css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing"])).css({ "line-height": "" }) // IE10 returns invalid line-height for hidden elements
-            .on("click", this._clickLabel.bind(this)).watch("datetime", invalidatePicker).set("datetime", initialValue);
+            .on("click", this._clickLabel.bind(this)).watch("datetime", invalidatePicker);
 
             this // hide original input text
             // IE8 doesn't suport color:transparent - use background-color instead
             .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
             // sync picker visibility on focus/blur
-            .on(["focus", "click"], this._focusPicker.bind(this, picker)).on("blur", this._blurPicker.bind(this, picker)).on("change", this._syncValue.bind(this, "value", label)).on("keydown", ["which"], this._keydownPicker.bind(this, picker)).value(initialValue) // restore initial value
-            .before(picker.hide(), label).closest("form").on("reset", this._syncValue.bind(this, "defaultValue", label));
+            .on(["focus", "click"], this._focusPicker.bind(this, picker)).on("blur", this._blurPicker.bind(this, picker)).on("change", this._syncValue.bind(this, "value", label)).on("keydown", ["which"], this._keydownPicker.bind(this, picker)).before(picker.hide(), label).closest("form").on("reset", this._syncValue.bind(this, "defaultValue", label));
 
             picker.watch("aria-expanded", invalidatePicker).on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths)).css("z-index", 1 + (this.css("z-index") | 0));
 
             calendarCaption.on("click", this._clickPickerCaption.bind(this, picker));
+
+            this._syncValue("defaultValue", label); // restore initial value
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) picker.show();
@@ -153,9 +156,14 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
         },
         _syncValue: function (propName, label) {
             var value = this.get(propName);
+            var date = new Date(value);
 
             this.value(value);
-            label.set("datetime", value);
+
+            if (!isNaN(date)) {
+                // #72: visible value must adjust timezone offset
+                label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
+            }
         },
         _clickPicker: function (picker, calendarMonths, target) {
             var targetDate;
