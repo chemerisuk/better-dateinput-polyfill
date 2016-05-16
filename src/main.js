@@ -86,7 +86,7 @@
             var value = new Date(this.value());
             var year, month, date;
 
-            if (!value.getTime()) {
+          if (isNaN(value.getTime())) {
                 value = new Date();
             }
 
@@ -167,7 +167,7 @@
             if (target.matches("a")) {
                 targetDate = new Date(this.value());
 
-                if (!targetDate.getTime()) targetDate = new Date();
+              if (isNaN(targetDate.getTime())) targetDate = new Date();
 
                 var sign = target.next("a")[0] ? -1 : 1;
 
@@ -181,7 +181,7 @@
 
                 targetDate = new Date(this.value());
 
-                if (!targetDate.getTime()) targetDate = new Date();
+              if (isNaN(targetDate.getTime())) targetDate = new Date();
 
                 targetDate.setUTCMonth(new Date(target.get("datetime")).getUTCMonth());
 
@@ -189,7 +189,7 @@
             } else if (target.matches("td")) {
                 targetDate = target.data("ts");
 
-                if (targetDate) {
+                if (!isNaN(targetDate)) {
                     targetDate = new Date(targetDate);
                     picker.hide();
                 }
@@ -230,7 +230,7 @@
             } else {
                 currentDate = new Date(this.value());
 
-                if (!currentDate.getTime()) currentDate = new Date();
+              if (isNaN(currentDate.getTime())) currentDate = new Date();
 
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
