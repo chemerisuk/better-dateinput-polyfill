@@ -159,6 +159,8 @@
             if (!isNaN(date)) {
                 // #72: visible value must adjust timezone offset
                 label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
+            } else if(propName === "defaultValue"){
+                label.set("datetime", '');
             }
         },
         _clickPicker(picker, calendarMonths, target) {
