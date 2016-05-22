@@ -13,7 +13,7 @@ Why another date picker? The problem is that most of existing solutions do not f
 * `placeholder` attribute works as expected in browsers that support it
 * fully customizable date picker, including [displayed value format](https://github.com/chemerisuk/better-time-element#custom-formats) via `data-format` attribute
 * control when to apply the polyfill using [data-polyfill](#forcing-the-polyfill) attribute
-* [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions)
+* [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions) (localized files located at [better-time-element](https://github.com/chemerisuk/better-time-element))
 * US variant for days of week is supported (use `<html lang="en-US">`)
 * * keyboard and accessibility friendly
 
