@@ -1,22 +1,46 @@
 (function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
     "use strict";
 
-    var emmet = DOM.emmetLiteral,
-        HTML = DOM.get("documentElement"),
+    var repeat = (times, str) => Array(times + 1).join(str);
+
+    var HTML = DOM.get("documentElement"),
         BASE_CLASS = "btr-dateinput-calendar",
         ampm = (pos, neg) => HTML.lang === "en_US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
-        PICKER_TEMPLATE = DOM.create(emmet `div.${BASE_CLASS}>(p.${BASE_CLASS}-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].${BASE_CLASS}-caption)`),
-        DAYS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-days>(thead>(tr>(th[unselectable=on]>time[is=local-time data-format=E])*7)+(tbody.${BASE_CLASS}-body>tr*6>td*7))`),
-        MONTHS_TEMPLATE = DOM.create(emmet `table[aria-hidden=true].${BASE_CLASS}-months>tbody>(tr>(td>time[is=local-time datetime=2001-$$-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@5-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@9-02 data-format=MMM])*4))`),
-        LABEL_TEMPLATE = DOM.create(emmet `time[is=local-time aria-hidden=true].btr-dateinput-value`),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
-    DAYS_TEMPLATE.findAll("time").forEach((dayOfWeek, index) => {
-        dayOfWeek.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
+    var LABEL_TEMPLATE = DOM.create(`
+<time is="local-time", aria-hidden="true" class="btr-dateinput-value">
+`);
+
+    var PICKER_TEMPLATE = DOM.create(`
+<div class="${BASE_CLASS}">
+    <p class="${BASE_CLASS}-header">
+        ${repeat(2, `<a unselectable="on"></a>`)}
+        <time is="local-time" class="${BASE_CLASS}-caption" data-format="MMMM yyyy" aria-hidden="true" unselectable="on">
+    </p>
+    <table class="${BASE_CLASS}-days" aria-hidden="true">
+        <thead>
+        ${repeat(7, `<th unselectable="on"><time is="local-time" data-format="E">`)}
+        </thead>
+        <tbody class="${BASE_CLASS}-body">
+        ${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}
+        </tbody>
+    </table>
+    <table class="${BASE_CLASS}-months" aria-hidden="true">
+        <tbody>
+        ${repeat(3, `<tr>${repeat(4, `<td><time is="local-time" data-format="MMM">`)}`)}
+        </tbody>
+    </table>
+</div>`);
+
+    PICKER_TEMPLATE.find(`.${BASE_CLASS}-days`).findAll("time").forEach((time, index) => {
+        time.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
     });
 
-    PICKER_TEMPLATE.append(DAYS_TEMPLATE).append(MONTHS_TEMPLATE);
+    PICKER_TEMPLATE.find(`.${BASE_CLASS}-months`).findAll("time").forEach((time, index) => {
+        time.set("datetime", `2001-${++index < 10 ? "0" + index : index}-02`);
+    });
 
     DOM.extend("input[type=date]", {
         constructor() {
