@@ -1,5 +1,5 @@
 (function (DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
-    "use strict";
+    "use strict"; /* globals html:false */
 
     var repeat = function (times, str) {
         return Array(times + 1).join(str);
@@ -19,9 +19,9 @@
         });
     };
 
-    var LABEL_TEMPLATE = DOM.create("\n<time is=\"local-time\", aria-hidden=\"true\" class=\"btr-dateinput-value\">\n");
+    var LABEL_TEMPLATE = DOM.create("<time is=\"local-time\" aria-hidden=\"true\" class=\"btr-dateinput-value\">");
 
-    var PICKER_TEMPLATE = DOM.create("\n<div class=\"" + BASE_CLASS + "\">\n    <p class=\"" + BASE_CLASS + "-header\">\n        " + repeat(2, "<a unselectable=\"on\"></a>") + "\n        <time is=\"local-time\" class=\"" + BASE_CLASS + "-caption\" data-format=\"MMMM yyyy\" aria-hidden=\"true\" unselectable=\"on\">\n    </p>\n    <table class=\"" + BASE_CLASS + "-days\" aria-hidden=\"true\">\n        <thead>\n        " + repeat(7, "<th unselectable=\"on\"><time is=\"local-time\" data-format=\"E\">") + "\n        </thead>\n        <tbody class=\"" + BASE_CLASS + "-body\">\n        " + repeat(7, "<tr>" + repeat(7, "<td>") + "</tr>") + "\n        </tbody>\n    </table>\n    <table class=\"" + BASE_CLASS + "-months\" aria-hidden=\"true\">\n        <tbody>\n        " + repeat(3, "<tr>" + repeat(4, "<td><time is=\"local-time\" data-format=\"MMM\">")) + "\n        </tbody>\n    </table>\n</div>");
+    var PICKER_TEMPLATE = DOM.create("<div class=\"" + BASE_CLASS + "\"><p class=\"" + BASE_CLASS + "-header\">" + repeat(2, "<a unselectable=\"on\"></a>") + "<time is=\"local-time\" class=\"" + BASE_CLASS + "-caption\" data-format=\"MMMM yyyy\" aria-hidden=\"true\" unselectable=\"on\"></p><table class=\"" + BASE_CLASS + "-days\" aria-hidden=\"true\"><thead>" + repeat(7, "<th unselectable=\"on\"><time is=\"local-time\" data-format=\"E\">") + "</thead><tbody class=\"" + BASE_CLASS + "-body\">" + repeat(7, "<tr>" + repeat(7, "<td>") + "</tr>") + "</tbody></table><table class=\"" + BASE_CLASS + "-months\" aria-hidden=\"true\"><tbody>" + repeat(3, "<tr>" + repeat(4, "<td><time is=\"local-time\" data-format=\"MMM\">")) + "</tbody></table></div>");
 
     PICKER_TEMPLATE.find("." + BASE_CLASS + "-days").findAll("time").forEach(function (time, index) {
         time.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
@@ -219,43 +219,43 @@
             } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
                 picker.hide(); // ESC, TAB or ENTER keys hide calendar
             } else if (which === VK_BACKSPACE || which === VK_DELETE) {
-                    this.value("").fire("change"); // BACKSPACE, DELETE clear value
-                } else if (which === VK_CONTROL) {
-                        // CONTROL toggles calendar mode
-                        picker.set("aria-expanded", String(picker.get("aria-expanded") !== "true"));
+                this.value("").fire("change"); // BACKSPACE, DELETE clear value
+            } else if (which === VK_CONTROL) {
+                // CONTROL toggles calendar mode
+                picker.set("aria-expanded", String(picker.get("aria-expanded") !== "true"));
+            } else {
+                currentDate = new Date(this.value());
+
+                if (isNaN(currentDate.getTime())) currentDate = new Date();
+
+                if (which === 74 || which === 40) {
+                    delta = 7;
+                } else if (which === 75 || which === 38) {
+                    delta = -7;
+                } else if (which === 76 || which === 39) {
+                    delta = 1;
+                } else if (which === 72 || which === 37) {
+                    delta = -1;
+                }
+
+                if (delta) {
+                    var expanded = picker.get("aria-expanded") === "true";
+
+                    if (expanded && (which === 40 || which === 38)) {
+                        currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
+                    } else if (expanded && (which === 37 || which === 39)) {
+                        currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 1 : -1));
                     } else {
-                        currentDate = new Date(this.value());
-
-                        if (isNaN(currentDate.getTime())) currentDate = new Date();
-
-                        if (which === 74 || which === 40) {
-                            delta = 7;
-                        } else if (which === 75 || which === 38) {
-                            delta = -7;
-                        } else if (which === 76 || which === 39) {
-                            delta = 1;
-                        } else if (which === 72 || which === 37) {
-                            delta = -1;
-                        }
-
-                        if (delta) {
-                            var expanded = picker.get("aria-expanded") === "true";
-
-                            if (expanded && (which === 40 || which === 38)) {
-                                currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
-                            } else if (expanded && (which === 37 || which === 39)) {
-                                currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 1 : -1));
-                            } else {
-                                currentDate.setUTCDate(currentDate.getUTCDate() + delta);
-                            }
-
-                            var range = readDateRange(this);
-
-                            if (!(currentDate < range[0] || currentDate > range[1])) {
-                                this.value(formatISODate(currentDate)).fire("change");
-                            }
-                        }
+                        currentDate.setUTCDate(currentDate.getUTCDate() + delta);
                     }
+
+                    var range = readDateRange(this);
+
+                    if (!(currentDate < range[0] || currentDate > range[1])) {
+                        this.value(formatISODate(currentDate)).fire("change");
+                    }
+                }
+            }
             // prevent default action except if it was TAB so
             // do not allow to change the value manually
             return which === VK_TAB;
