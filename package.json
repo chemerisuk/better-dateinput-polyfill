@@ -15,8 +15,8 @@
   ],
   "peerDependencies": {
     "better-dom": "^3.0.0-rc.1",
-    "better-i18n-plugin": "^2.0.0-rc.1",
-    "better-time-element": "^1.0.0-rc.4"
+    "better-i18n-plugin": "~2.0.0",
+    "better-time-element": "~1.0.0"
   },
   "devDependencies": {
     "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"

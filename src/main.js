@@ -1,5 +1,5 @@
 (function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
-    "use strict";
+    "use strict"; /* globals html:false */
 
     var repeat = (times, str) => Array(times + 1).join(str);
 
@@ -9,11 +9,11 @@
         formatISODate = (value) => value.toISOString().split("T")[0],
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
-    var LABEL_TEMPLATE = DOM.create(`
-<time is="local-time", aria-hidden="true" class="btr-dateinput-value">
+    const LABEL_TEMPLATE = DOM.create(html`
+<time is="local-time" aria-hidden="true" class="btr-dateinput-value">
 `);
 
-    var PICKER_TEMPLATE = DOM.create(`
+    const PICKER_TEMPLATE = DOM.create(html`
 <div class="${BASE_CLASS}">
     <p class="${BASE_CLASS}-header">
         ${repeat(2, `<a unselectable="on"></a>`)}
