@@ -1,15 +1,11 @@
-var _templateObject = _taggedTemplateLiteralLoose(["div.", ">(p.", "-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].", "-caption)"], ["div.", ">(p.", "-header>a[unselectable=on]*2+time[is=local-time data-format='MMMM yyyy' aria-hidden=true unselectable=on].", "-caption)"]),
-    _templateObject2 = _taggedTemplateLiteralLoose(["table[aria-hidden=true].", "-days>(thead>(tr>(th[unselectable=on]>time[is=local-time data-format=E])*7)+(tbody.", "-body>tr*6>td*7))"], ["table[aria-hidden=true].", "-days>(thead>(tr>(th[unselectable=on]>time[is=local-time data-format=E])*7)+(tbody.", "-body>tr*6>td*7))"]),
-    _templateObject3 = _taggedTemplateLiteralLoose(["table[aria-hidden=true].", "-months>tbody>(tr>(td>time[is=local-time datetime=2001-$$-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@5-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@9-02 data-format=MMM])*4))"], ["table[aria-hidden=true].", "-months>tbody>(tr>(td>time[is=local-time datetime=2001-$$-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@5-02 data-format=MMM])*4)+(tr>(td>time[is=local-time datetime=2001-$$@9-02 data-format=MMM])*4))"]),
-    _templateObject4 = _taggedTemplateLiteralLoose(["time[is=local-time aria-hidden=true].btr-dateinput-value"], ["time[is=local-time aria-hidden=true].btr-dateinput-value"]);
-
-function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return strings; }
-
 (function (DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
     "use strict";
 
-    var emmet = DOM.emmetLiteral,
-        HTML = DOM.get("documentElement"),
+    var repeat = function (times, str) {
+        return Array(times + 1).join(str);
+    };
+
+    var HTML = DOM.get("documentElement"),
         BASE_CLASS = "btr-dateinput-calendar",
         ampm = function (pos, neg) {
         return HTML.lang === "en_US" ? pos : neg;
@@ -17,21 +13,23 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
         formatISODate = function (value) {
         return value.toISOString().split("T")[0];
     },
-        PICKER_TEMPLATE = DOM.create(emmet(_templateObject, BASE_CLASS, BASE_CLASS, BASE_CLASS)),
-        DAYS_TEMPLATE = DOM.create(emmet(_templateObject2, BASE_CLASS, BASE_CLASS)),
-        MONTHS_TEMPLATE = DOM.create(emmet(_templateObject3, BASE_CLASS)),
-        LABEL_TEMPLATE = DOM.create(emmet(_templateObject4)),
         readDateRange = function (el) {
         return ["min", "max"].map(function (x) {
             return new Date(el.get(x) || "");
         });
     };
 
-    DAYS_TEMPLATE.findAll("time").forEach(function (dayOfWeek, index) {
-        dayOfWeek.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
+    var LABEL_TEMPLATE = DOM.create("\n<time is=\"local-time\", aria-hidden=\"true\" class=\"btr-dateinput-value\">\n");
+
+    var PICKER_TEMPLATE = DOM.create("\n<div class=\"" + BASE_CLASS + "\">\n    <p class=\"" + BASE_CLASS + "-header\">\n        " + repeat(2, "<a unselectable=\"on\"></a>") + "\n        <time is=\"local-time\" class=\"" + BASE_CLASS + "-caption\" data-format=\"MMMM yyyy\" aria-hidden=\"true\" unselectable=\"on\">\n    </p>\n    <table class=\"" + BASE_CLASS + "-days\" aria-hidden=\"true\">\n        <thead>\n        " + repeat(7, "<th unselectable=\"on\"><time is=\"local-time\" data-format=\"E\">") + "\n        </thead>\n        <tbody class=\"" + BASE_CLASS + "-body\">\n        " + repeat(7, "<tr>" + repeat(7, "<td>") + "</tr>") + "\n        </tbody>\n    </table>\n    <table class=\"" + BASE_CLASS + "-months\" aria-hidden=\"true\">\n        <tbody>\n        " + repeat(3, "<tr>" + repeat(4, "<td><time is=\"local-time\" data-format=\"MMM\">")) + "\n        </tbody>\n    </table>\n</div>");
+
+    PICKER_TEMPLATE.find("." + BASE_CLASS + "-days").findAll("time").forEach(function (time, index) {
+        time.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
     });
 
-    PICKER_TEMPLATE.append(DAYS_TEMPLATE).append(MONTHS_TEMPLATE);
+    PICKER_TEMPLATE.find("." + BASE_CLASS + "-months").findAll("time").forEach(function (time, index) {
+        time.set("datetime", "2001-" + (++index < 10 ? "0" + index : index) + "-02");
+    });
 
     DOM.extend("input[type=date]", {
         constructor: function () {
@@ -88,7 +86,7 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
             var value = new Date(this.value());
             var year, month, date;
 
-            if (!value.getTime()) {
+            if (isNaN(value.getTime())) {
                 value = new Date();
             }
 
@@ -156,6 +154,8 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
             if (!isNaN(date)) {
                 // #72: visible value must adjust timezone offset
                 label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
+            } else {
+                label.set("datetime", "");
             }
         },
         _clickPicker: function (picker, calendarMonths, target) {
@@ -164,7 +164,7 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
             if (target.matches("a")) {
                 targetDate = new Date(this.value());
 
-                if (!targetDate.getTime()) targetDate = new Date();
+                if (isNaN(targetDate.getTime())) targetDate = new Date();
 
                 var sign = target.next("a")[0] ? -1 : 1;
 
@@ -178,7 +178,7 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
 
                 targetDate = new Date(this.value());
 
-                if (!targetDate.getTime()) targetDate = new Date();
+                if (isNaN(targetDate.getTime())) targetDate = new Date();
 
                 targetDate.setUTCMonth(new Date(target.get("datetime")).getUTCMonth());
 
@@ -186,7 +186,7 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
             } else if (target.matches("td")) {
                 targetDate = target.data("ts");
 
-                if (targetDate) {
+                if (!isNaN(targetDate)) {
                     targetDate = new Date(targetDate);
                     picker.hide();
                 }
@@ -226,7 +226,7 @@ function _taggedTemplateLiteralLoose(strings, raw) { strings.raw = raw; return s
                     } else {
                         currentDate = new Date(this.value());
 
-                        if (!currentDate.getTime()) currentDate = new Date();
+                        if (isNaN(currentDate.getTime())) currentDate = new Date();
 
                         if (which === 74 || which === 40) {
                             delta = 7;
