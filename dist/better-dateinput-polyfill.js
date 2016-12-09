@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 2.0.2 Wed, 02 Nov 2016 16:33:36 GMT
+ * @version 2.0.3 Fri, 09 Dec 2016 23:26:12 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2016 Maksim Chemerisuk
  * @license MIT
@@ -54,7 +54,7 @@
 
             this // hide original input text
             // IE8 doesn't suport color:transparent - use background-color instead
-            .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
+            //.css("color", document.addEventListener ? "transparent" : this.css("background-color"))
             // sync picker visibility on focus/blur
             .on(["focus", "click"], this._focusPicker.bind(this, picker)).on("blur", this._blurPicker.bind(this, picker)).on("change", this._syncValue.bind(this, "value", label)).on("keydown", ["which"], this._keydownPicker.bind(this, picker)).before(picker.hide(), label).closest("form").on("reset", this._syncValue.bind(this, "defaultValue", label));
 
