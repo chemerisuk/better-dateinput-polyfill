@@ -32,7 +32,6 @@ Then append the following script on your page:
 <script src="bower_components/better-dom/dist/better-dom.js"></script>
 <script src="bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"></script>
 <script src="bower_components/better-time-element/dist/better-time-element.js"></script>
-<script src="bower_components/better-emmet-plugin/dist/better-emmet-plugin.js"></script>
 <script src="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
 ```
 
