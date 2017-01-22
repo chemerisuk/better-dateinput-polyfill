@@ -46,6 +46,8 @@
         constructor() {
             if (this._isNative()) return false;
 
+            const dscr = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+
             var picker = PICKER_TEMPLATE.clone(true),
                 label = LABEL_TEMPLATE.clone(true),
                 calenderDays = picker.find(`.${BASE_CLASS}-body`),
@@ -71,42 +73,23 @@
             calendarCaption
                 .on("click", this._clickPickerCaption.bind(this, picker));
 
-            var value = this.get("defaultValue");
-            const dscr = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
-
             Object.defineProperty(this[0], "value", {
                 configurable: !!dscr.configurable,
                 enumerable: !!dscr.enumerable,
-
-                get: () => value,
-                set: function(v) {
-                    value = v;
-
-                    var date = new Date(value);
-
-                    if (!isNaN(date)) {
-                        // #72: visible value must adjust timezone offset
-                        label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
-                    } else {
-                        label.set("datetime", "");
-                    }
-
-                    invalidatePicker();
-
-                    return dscr.set.call(this, label.get("innerText"));
-                }
+                get: () => label.get("datetime").split("T")[0],
+                set: this._syncValue.bind(this, dscr, invalidatePicker, label)
             });
 
             this.get("form").addEventListener("submit", () => {
                 // restore value to submit properly
-                dscr.set.call(this[0], value);
+                dscr.set.call(this[0], this.value());
                 // restore formatted value after serialization (for SPA)
                 setTimeout(() => {
                     dscr.set.call(this[0], label.get("innerText"));
                 }, 0);
             }, true);
 
-            this.value(value); // restore initial value
+            this.value(this.get("defaultValue")); // restore initial value
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) picker.show();
@@ -131,6 +114,20 @@
                 // force applying the polyfill
                 return false;
             }
+        },
+        _syncValue(dscr, invalidatePicker, label, value) {
+            var date = new Date(value);
+
+            if (!isNaN(date)) {
+                // #72: visible value must adjust timezone offset
+                label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
+            } else {
+                label.set("datetime", "");
+            }
+
+            invalidatePicker();
+
+            return dscr.set.call(this[0], label.get("innerText"));
         },
         _invalidatePicker(caption, calendarMonths, calenderDays, picker) {
             var expanded = picker.get("aria-expanded") === "true";
