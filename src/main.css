@@ -15,13 +15,7 @@
 @media screen {
     .btr-dateinput-value {
         position: absolute;
-        display: inline-block;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-
-        border-style: solid;
-        border-color: transparent;
+        color: transparent;
         pointer-events: none;
     }
 

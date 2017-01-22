@@ -3,14 +3,14 @@ describe("better-dateinput-polyfill", function() {
         return value.toISOString().split("T")[0];
     }
 
-    var el, picker, months, caption, label;
+    var el, picker, months, caption;//, label;
 
     beforeEach(function() {
         el = DOM.mock("<input type='date'>");
         picker = DOM.mock("<div>");
         months = DOM.mock();
         caption = DOM.mock();
-        label = DOM.mock("<span>");
+        // label = DOM.mock("<span>");
     });
 
     it("should toggle calendar visibility on space key", function() {
@@ -229,32 +229,32 @@ describe("better-dateinput-polyfill", function() {
         });
     });
 
-    describe("label", () => {
-        it("propagates click to input", () => {
-            var spy = jasmine.createSpy();
+    // describe("label", () => {
+    //     it("propagates click to input", () => {
+    //         var spy = jasmine.createSpy();
 
-            el.on("focus", spy);
-            el._clickLabel();
-            expect(spy).toHaveBeenCalled();
-        });
-    });
+    //         el.on("focus", spy);
+    //         el._clickLabel();
+    //         expect(spy).toHaveBeenCalled();
+    //     });
+    // });
 
-    describe("data-polyfill", () => {
-        it("skips when value is 'none'", () => {
-            el.set("data-polyfill", "none");
-            expect(el._isNative()).toBe(true);
-        });
+    // describe("data-polyfill", () => {
+    //     it("skips when value is 'none'", () => {
+    //         el.set("data-polyfill", "none");
+    //         expect(el._isNative()).toBe(true);
+    //     });
 
-        it("forces polyfill if value is 'all'", () => {
-            el.set("data-polyfill", "all");
-            expect(el._isNative()).toBe(false);
-            expect(el.get("type")).toBe("text");
-        });
+    //     it("forces polyfill if value is 'all'", () => {
+    //         el.set("data-polyfill", "all");
+    //         expect(el._isNative()).toBe(false);
+    //         expect(el.get("type")).toBe("text");
+    //     });
 
-        it("supports desktop value", () => {
-            el.set("data-polyfill", "desktop");
-            expect(el._isNative()).toBe(false);
-            expect(el.get("type")).toBe("text");
-        });
-    });
+    //     it("supports desktop value", () => {
+    //         el.set("data-polyfill", "desktop");
+    //         expect(el._isNative()).toBe(false);
+    //         expect(el.get("type")).toBe("text");
+    //     });
+    // });
 });

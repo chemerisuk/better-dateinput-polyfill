@@ -54,22 +54,14 @@
                 invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
 
             label
-                .set("data-format", this.get("data-format") || "E, dd MMM yyyy")
-                .css(this.css(["color", "width", "font", "padding", "text-align", "border-width", "box-sizing"]))
-                .css({"line-height": ""}) // IE10 returns invalid line-height for hidden elements
-                .on("click", this._clickLabel.bind(this))
-                .watch("datetime", invalidatePicker);
+                .set("data-format", this.get("data-format") || "E, dd MMM yyyy");
 
             this// hide original input text
-                // IE8 doesn't suport color:transparent - use background-color instead
-                .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this._focusPicker.bind(this, picker))
                 .on("blur", this._blurPicker.bind(this, picker))
-                .on("change", this._syncValue.bind(this, "value", label))
                 .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
-                .before(picker.hide(), label)
-                .closest("form").on("reset", this._syncValue.bind(this, "defaultValue", label));
+                .before(picker.hide(), label);
 
             picker
                 .watch("aria-expanded", invalidatePicker)
@@ -79,7 +71,42 @@
             calendarCaption
                 .on("click", this._clickPickerCaption.bind(this, picker));
 
-            this._syncValue("defaultValue", label); // restore initial value
+            var value = this.get("defaultValue");
+            const dscr = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+
+            Object.defineProperty(this[0], "value", {
+                configurable: !!dscr.configurable,
+                enumerable: !!dscr.enumerable,
+
+                get: () => value,
+                set: function(v) {
+                    value = v;
+
+                    var date = new Date(value);
+
+                    if (!isNaN(date)) {
+                        // #72: visible value must adjust timezone offset
+                        label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
+                    } else {
+                        label.set("datetime", "");
+                    }
+
+                    invalidatePicker();
+
+                    return dscr.set.call(this, label.get("innerText"));
+                }
+            });
+
+            this.get("form").addEventListener("submit", () => {
+                // restore value to submit properly
+                dscr.set.call(this[0], value);
+                // restore formatted value after serialization (for SPA)
+                setTimeout(() => {
+                    dscr.set.call(this[0], label.get("innerText"));
+                }, 0);
+            }, true);
+
+            this.value(value); // restore initial value
 
             // display calendar for autofocused elements
             if (this.matches(":focus")) picker.show();
@@ -173,19 +200,6 @@
             caption
                 .set("data-format", expanded ? "yyyy" : "MMMM yyyy")
                 .set("datetime", new Date(year, month).toISOString());
-        },
-        _syncValue(propName, label) {
-            var value = this.get(propName);
-            var date = new Date(value);
-
-            this.value(value);
-
-            if (!isNaN(date)) {
-                // #72: visible value must adjust timezone offset
-                label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
-            } else {
-                label.set("datetime", "");
-            }
         },
         _clickPicker(picker, calendarMonths, target) {
             var targetDate;
@@ -307,31 +321,10 @@
                 .set("aria-expanded", "false")
                 // display the date picker
                 .show();
-
-            // use the trick below to reset text selection on focus
-            /* istanbul ignore next */
-            setTimeout(() => {
-                var node = this[0];
-
-                if ("selectionStart" in node) {
-                    node.selectionStart = 0;
-                    node.selectionEnd = 0;
-                } else {
-                    var inputRange = node.createTextRange();
-
-                    inputRange.moveStart("character", 0);
-                    inputRange.collapse();
-                    inputRange.moveEnd("character", 0);
-                    inputRange.select();
-                }
-            }, 0);
         },
         _clickPickerCaption(picker) {
             picker.set("aria-expanded",
                 String(picker.get("aria-expanded") !== "true"));
-        },
-        _clickLabel() {
-            this.fire("focus");
         }
     });
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17));
