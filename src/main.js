@@ -95,7 +95,7 @@
                 // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
                 if (this[0].type === "date") return true;
                 // persist current value to restore it later
-                this.set("defaultValue", this.value());
+                this.set("defaultValue", this.value() === "" ? this.get("valueAsDate") : this.value());
                 // if browser allows invalid value then it doesn't support the feature
                 return this.value("_").value() !== "_";
             } else {
@@ -183,8 +183,10 @@
             if (!isNaN(date)) {
                 // #72: visible value must adjust timezone offset
                 label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
+                this.set("valueAsDate",date);
             } else {
                 label.set("datetime", "");
+                this.set("valueAsDate","");
             }
         },
         _clickPicker(picker, calendarMonths, target) {
