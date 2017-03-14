@@ -62,7 +62,7 @@
 
             this// hide original input text
                 // IE8 doesn't suport color:transparent - use background-color instead
-                .css("color", document.addEventListener ? "transparent" : this.css("background-color"))
+          //.css("color", document.addEventListener ? "transparent" : this.css("background-color"))
                 // sync picker visibility on focus/blur
                 .on(["focus", "click"], this._focusPicker.bind(this, picker))
                 .on("blur", this._blurPicker.bind(this, picker))
