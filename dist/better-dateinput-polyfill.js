@@ -1,8 +1,8 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 2.0.2 Wed, 02 Nov 2016 16:33:36 GMT
+ * @version 2.0.2 Tue, 14 Mar 2017 05:50:31 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
- * @copyright 2016 Maksim Chemerisuk
+ * @copyright 2017 Maksim Chemerisuk
  * @license MIT
  */
 (function (DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
@@ -78,7 +78,7 @@
                 // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
                 if (this[0].type === "date") return true;
                 // persist current value to restore it later
-                this.set("defaultValue", this.value());
+                this.set("defaultValue", this.value() === "" ? this.get("valueAsDate") : this.value());
                 // if browser allows invalid value then it doesn't support the feature
                 return this.value("_").value() !== "_";
             } else {
@@ -161,8 +161,10 @@
             if (!isNaN(date)) {
                 // #72: visible value must adjust timezone offset
                 label.set("datetime", new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()).toISOString());
+                this.set("valueAsDate", date);
             } else {
                 label.set("datetime", "");
+                this.set("valueAsDate", "");
             }
         },
         _clickPicker: function (picker, calendarMonths, target) {
