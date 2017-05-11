@@ -2,10 +2,11 @@
     "use strict"; /* globals html:false */
 
     var repeat = (times, str) => Array(times + 1).join(str);
+    const validUSLocales = ["en_us", "en-us"];
 
     var HTML = DOM.get("documentElement"),
         BASE_CLASS = "btr-dateinput-calendar",
-        ampm = (pos, neg) => HTML.lang === "en_US" ? pos : neg,
+        ampm = (pos, neg) => validUSLocales.indexOf(HTML.lang.toLowerCase()) >= 0 ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
