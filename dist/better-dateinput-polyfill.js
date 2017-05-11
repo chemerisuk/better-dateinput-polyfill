@@ -1,8 +1,8 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 2.0.2 Wed, 02 Nov 2016 16:33:36 GMT
+ * @version 2.0.3 Thu, 11 May 2017 15:19:18 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
- * @copyright 2016 Maksim Chemerisuk
+ * @copyright 2017 Maksim Chemerisuk
  * @license MIT
  */
 (function (DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
@@ -11,11 +11,12 @@
     var repeat = function (times, str) {
         return Array(times + 1).join(str);
     };
+    var validUSLocales = ["en_us", "en-us"];
 
     var HTML = DOM.get("documentElement"),
         BASE_CLASS = "btr-dateinput-calendar",
         ampm = function (pos, neg) {
-        return HTML.lang === "en_US" ? pos : neg;
+        return validUSLocales.indexOf(HTML.lang.toLowerCase()) >= 0 ? pos : neg;
     },
         formatISODate = function (value) {
         return value.toISOString().split("T")[0];
