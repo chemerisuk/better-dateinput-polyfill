@@ -1,4 +1,4 @@
-# better-dateinput-polyfill<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
+# better-dateinput-polyfill<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url] [![CDNJS version](https://img.shields.io/cdnjs/v/better-dateinput-polyfill.svg)](https://cdnjs.com/libraries/better-dateinput-polyfill)
 > `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
 
 Why another date picker? The problem is that most of existing solutions do not follow standards regarding to `value` property format, that should have “a valid full-date as defined in [RFC 3339]”. In other words representation of date can vary, but the string value should have `yyyy-MM-dd` format. It helps to work with such values consistently regarding on the current language.
