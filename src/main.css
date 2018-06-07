@@ -1,41 +1,43 @@
-.btr-dateinput-picker {
-    overflow: hidden;
-    display: inline-block;
-    vertical-align: bottom;
-}
+@media screen {
+    .btr-dateinput-picker {
+        overflow: hidden;
+        display: inline-block;
+        vertical-align: bottom;
+    }
 
-.btr-dateinput-picker > object {
-    width: 17em;
-    max-height: 17.625em;
-    box-shadow: 0 0 15px #AAA;
-    background: #FFF;
-    position: absolute;
+    .btr-dateinput-picker > object {
+        width: 17em;
+        max-height: 17.625em;
+        box-shadow: 0 0 15px #AAA;
+        background: #FFF;
+        position: absolute;
 
-    opacity: 1;
-    transform: translate3d(0,0,0);
-    transform-origin: 0 0;
-    transition: 0.1s ease-out;
-}
+        opacity: 1;
+        transform: translate3d(0,0,0);
+        transform-origin: 0 0;
+        transition: 0.1s ease-out;
+    }
 
-.btr-dateinput-picker[aria-hidden=true] > object {
-    opacity: 0;
-    transform: skew(-25deg) scaleX(0.75);
-}
+    .btr-dateinput-picker[aria-hidden=true] > object {
+        opacity: 0;
+        transform: skew(-25deg) scaleX(0.75);
+    }
 
-.btr-dateinput-picker[aria-expanded=true] > object {
-    max-height: 14.25em;
-}
+    .btr-dateinput-picker[aria-expanded=true] > object {
+        max-height: 14.25em;
+    }
 
-/* hide original input text */
-.btr-dateinput-picker + input {
-    color: transparent !important;
-}
+    /* hide original input text */
+    .btr-dateinput-picker + input {
+        color: transparent !important;
+    }
 
-/* disable text selection */
-.btr-dateinput-picker + input::selection {
-    background: transparent;
-}
+    /* disable text selection */
+    .btr-dateinput-picker + input::selection {
+        background: transparent;
+    }
 
-.btr-dateinput-picker + input::-moz-selection {
-    background: transparent;
+    .btr-dateinput-picker + input::-moz-selection {
+        background: transparent;
+    }
 }

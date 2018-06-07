@@ -1,4 +1,4 @@
-(function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
+(function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL, PICKER_CSS) {
     "use strict"; /* globals html:false */
 
     var repeat = (times, str) => Array(times + 1).join(str);
@@ -16,82 +16,7 @@
 
     const PICKER_TEMPLATE = DOM.create(html`
 <div>
-    <style>
-    body {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        font-size: 0.85em;
-        line-height: 2.5em;
-        text-align: center;
-        cursor: default;
-
-        margin: 0;
-        overflow: hidden;
-        /* improve font on OSX */
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-    a {
-        width: 2.5em;
-        height: 2.5em;
-        position: absolute;
-        color: inherit;
-        display: block;
-        text-decoration: none;
-    }
-
-    table {
-        width: 100%;
-        table-layout: fixed;
-        border-spacing: 0;
-        border-collapse: collapse;
-    }
-
-    thead {
-        border-top: 1px solid #EEE;
-        border-bottom: 1px solid graytext;
-        font-size: 0.85em;
-        background: #DDD;
-        font-weight: bold;
-    }
-
-    td, th {
-        width: 2.5em;
-        height: 2.25em;
-        line-height: 2.25;
-        padding: 0;
-        text-align: center;
-    }
-
-    [aria-selected=false], [aria-disabled=true] {
-        color: graytext;
-    }
-
-    [aria-selected=true] {
-        font-weight: bold;
-    }
-
-    a:hover, td:hover, [aria-selected=true]:hover, [aria-disabled=true], [aria-selected=true] {
-        background-color: rgba(0,0,0,0.05);
-    }
-
-    table+table {
-        position: absolute;
-        top: 2.25em;
-        left: 0;
-        visibility: hidden;
-        background: white;
-    }
-
-    table+table td {
-        line-height: 4;
-        height: 4em;
-    }
-
-    [aria-expanded=true] table+table {
-        visibility: inherit;
-    }
-    </style>
+    <style>${PICKER_CSS}</style>
     <a unselectable="on" style="left:0">&#x25C4;</a>
     <a unselectable="on" style="right:0">&#x25BA;</a>
     <b aria-hidden="true" style="display:block"></b>
@@ -415,4 +340,78 @@
             pickerBody.set("aria-expanded", value);
         }
     });
-}(window.DOM, 32, 9, 13, 27, 8, 46, 17));
+}(window.DOM, 32, 9, 13, 27, 8, 46, 17, `
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 0.85em;
+    line-height: 2.5em;
+    text-align: center;
+    cursor: default;
+
+    margin: 0;
+    overflow: hidden;
+    /* improve font on OSX */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    width: 2.5em;
+    height: 2.5em;
+    position: absolute;
+    color: inherit;
+    display: block;
+    text-decoration: none;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+thead {
+    border-top: 1px solid #EEE;
+    border-bottom: 1px solid graytext;
+    font-size: 0.85em;
+    background: #DDD;
+    font-weight: bold;
+}
+
+td, th {
+    width: 2.5em;
+    height: 2.25em;
+    line-height: 2.25;
+    padding: 0;
+    text-align: center;
+}
+
+[aria-selected=false], [aria-disabled=true] {
+    color: graytext;
+}
+
+[aria-selected=true] {
+    font-weight: bold;
+}
+
+a:hover, td:hover, [aria-selected=true]:hover, [aria-disabled=true], [aria-selected=true] {
+    background-color: rgba(0,0,0,0.05);
+}
+
+table+table {
+    position: absolute;
+    top: 2.25em;
+    left: 0;
+    visibility: hidden;
+    background: white;
+}
+
+table+table td {
+    line-height: 4;
+    height: 4em;
+}
+
+[aria-expanded=true] table+table {
+    visibility: inherit;
+}`));
