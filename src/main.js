@@ -106,31 +106,31 @@
             const calenderDays = pickerBody.find("tbody");
             const calendarMonths = pickerBody.find("table+table");
             const calendarCaption = pickerBody.find("b");
-            const invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
+            const invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, pickerBody);
 
             pickerRoot.find("body").append(pickerBody);
+            // sync picker visibility on focus/blur
+            this.on("focus", this._focusPicker.bind(this, invalidatePicker, picker, pickerBody));
+            this.on("click", this._focusPicker.bind(this, invalidatePicker, picker, pickerBody));
+            this.on("blur", this._blurPicker.bind(this, picker));
+            this.on("change", this._syncValue.bind(this, invalidatePicker, "value"));
+            this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
 
-            this
-                // sync picker visibility on focus/blur
-                .on(["focus", "click"], this._focusPicker.bind(this, picker, pickerBody))
-                .on("blur", this._blurPicker.bind(this, picker))
-                .on("change", this._syncValue.bind(this, invalidatePicker, "value"))
-                .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
-                .closest("form").on("reset", this._syncValue.bind(this, invalidatePicker, "defaultValue"));
-
-            pickerBody
-                .watch("aria-expanded", invalidatePicker)
-                .on("mousedown", ["target"], this._clickPicker.bind(this, pickerBody, picker, calendarMonths));
-
-            calendarCaption
-                .on("click", this._clickPickerCaption.bind(this, pickerBody, picker));
+            this.closest("form").on("reset",
+                this._syncValue.bind(this, invalidatePicker, "defaultValue"));
+            pickerBody.on("mousedown", ["target"],
+                this._clickPicker.bind(this, pickerBody, picker, calendarMonths));
+            calendarCaption.on("click",
+                this._clickPickerCaption.bind(this, invalidatePicker, pickerBody, picker));
 
             this._syncValue(invalidatePicker, "defaultValue"); // restore initial value
             // display calendar for autofocused elements
-            if (this.matches(":focus")) picker.show();
+            if (DOM.get("activeElement") === this[0]) {
+                picker.show();
+            }
         },
-        _invalidatePicker(caption, calendarMonths, calenderDays, picker) {
-            var expanded = picker.get("aria-expanded") === "true";
+        _invalidatePicker(caption, calendarMonths, calenderDays, pickerBody) {
+            var expanded = pickerBody.get("aria-expanded") === "true";
             var value = new Date(this.value());
             var year, month, date;
 
@@ -158,9 +158,8 @@
                         selectedValue = "true";
                     }
 
-                    day
-                        .set("aria-selected", selectedValue)
-                        .data("ts", iterDate.getTime());
+                    day._ts = iterDate.getTime();
+                    day.set("aria-selected", selectedValue);
                 });
             } else {
                 // move to beginning of the first week in current month
@@ -177,19 +176,16 @@
 
                     if (iterDate < range[0] || iterDate > range[1]) {
                         disabledValue = "true";
-                    } else if (mDiff > 0) {
-                        selectedValue = "false";
-                    } else if (mDiff < 0) {
+                    } else if (mDiff > 0 || mDiff < 0) {
                         selectedValue = "false";
                     } else if (date === iterDate.getUTCDate()) {
                         selectedValue = "true";
                     }
 
-                    day
-                        .set("aria-selected", selectedValue)
-                        .set("aria-disabled", disabledValue)
-                        .data("ts", iterDate.getTime())
-                        .value(iterDate.getUTCDate());
+                    day._ts = iterDate.getTime();
+                    day.set("aria-selected", selectedValue);
+                    day.set("aria-disabled", disabledValue);
+                    day.value(iterDate.getUTCDate());
                 });
             }
             // update calendar caption
@@ -226,19 +222,17 @@
                     targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
                 }
             } else if (calendarMonths.contains(target)) {
-                targetDate = target.data("ts");
-                if (isNaN(targetDate)) {
+                if (isNaN(target._ts)) {
                     targetDate = new Date();
                 } else {
-                    targetDate = new Date(targetDate);
+                    targetDate = new Date(target._ts);
                 }
 
                 pickerBody.set("aria-expanded", "false");
                 picker.set("aria-expanded", "false");
             } else if (target.matches("td")) {
-                targetDate = target.data("ts");
-                if (!isNaN(targetDate)) {
-                    targetDate = new Date(targetDate);
+                if (!isNaN(target._ts)) {
+                    targetDate = new Date(target._ts);
                     picker.hide();
                 }
             }
@@ -260,12 +254,17 @@
         _keydownPicker(picker, which) {
             var delta, currentDate;
             // ENTER key should submit form if calendar is hidden
-            if (picker.matches(":hidden") && which === VK_ENTER) return true;
+            if (which === VK_ENTER && picker.get("aria-hidden") === "true") return true;
 
             if (which === VK_SPACE) {
                 // SPACE key toggles calendar visibility
                 if (!this.get("readonly")) {
-                    picker.set("aria-expanded", "false").toggle();
+                    picker.set("aria-expanded", "false");
+                    if (picker.get("aria-hidden") === "true") {
+                        picker.show();
+                    } else {
+                        picker.hide();
+                    }
                 }
             } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
                 picker.hide(); // ESC, TAB or ENTER keys hide calendar
@@ -310,7 +309,7 @@
         _blurPicker(picker) {
             picker.hide();
         },
-        _focusPicker(picker, pickerBody) {
+        _focusPicker(invalidatePicker, picker, pickerBody) {
             if (this.get("readonly")) return false;
 
             var offset = this.offset();
@@ -324,6 +323,8 @@
 
             pickerBody.set("aria-expanded", "false");
 
+            invalidatePicker();
+
             picker
                 // always recalculate picker top position
                 .css("margin-top", marginTop)
@@ -332,10 +333,12 @@
                 // display the date picker
                 .show();
         },
-        _clickPickerCaption(pickerBody, picker) {
+        _clickPickerCaption(invalidatePicker, pickerBody, picker) {
             const value = String(picker.get("aria-expanded") !== "true");
             picker.set("aria-expanded", value);
             pickerBody.set("aria-expanded", value);
+
+            invalidatePicker();
         }
     });
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17, `

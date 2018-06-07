@@ -20,6 +20,7 @@
     .btr-dateinput-picker[aria-hidden=true] > object {
         opacity: 0;
         transform: skew(-25deg) scaleX(0.75);
+        pointer-events: none;
     }
 
     .btr-dateinput-picker[aria-expanded=true] > object {
