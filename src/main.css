@@ -1,13 +1,12 @@
 @media screen {
     .btr-dateinput-picker {
-        overflow: hidden;
         display: inline-block;
         vertical-align: bottom;
     }
 
     .btr-dateinput-picker > object {
-        width: 17em;
-        max-height: 17.625em;
+        width: 17rem;
+        max-height: 17.625rem;
         box-shadow: 0 0 15px #AAA;
         background: #FFF;
         position: absolute;
@@ -24,7 +23,7 @@
     }
 
     .btr-dateinput-picker[aria-expanded=true] > object {
-        max-height: 14.25em;
+        max-height: 14.25rem;
     }
 
     /* hide original input text */
