@@ -47,20 +47,17 @@
     </object>
 </div>`);
 
-    const PICKER_BODY_TEMPLATE = DOM.create(html`
-<div>
-    <style>${PICKER_CSS}</style>
-    <a unselectable="on" style="left:0">&#x25C4;</a>
-    <a unselectable="on" style="right:0">&#x25BA;</a>
-    <b aria-hidden="true" style="display:block;cursor:pointer"></b>
-    <table aria-hidden="true">
-        <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
-        <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
-    </table>
-    <table aria-hidden="true">
-        <tbody>${repeat(3, (_, i) => "<tr>" + repeat(4, (_, j) => "<td>" + localeMonth(i * 4 + j)))}</tbody>
-    </table>
-</div>`);
+    const PICKER_BODY_HTML = html`
+<a unselectable="on" style="left:0">&#x25C4;</a>
+<a unselectable="on" style="right:0">&#x25BA;</a>
+<b aria-hidden="true" style="display:block;cursor:pointer"></b>
+<table aria-hidden="true">
+    <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
+    <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
+</table>
+<table aria-hidden="true">
+    <tbody>${repeat(3, (_, i) => "<tr>" + repeat(4, (_, j) => "<td>" + localeMonth(i * 4 + j)))}</tbody>
+</table>`;
 
     DOM.extend("input[type=date]", {
         constructor() {
@@ -102,66 +99,34 @@
         },
         _initPicker(object, picker) {
             const pickerRoot = DOM.constructor(object.contentDocument);
-            const pickerBody = PICKER_BODY_TEMPLATE.clone(true);
+            const pickerBody = pickerRoot.find("body");
+
+            pickerRoot.importStyles(PICKER_CSS);
+            pickerBody.set(PICKER_BODY_HTML);
+
             const calenderDays = pickerBody.find("tbody");
             const calendarMonths = pickerBody.find("table+table");
             const calendarCaption = pickerBody.find("b");
-            const invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, pickerBody);
+            const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays, pickerBody);
 
-            pickerRoot.find("body").append(pickerBody);
-            // sync picker visibility on focus/blur
-            this.on("focus", this._focusPicker.bind(this, invalidatePicker, picker, pickerBody));
-            this.on("click", this._focusPicker.bind(this, invalidatePicker, picker, pickerBody));
-            this.on("blur", this._blurPicker.bind(this, picker));
-            this.on("change", this._syncValue.bind(this, invalidatePicker, "value"));
-            this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
+            pickerBody.on("picker:invalidate", ["detail"], (detail) => {
+                const year = detail.getUTCFullYear();
+                // update calendar caption
+                if (pickerBody.get("aria-expanded") === "true") {
+                    calendarCaption.value(year);
+                } else {
+                    const month = detail.getUTCMonth();
 
-            this.closest("form").on("reset",
-                this._syncValue.bind(this, invalidatePicker, "defaultValue"));
-            pickerBody.on("mousedown", ["target"],
-                this._clickPicker.bind(this, pickerBody, picker, calendarMonths));
-            calendarCaption.on("click",
-                this._clickPickerCaption.bind(this, invalidatePicker, pickerBody, picker));
+                    calendarCaption.value(localeMonthYear(month, year));
+                }
+            });
 
-            this._syncValue(invalidatePicker, "defaultValue"); // restore initial value
-            // display calendar for autofocused elements
-            if (DOM.get("activeElement") === this[0]) {
-                picker.show();
-            }
-        },
-        _invalidatePicker(caption, calendarMonths, calenderDays, pickerBody) {
-            var expanded = pickerBody.get("aria-expanded") === "true";
-            var value = new Date(this.value());
-            var year, month, date;
-
-            if (isNaN(value.getTime())) {
-                value = new Date();
-            }
-
-            month = value.getUTCMonth();
-            date = value.getUTCDate();
-            year = value.getUTCFullYear();
-
-            var range = readDateRange(this);
-            var iterDate = new Date(Date.UTC(year, month, expanded ? 1 : 0));
-
-            if (expanded) {
-                calendarMonths.findAll("td").forEach((day, index) => {
-                    iterDate.setUTCMonth(index);
-
-                    var mDiff = month - iterDate.getUTCMonth(),
-                        selectedValue = null;
-
-                    if (iterDate < range[0] || iterDate > range[1]) {
-                        selectedValue = "false";
-                    } else if (!mDiff) {
-                        selectedValue = "true";
-                    }
-
-                    day._ts = iterDate.getTime();
-                    day.set("aria-selected", selectedValue);
-                });
-            } else {
+            calenderDays.on("picker:invalidate", ["detail"], (detail) => {
+                const month = detail.getUTCMonth();
+                const date = detail.getUTCDate();
+                const year = detail.getUTCFullYear();
+                const range = readDateRange(this);
+                const iterDate = new Date(Date.UTC(year, month, 0));
                 // move to beginning of the first week in current month
                 iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
                 // update days picker
@@ -187,9 +152,62 @@
                     day.set("aria-disabled", disabledValue);
                     day.value(iterDate.getUTCDate());
                 });
+            });
+
+            calendarMonths.on("picker:invalidate", ["detail"], (detail) => {
+                const month = detail.getUTCMonth();
+                const year = detail.getUTCFullYear();
+                const range = readDateRange(this);
+                const iterDate = new Date(Date.UTC(year, month, 1));
+
+                calendarMonths.findAll("td").forEach((day, index) => {
+                    iterDate.setUTCMonth(index);
+
+                    var mDiff = month - iterDate.getUTCMonth(),
+                        selectedValue = null;
+
+                    if (iterDate < range[0] || iterDate > range[1]) {
+                        selectedValue = "false";
+                    } else if (!mDiff) {
+                        selectedValue = "true";
+                    }
+
+                    day._ts = iterDate.getTime();
+                    day.set("aria-selected", selectedValue);
+                });
+            });
+
+            // sync picker visibility on focus/blur
+            this.on("focus", this._focusPicker.bind(this, invalidatePicker, picker, pickerBody));
+            this.on("click", this._focusPicker.bind(this, invalidatePicker, picker, pickerBody));
+            this.on("blur", this._blurPicker.bind(this, picker));
+            this.on("change", this._syncValue.bind(this, invalidatePicker, "value"));
+            this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
+
+            this.closest("form").on("reset",
+                this._syncValue.bind(this, invalidatePicker, "defaultValue"));
+            pickerBody.on("mousedown", ["target"],
+                this._clickPicker.bind(this, pickerBody, picker, calendarMonths));
+            calendarCaption.on("click",
+                this._clickPickerCaption.bind(this, invalidatePicker, pickerBody, picker));
+
+            this._syncValue(invalidatePicker, "defaultValue"); // restore initial value
+            // display calendar for autofocused elements
+            if (DOM.get("activeElement") === this[0]) {
+                picker.show();
             }
-            // update calendar caption
-            caption.value(expanded ? year : localeMonthYear(month, year));
+        },
+        _invalidatePicker(calendarMonths, calenderDays, pickerBody) {
+            var value = new Date(this.value());
+            if (isNaN(value.getTime())) {
+                value = new Date();
+            }
+
+            if (pickerBody.get("aria-expanded") === "true") {
+                calendarMonths.fire("picker:invalidate", value);
+            } else {
+                calenderDays.fire("picker:invalidate", value);
+            }
         },
         _syncValue(invalidatePicker, propName) {
             const date = new Date(this.get(propName));
