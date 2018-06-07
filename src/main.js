@@ -4,33 +4,107 @@
     var repeat = (times, str) => Array(times + 1).join(str);
 
     var HTML = DOM.get("documentElement"),
-        BASE_CLASS = "btr-dateinput-calendar",
         ampm = (pos, neg) => HTML.lang === "en_US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
+    const CONTEXT_TEMPLATE = DOM.create(html`
+<div tabindex="-1" class="btr-dateinput-picker">
+    <object data="about:blank" type="text/html" width="100%" height="100%">
+    </object>
+</div>`);
+
     const PICKER_TEMPLATE = DOM.create(html`
-<div class="${BASE_CLASS}">
-    <p class="${BASE_CLASS}-header">
-        ${repeat(2, `<a unselectable="on"></a>`)}
-        <span class="${BASE_CLASS}-caption" aria-hidden="true" unselectable="on"></span>
-    </p>
-    <table class="${BASE_CLASS}-days" aria-hidden="true">
-        <thead>
-        ${repeat(7, `<th unselectable="on">`)}
-        </thead>
-        <tbody class="${BASE_CLASS}-body">
-        ${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}
-        </tbody>
+<div>
+    <style>
+    body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 0.85em;
+        line-height: 2.5em;
+        text-align: center;
+        cursor: default;
+
+        margin: 0;
+        overflow: hidden;
+        /* improve font on OSX */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+        width: 2.5em;
+        height: 2.5em;
+        position: absolute;
+        color: inherit;
+        display: block;
+        text-decoration: none;
+    }
+
+    table {
+        width: 100%;
+        table-layout: fixed;
+        border-spacing: 0;
+        border-collapse: collapse;
+    }
+
+    thead {
+        border-top: 1px solid #EEE;
+        border-bottom: 1px solid graytext;
+        font-size: 0.85em;
+        background: #DDD;
+        font-weight: bold;
+    }
+
+    td, th {
+        width: 2.5em;
+        height: 2.25em;
+        line-height: 2.25;
+        padding: 0;
+        text-align: center;
+    }
+
+    [aria-selected=false], [aria-disabled=true] {
+        color: graytext;
+    }
+
+    [aria-selected=true] {
+        font-weight: bold;
+    }
+
+    a:hover, td:hover, [aria-selected=true]:hover, [aria-disabled=true], [aria-selected=true] {
+        background-color: rgba(0,0,0,0.05);
+    }
+
+    table+table {
+        position: absolute;
+        top: 2.25em;
+        left: 0;
+        visibility: hidden;
+        background: white;
+    }
+
+    table+table td {
+        line-height: 4;
+        height: 4em;
+    }
+
+    [aria-expanded=true] table+table {
+        visibility: inherit;
+    }
+    </style>
+    <a unselectable="on" style="left:0">&#x25C4;</a>
+    <a unselectable="on" style="right:0">&#x25BA;</a>
+    <b aria-hidden="true" style="display:block"></b>
+    <table aria-hidden="true">
+        <thead>${repeat(7, `<th>`)}</thead>
+        <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
     </table>
-    <table class="${BASE_CLASS}-months" aria-hidden="true">
-        <tbody>
-        ${repeat(3, `<tr>${repeat(4, `<td>`)}`)}
-        </tbody>
+    <table aria-hidden="true">
+        <tbody>${repeat(3, `<tr>${repeat(4, `<td>`)}`)}</tbody>
     </table>
 </div>`);
 
-    PICKER_TEMPLATE.find(`.${BASE_CLASS}-days`).findAll("th").forEach((th, index) => {
+    PICKER_TEMPLATE.findAll("th").forEach((th, index) => {
         var date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
         var formattedValue;
         try {
@@ -42,7 +116,7 @@
         th.value(formattedValue);
     });
 
-    PICKER_TEMPLATE.find(`.${BASE_CLASS}-months`).findAll("td").forEach((td, index) => {
+    PICKER_TEMPLATE.findAll("table+table td").forEach((td, index) => {
         var date = new Date(Date.UTC(2010, index));
         var formattedValue;
         try {
@@ -63,33 +137,13 @@
             const font = ["font-style", "font-size", "/", "line-height", "font-family"].map(p => p === "/" ? p : this.css(p)).join(" ");
             this._wrap = (value) => `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><text x='${offset}' y='50%' dominant-baseline='central' style='font:${font};fill:${color}' >${value}</text></svg>")`;
 
-            var picker = PICKER_TEMPLATE.clone(true),
-                calenderDays = picker.find(`.${BASE_CLASS}-body`),
-                calendarMonths = picker.find(`.${BASE_CLASS}-months`),
-                calendarCaption = picker.find(`.${BASE_CLASS}-caption`),
-                invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
+            const picker = CONTEXT_TEMPLATE.clone(true);
+            const object = picker.get("firstChild");
+            object.onload = this._initPicker.bind(this, object, picker);
 
-            this
-                // sync picker visibility on focus/blur
-                .on(["focus", "click"], this._focusPicker.bind(this, picker))
-                .on("blur", this._blurPicker.bind(this, picker))
-                .on("change", this._syncValue.bind(this, invalidatePicker, "value"))
-                .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
-                .before(picker.hide())
-                .closest("form").on("reset", this._syncValue.bind(this, invalidatePicker, "defaultValue"));
+            picker.css("z-index", 1 + (this.css("z-index") | 0));
 
-            picker
-                .watch("aria-expanded", invalidatePicker)
-                .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths))
-                .css("z-index", 1 + (this.css("z-index") | 0));
-
-            calendarCaption
-                .on("click", this._clickPickerCaption.bind(this, picker));
-
-            this._syncValue(invalidatePicker, "defaultValue"); // restore initial value
-
-            // display calendar for autofocused elements
-            if (this.matches(":focus")) picker.show();
+            this.before(picker.hide());
         },
         _isNative() {
             var polyfillType = this.get("data-polyfill"),
@@ -112,6 +166,35 @@
                 return false;
             }
         },
+        _initPicker(object, picker) {
+            const pickerRoot = DOM.constructor(object.contentDocument);
+            const pickerBody = PICKER_TEMPLATE.clone(true);
+            const calenderDays = pickerBody.find("tbody");
+            const calendarMonths = pickerBody.find("table+table");
+            const calendarCaption = pickerBody.find("b");
+            const invalidatePicker = this._invalidatePicker.bind(this, calendarCaption, calendarMonths, calenderDays, picker);
+
+            pickerRoot.find("body").append(pickerBody);
+
+            this
+                // sync picker visibility on focus/blur
+                .on(["focus", "click"], this._focusPicker.bind(this, picker, pickerBody))
+                .on("blur", this._blurPicker.bind(this, picker))
+                .on("change", this._syncValue.bind(this, invalidatePicker, "value"))
+                .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
+                .closest("form").on("reset", this._syncValue.bind(this, invalidatePicker, "defaultValue"));
+
+            pickerBody
+                .watch("aria-expanded", invalidatePicker)
+                .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths));
+
+            calendarCaption
+                .on("click", this._clickPickerCaption.bind(this, pickerBody, picker));
+
+            this._syncValue(invalidatePicker, "defaultValue"); // restore initial value
+            // display calendar for autofocused elements
+            if (this.matches(":focus")) picker.show();
+        },
         _invalidatePicker(caption, calendarMonths, calenderDays, picker) {
             var expanded = picker.get("aria-expanded") === "true";
             var value = new Date(this.value());
@@ -133,17 +216,15 @@
                     iterDate.setUTCMonth(index);
 
                     var mDiff = month - iterDate.getUTCMonth(),
-                        className = BASE_CLASS;
+                        selectedValue = "";
 
                     if (iterDate < range[0] || iterDate > range[1]) {
-                        className += "-out";
+                        selectedValue = "false";
                     } else if (!mDiff) {
-                        className += "-today";
-                    } else {
-                        className = "";
+                        selectedValue = "true";
                     }
 
-                    day.set("class", className);
+                    day.set("aria-selected", selectedValue);
                 });
             } else {
                 // move to beginning of the first week in current month
@@ -153,24 +234,24 @@
                     iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                     var mDiff = month - iterDate.getUTCMonth(),
-                        className = BASE_CLASS;
+                        selectedValue = "",
+                        disabledValue = "";
 
                     if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
                     if (iterDate < range[0] || iterDate > range[1]) {
-                        className += "-out";
+                        disabledValue = "true";
                     } else if (mDiff > 0) {
-                        className += "-past";
+                        selectedValue = "false";
                     } else if (mDiff < 0) {
-                        className += "-future";
+                        selectedValue = "false";
                     } else if (date === iterDate.getUTCDate()) {
-                        className += "-today";
-                    } else {
-                        className = "";
+                        selectedValue = "true";
                     }
 
                     day
-                        .set("class", className)
+                        .set("aria-selected", selectedValue)
+                        .set("aria-disabled", disabledValue)
                         .data("ts", iterDate.getTime())
                         .value(iterDate.getUTCDate());
                 });
@@ -306,7 +387,7 @@
         _blurPicker(picker) {
             picker.hide();
         },
-        _focusPicker(picker) {
+        _focusPicker(picker, pickerBody) {
             if (this.get("readonly")) return false;
 
             var offset = this.offset();
@@ -318,6 +399,8 @@
                 marginTop = -pickerOffset.height;
             }
 
+            pickerBody.set("aria-expanded", "false");
+
             picker
                 // always recalculate picker top position
                 .css("margin-top", marginTop)
@@ -326,9 +409,10 @@
                 // display the date picker
                 .show();
         },
-        _clickPickerCaption(picker) {
-            picker.set("aria-expanded",
-                String(picker.get("aria-expanded") !== "true"));
+        _clickPickerCaption(pickerBody, picker) {
+            const value = String(picker.get("aria-expanded") !== "true");
+            picker.set("aria-expanded", value);
+            pickerBody.set("aria-expanded", value);
         }
     });
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17));

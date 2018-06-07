@@ -1,200 +1,41 @@
-:root {
-    --font-color: #555;
-    --bkg-header: #34b3df;
-    --bkg-active: #207FB1;
-    --color-border: #DDD;
-    --color-graytext: #ABABAB;
-    --bkg-graytext: #F3F3F3;
-    --bkg-normal: #FFF;
-    --border-normal: 1px solid;
-    --border-radius: 3px;
-    --height-header: 2.5em;
-    --shadow-text: 0 1px 0;
+.btr-dateinput-picker {
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: bottom;
 }
 
-@media screen {
-    .btr-dateinput-calendar {
-        position: absolute;
-        visibility: hidden; /* initially calendar is hidden */
-        display: inline-block;
+.btr-dateinput-picker > object {
+    width: 17em;
+    max-height: 17.625em;
+    box-shadow: 0 0 15px #AAA;
+    background: #FFF;
+    position: absolute;
 
-        cursor: default;
-        user-select: none;
+    opacity: 1;
+    transform: translate3d(0,0,0);
+    transform-origin: 0 0;
+    transition: 0.1s ease-out;
+}
 
-        color: var(--bkg-normal);
-        border-bottom: var(--border-normal) var(--color-border);
-        overflow: hidden;
+.btr-dateinput-picker[aria-hidden=true] > object {
+    opacity: 0;
+    transform: skew(-25deg) scaleX(0.75);
+}
 
-        border-radius: var(--border-radius);
-        box-shadow: 0 0.25em 0.5em rgba(0,0,0,0.2);
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        font-size: 0.85em;
-        text-align: center;
+.btr-dateinput-picker[aria-expanded=true] > object {
+    max-height: 14.25em;
+}
 
-        opacity: 1;
-        transform: translate3d(0,0,0);
-        transform-origin: 0 0;
-        transition: 0.1s ease-out;
+/* hide original input text */
+.btr-dateinput-picker + input {
+    color: transparent !important;
+}
 
-        width: 17em;
-        max-height: 18.25em;
+/* disable text selection */
+.btr-dateinput-picker + input::selection {
+    background: transparent;
+}
 
-        /* improve font on OSX */
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-    .btr-dateinput-calendar-months {
-        position: absolute;
-        margin-top: 1px;
-        top: 2.5em;
-        left: 0;
-        visibility: hidden;
-    }
-
-    .btr-dateinput-calendar[aria-expanded=true] {
-        max-height: 14.5em;
-    }
-
-    .btr-dateinput-calendar[aria-expanded=true] .btr-dateinput-calendar-months {
-        visibility: inherit;
-    }
-
-    .btr-dateinput-calendar[aria-hidden=true] {
-        opacity: 0;
-        transform: skew(-25deg) scaleX(0.75);
-    }
-
-    .btr-dateinput-calendar-header {
-        position: relative;
-        margin: 0;
-
-        height: var(--height-header);
-        line-height: var(--height-header);
-        font-weight: bold;
-        white-space: nowrap;
-
-        background: var(--bkg-header);
-        text-shadow: var(--shadow-text) var(--font-color);
-        border-bottom: var(--border-normal) var(--bkg-active);
-    }
-
-    .btr-dateinput-calendar-header > a {
-        width: var(--height-header);
-        height: var(--height-header);
-
-        position: absolute;
-        left: 0;
-        top: 0;
-
-        color: inherit;
-    }
-
-    .btr-dateinput-calendar-header > time {
-        display: block;
-    }
-
-    .btr-dateinput-calendar-header > a:before {
-        content: '\25C4';
-    }
-
-    .btr-dateinput-calendar-header > a::before {
-        font-size: 0.85em;
-    }
-
-    .btr-dateinput-calendar-header > a + a {
-        left: auto;
-        right: 0;
-    }
-
-    .btr-dateinput-calendar-header > a + a:before {
-        content: '\25BA';
-    }
-
-    .btr-dateinput-calendar-days,
-    .btr-dateinput-calendar-months {
-        width: 100%;
-        table-layout: fixed;
-        border-spacing: 0;
-        border-collapse: collapse;
-
-        color: var(--font-color);
-        background: var(--bkg-normal);
-
-        border-radius: var(--border-radius);
-        border: var(--border-normal) var(--color-border);
-        border-bottom: 0;
-    }
-
-    .btr-dateinput-calendar-days > thead {
-        border-top: var(--border-normal) #EEE;
-        border-bottom: var(--border-normal) var(--color-graytext);
-
-        font-size: 0.85em;
-        background: var(--color-border);
-        font-weight: bold;
-
-        text-shadow: var(--shadow-text) var(--bkg-graytext);
-    }
-
-    .btr-dateinput-calendar td,
-    .btr-dateinput-calendar th {
-        width: 2.5em;
-        height: 2.25em;
-        line-height: 2.25;
-        padding: 0;
-        text-align: center;
-    }
-
-    .btr-dateinput-calendar-months td {
-        line-height: 4;
-        height: 4em;
-    }
-
-    .btr-dateinput-calendar-months time {
-        display: block;
-    }
-
-    .btr-dateinput-calendar-past,
-    .btr-dateinput-calendar-future {
-        color: var(--color-graytext);
-    }
-
-    .btr-dateinput-calendar-out {
-        color: var(--color-graytext);
-        text-shadow: var(--shadow-text) var(--bkg-normal);
-    }
-
-    .btr-dateinput-calendar-today {
-        color: var(--bkg-normal);
-        background-color: var(--bkg-header);
-        text-shadow: var(--shadow-text) var(--font-color);
-        font-weight: bold;
-    }
-
-    .btr-dateinput-calendar-out,
-    .btr-dateinput-calendar td:hover {
-        background-color: var(--bkg-graytext);
-        background-color: rgba(0,0,0,0.05);
-    }
-
-    .btr-dateinput-calendar-header > a:hover,
-    td.btr-dateinput-calendar-today:hover {
-        background-color: var(--bkg-active);
-        text-decoration: none;
-    }
-
-    /* hide original input text */
-    .btr-dateinput-calendar + input {
-        color: transparent !important;
-    }
-
-    /* disable text selection */
-    .btr-dateinput-calendar + input::selection {
-        background: transparent;
-    }
-
-    .btr-dateinput-calendar + input::-moz-selection {
-        background: transparent;
-    }
+.btr-dateinput-picker + input::-moz-selection {
+    background: transparent;
 }
