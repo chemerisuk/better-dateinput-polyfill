@@ -117,7 +117,7 @@
             var value = new Date(this.value());
             var year, month, date;
 
-          if (isNaN(value.getTime())) {
+            if (isNaN(value.getTime())) {
                 value = new Date();
             }
 
@@ -126,7 +126,7 @@
             year = value.getUTCFullYear();
 
             var range = readDateRange(this);
-            var iterDate = new Date(Date.UTC(year, month, 0));
+            var iterDate = new Date(Date.UTC(year, month, expanded ? 1 : 0));
 
             if (expanded) {
                 calendarMonths.findAll("td").forEach((day, index) => {
@@ -211,7 +211,7 @@
             if (target.matches("a")) {
                 targetDate = new Date(this.value());
 
-              if (isNaN(targetDate.getTime())) targetDate = new Date();
+                if (isNaN(targetDate.getTime())) targetDate = new Date();
 
                 var sign = target.next("a")[0] ? -1 : 1;
 
@@ -225,7 +225,7 @@
 
                 targetDate = new Date(this.value());
 
-              if (isNaN(targetDate.getTime())) targetDate = new Date();
+                if (isNaN(targetDate.getTime())) targetDate = new Date();
 
                 targetDate.setUTCMonth(new Date(target.get("datetime")).getUTCMonth());
 
@@ -274,7 +274,7 @@
             } else {
                 currentDate = new Date(this.value());
 
-              if (isNaN(currentDate.getTime())) currentDate = new Date();
+                if (isNaN(currentDate.getTime())) currentDate = new Date();
 
                 if (which === 74 || which === 40) { delta = 7; }
                 else if (which === 75 || which === 38) { delta = -7; }
