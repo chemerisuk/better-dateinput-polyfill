@@ -190,12 +190,15 @@
             caption.value(formattedValue);
         },
         _syncValue(invalidatePicker, propName) {
-            var formattedValue = new Date(this.get(propName));
-            if (isNaN(formattedValue)) {
-                formattedValue = "";
-            } else {
-                // TODO: respect data-format mask
-                formattedValue = formattedValue.toLocaleDateString();
+            const date = new Date(this.get(propName));
+            var formattedValue = "";
+            if (!isNaN(date)) {
+                const formatOptions = this.get("data-format");
+                try {
+                    formattedValue = date.toLocaleDateString(HTML.lang, JSON.parse(formatOptions));
+                } catch (err) {
+                    formattedValue = date.toLocaleDateString();
+                }
             }
 
             this.css("background-image", this._wrap(formattedValue));
