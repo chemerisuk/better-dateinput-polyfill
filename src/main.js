@@ -107,12 +107,12 @@
             const calenderDays = pickerBody.find("tbody");
             const calendarMonths = pickerBody.find("table+table");
             const calendarCaption = pickerBody.find("b");
-            const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays, pickerBody);
+            const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays, picker);
 
             pickerBody.on("picker:invalidate", ["detail"], (detail) => {
                 const year = detail.getUTCFullYear();
                 // update calendar caption
-                if (pickerBody.get("aria-expanded") === "true") {
+                if (picker.expanded) {
                     calendarCaption.value(year);
                 } else {
                     const month = detail.getUTCMonth();
@@ -177,9 +177,24 @@
                 });
             });
 
+            Object.defineProperty(picker[0], "expanded", {
+                configurable: false,
+                enumerable: true,
+                get() {
+                    return picker.get("aria-expanded") === "true";
+                },
+                set(expanded) {
+                    if (typeof expanded === "boolean") {
+                        picker.set("aria-expanded", expanded);
+                        pickerBody.set("aria-expanded", expanded);
+
+                        invalidatePicker();
+                    }
+                }
+            });
             // sync picker visibility on focus/blur
-            this.on("focus", this._focusPicker.bind(this, invalidatePicker, picker, pickerBody));
-            this.on("click", this._focusPicker.bind(this, invalidatePicker, picker, pickerBody));
+            this.on("focus", this._focusPicker.bind(this, picker));
+            this.on("click", this._focusPicker.bind(this, picker));
             this.on("blur", this._blurPicker.bind(this, picker));
             this.on("change", this._syncValue.bind(this, invalidatePicker, "value"));
             this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
@@ -187,9 +202,9 @@
             this.closest("form").on("reset",
                 this._syncValue.bind(this, invalidatePicker, "defaultValue"));
             pickerBody.on("mousedown", ["target"],
-                this._clickPicker.bind(this, pickerBody, picker, calendarMonths));
+                this._clickPicker.bind(this, picker, calendarMonths));
             calendarCaption.on("click",
-                this._clickPickerCaption.bind(this, invalidatePicker, pickerBody, picker));
+                this._clickPickerCaption.bind(this, picker));
 
             this._syncValue(invalidatePicker, "defaultValue"); // restore initial value
             // display calendar for autofocused elements
@@ -197,13 +212,13 @@
                 picker.show();
             }
         },
-        _invalidatePicker(calendarMonths, calenderDays, pickerBody) {
+        _invalidatePicker(calendarMonths, calenderDays, picker) {
             var value = new Date(this.value());
             if (isNaN(value.getTime())) {
                 value = new Date();
             }
 
-            if (pickerBody.get("aria-expanded") === "true") {
+            if (picker.get("expanded")) {
                 calendarMonths.fire("picker:invalidate", value);
             } else {
                 calenderDays.fire("picker:invalidate", value);
@@ -219,12 +234,12 @@
                     formattedValue = date.toLocaleDateString(HTML.lang);
                 }
             }
-
+            // update displayed text
             this.css("background-image", this._wrap(formattedValue));
 
             invalidatePicker();
         },
-        _clickPicker(pickerBody, picker, calendarMonths, target) {
+        _clickPicker(picker, calendarMonths, target) {
             var targetDate;
 
             if (target.matches("a")) {
@@ -234,7 +249,7 @@
 
                 var sign = target.next("a")[0] ? -1 : 1;
 
-                if (picker.get("aria-expanded") === "true") {
+                if (picker.get("expanded")) {
                     targetDate.setUTCFullYear(targetDate.getUTCFullYear() + sign);
                 } else {
                     targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
@@ -246,8 +261,7 @@
                     targetDate = new Date(target._ts);
                 }
 
-                pickerBody.set("aria-expanded", "false");
-                picker.set("aria-expanded", "false");
+                picker.set("expanded", false);
             } else if (target.matches("td")) {
                 if (!isNaN(target._ts)) {
                     targetDate = new Date(target._ts);
@@ -277,7 +291,7 @@
             if (which === VK_SPACE) {
                 // SPACE key toggles calendar visibility
                 if (!this.get("readonly")) {
-                    picker.set("aria-expanded", "false");
+                    picker.set("expanded", false);
                     if (picker.get("aria-hidden") === "true") {
                         picker.show();
                     } else {
@@ -290,8 +304,7 @@
                 this.value("").fire("change"); // BACKSPACE, DELETE clear value
             } else if (which === VK_CONTROL) {
                 // CONTROL toggles calendar mode
-                picker.set("aria-expanded",
-                    String(picker.get("aria-expanded") !== "true"));
+                picker.set("expanded", !picker.get("expanded"));
             } else {
                 currentDate = new Date(this.value());
 
@@ -327,7 +340,7 @@
         _blurPicker(picker) {
             picker.hide();
         },
-        _focusPicker(invalidatePicker, picker, pickerBody) {
+        _focusPicker(picker) {
             if (this.get("readonly")) return false;
 
             var offset = this.offset();
@@ -338,25 +351,13 @@
             if (HTML.clientHeight < offset.bottom + pickerOffset.height) {
                 marginTop = -pickerOffset.height;
             }
-
-            pickerBody.set("aria-expanded", "false");
-
-            invalidatePicker();
-
-            picker
-                // always recalculate picker top position
-                .css("margin-top", marginTop)
-                // always reset picker mode to default
-                .set("aria-expanded", "false")
-                // display the date picker
-                .show();
+            // always reset picker mode to the default
+            picker.set("expanded", false);
+            // always recalculate picker top position
+            picker.css("margin-top", marginTop).show();
         },
-        _clickPickerCaption(invalidatePicker, pickerBody, picker) {
-            const value = String(picker.get("aria-expanded") !== "true");
-            picker.set("aria-expanded", value);
-            pickerBody.set("aria-expanded", value);
-
-            invalidatePicker();
+        _clickPickerCaption(picker) {
+            picker.set("expanded", !picker.get("expanded"));
         }
     });
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17, `
