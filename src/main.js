@@ -52,7 +52,7 @@
     <style>${PICKER_CSS}</style>
     <a unselectable="on" style="left:0">&#x25C4;</a>
     <a unselectable="on" style="right:0">&#x25BA;</a>
-    <b aria-hidden="true" style="display:block"></b>
+    <b aria-hidden="true" style="display:block;cursor:pointer"></b>
     <table aria-hidden="true">
         <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
         <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
@@ -120,7 +120,7 @@
 
             pickerBody
                 .watch("aria-expanded", invalidatePicker)
-                .on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths));
+                .on("mousedown", ["target"], this._clickPicker.bind(this, pickerBody, picker, calendarMonths));
 
             calendarCaption
                 .on("click", this._clickPickerCaption.bind(this, pickerBody, picker));
@@ -158,7 +158,9 @@
                         selectedValue = "true";
                     }
 
-                    day.set("aria-selected", selectedValue);
+                    day
+                        .set("aria-selected", selectedValue)
+                        .data("ts", iterDate.getTime());
                 });
             } else {
                 // move to beginning of the first week in current month
@@ -208,7 +210,7 @@
 
             invalidatePicker();
         },
-        _clickPicker(picker, calendarMonths, target) {
+        _clickPicker(pickerBody, picker, calendarMonths, target) {
             var targetDate;
 
             if (target.matches("a")) {
@@ -224,18 +226,17 @@
                     targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
                 }
             } else if (calendarMonths.contains(target)) {
-                target = target.closest("time");
+                targetDate = target.data("ts");
+                if (isNaN(targetDate)) {
+                    targetDate = new Date();
+                } else {
+                    targetDate = new Date(targetDate);
+                }
 
-                targetDate = new Date(this.value());
-
-                if (isNaN(targetDate.getTime())) targetDate = new Date();
-
-                targetDate.setUTCMonth(new Date(target.get("datetime")).getUTCMonth());
-
-                picker.hide();
+                pickerBody.set("aria-expanded", "false");
+                picker.set("aria-expanded", "false");
             } else if (target.matches("td")) {
                 targetDate = target.data("ts");
-
                 if (!isNaN(targetDate)) {
                     targetDate = new Date(targetDate);
                     picker.hide();
