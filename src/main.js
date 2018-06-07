@@ -31,7 +31,7 @@
 </div>`);
 
     PICKER_TEMPLATE.find(`.${BASE_CLASS}-days`).findAll("th").forEach((th, index) => {
-        var date = new Date(Date.UTC(2010, 1, index + 1));
+        var date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
         var formattedValue;
         try {
             formattedValue = date.toLocaleDateString(HTML.lang, {weekday: "short"});
