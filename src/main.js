@@ -1,57 +1,66 @@
 (function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL, PICKER_CSS) {
     "use strict"; /* globals html:false */
 
-    var repeat = (times, str) => Array(times + 1).join(str);
-
     var HTML = DOM.get("documentElement"),
         ampm = (pos, neg) => HTML.lang === "en_US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
-    const CONTEXT_TEMPLATE = DOM.create(html`
+    function repeat(times, fn) {
+        if (typeof fn === "string") {
+            return Array(times + 1).join(fn);
+        } else {
+            return Array.apply(null, Array(times)).map(fn).join("");
+        }
+    }
+
+    function localeWeekday(index) {
+        var date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
+        try {
+            return date.toLocaleDateString(HTML.lang, {weekday: "short"});
+        } catch (err) {
+            return date.toUTCString().split(",")[0].slice(0, 2).toLowerCase();
+        }
+    }
+
+    function localeMonth(index) {
+        var date = new Date(Date.UTC(2010, index));
+        try {
+            return date.toLocaleDateString(HTML.lang, {month: "short"});
+        } catch (err) {
+            return date.toUTCString().split(" ")[2];
+        }
+    }
+
+    function localeMonthYear(month, year) {
+        var date = new Date(year, month);
+        try {
+            return date.toLocaleDateString(HTML.lang, {month: "long", year: "numeric"});
+        } catch (err) {
+            return date.toUTCString().split(" ").slice(2, 4).join(" ");
+        }
+    }
+
+    const PICKER_TEMPLATE = DOM.create(html`
 <div tabindex="-1" class="btr-dateinput-picker">
     <object data="about:blank" type="text/html" width="100%" height="100%">
     </object>
 </div>`);
 
-    const PICKER_TEMPLATE = DOM.create(html`
+    const PICKER_BODY_TEMPLATE = DOM.create(html`
 <div>
     <style>${PICKER_CSS}</style>
     <a unselectable="on" style="left:0">&#x25C4;</a>
     <a unselectable="on" style="right:0">&#x25BA;</a>
     <b aria-hidden="true" style="display:block"></b>
     <table aria-hidden="true">
-        <thead>${repeat(7, `<th>`)}</thead>
+        <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
         <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
     </table>
     <table aria-hidden="true">
-        <tbody>${repeat(3, `<tr>${repeat(4, `<td>`)}`)}</tbody>
+        <tbody>${repeat(3, (_, i) => "<tr>" + repeat(4, (_, j) => "<td>" + localeMonth(i * 4 + j)))}</tbody>
     </table>
 </div>`);
-
-    PICKER_TEMPLATE.findAll("th").forEach((th, index) => {
-        var date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
-        var formattedValue;
-        try {
-            formattedValue = date.toLocaleDateString(HTML.lang, {weekday: "short"});
-        } catch (err) {
-            formattedValue = date.toUTCString().split(",")[0].slice(0, 2).toLowerCase();
-        }
-
-        th.value(formattedValue);
-    });
-
-    PICKER_TEMPLATE.findAll("table+table td").forEach((td, index) => {
-        var date = new Date(Date.UTC(2010, index));
-        var formattedValue;
-        try {
-            formattedValue = date.toLocaleDateString(HTML.lang, {month: "short"});
-        } catch (err) {
-            formattedValue = date.toUTCString().split(" ")[2];
-        }
-
-        td.value(formattedValue);
-    });
 
     DOM.extend("input[type=date]", {
         constructor() {
@@ -62,7 +71,7 @@
             const font = ["font-style", "font-size", "/", "line-height", "font-family"].map(p => p === "/" ? p : this.css(p)).join(" ");
             this._wrap = (value) => `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><text x='${offset}' y='50%' dominant-baseline='central' style='font:${font};fill:${color}' >${value}</text></svg>")`;
 
-            const picker = CONTEXT_TEMPLATE.clone(true);
+            const picker = PICKER_TEMPLATE.clone(true);
             const object = picker.get("firstChild");
             object.onload = this._initPicker.bind(this, object, picker);
 
@@ -93,7 +102,7 @@
         },
         _initPicker(object, picker) {
             const pickerRoot = DOM.constructor(object.contentDocument);
-            const pickerBody = PICKER_TEMPLATE.clone(true);
+            const pickerBody = PICKER_BODY_TEMPLATE.clone(true);
             const calenderDays = pickerBody.find("tbody");
             const calendarMonths = pickerBody.find("table+table");
             const calendarCaption = pickerBody.find("b");
@@ -141,7 +150,7 @@
                     iterDate.setUTCMonth(index);
 
                     var mDiff = month - iterDate.getUTCMonth(),
-                        selectedValue = "";
+                        selectedValue = null;
 
                     if (iterDate < range[0] || iterDate > range[1]) {
                         selectedValue = "false";
@@ -159,8 +168,8 @@
                     iterDate.setUTCDate(iterDate.getUTCDate() + 1);
 
                     var mDiff = month - iterDate.getUTCMonth(),
-                        selectedValue = "",
-                        disabledValue = "";
+                        selectedValue = null,
+                        disabledValue = null;
 
                     if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
 
@@ -181,29 +190,17 @@
                         .value(iterDate.getUTCDate());
                 });
             }
-
             // update calendar caption
-            var formattedValue = year;
-            if (!expanded) {
-                var d = new Date(year, month);
-                try {
-                    formattedValue = d.toLocaleDateString(HTML.lang, {month: "long", year: "numeric"});
-                } catch (err) {
-                    formattedValue = d.toUTCString().split(" ").slice(2, 4).join(" ");
-                }
-            }
-
-            caption.value(formattedValue);
+            caption.value(expanded ? year : localeMonthYear(month, year));
         },
         _syncValue(invalidatePicker, propName) {
             const date = new Date(this.get(propName));
             var formattedValue = "";
             if (!isNaN(date)) {
-                const formatOptions = this.get("data-format");
                 try {
-                    formattedValue = date.toLocaleDateString(HTML.lang, JSON.parse(formatOptions));
+                    formattedValue = date.toLocaleDateString(HTML.lang, JSON.parse(this.get("data-format")));
                 } catch (err) {
-                    formattedValue = date.toLocaleDateString();
+                    formattedValue = date.toLocaleDateString(HTML.lang);
                 }
             }
 
