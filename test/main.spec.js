@@ -229,16 +229,6 @@ describe("better-dateinput-polyfill", function() {
         });
     });
 
-    describe("label", () => {
-        it("propagates click to input", () => {
-            var spy = jasmine.createSpy();
-
-            el.on("focus", spy);
-            el._clickLabel();
-            expect(spy).toHaveBeenCalled();
-        });
-    });
-
     describe("data-polyfill", () => {
         it("skips when value is 'none'", () => {
             el.set("data-polyfill", "none");
