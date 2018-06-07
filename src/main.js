@@ -13,11 +13,11 @@
 <div class="${BASE_CLASS}">
     <p class="${BASE_CLASS}-header">
         ${repeat(2, `<a unselectable="on"></a>`)}
-        <time is="local-time" class="${BASE_CLASS}-caption" data-format="MMMM yyyy" aria-hidden="true" unselectable="on">
+        <span class="${BASE_CLASS}-caption" aria-hidden="true" unselectable="on"></span>
     </p>
     <table class="${BASE_CLASS}-days" aria-hidden="true">
         <thead>
-        ${repeat(7, `<th unselectable="on"><time is="local-time" data-format="E">`)}
+        ${repeat(7, `<th unselectable="on">`)}
         </thead>
         <tbody class="${BASE_CLASS}-body">
         ${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}
@@ -25,17 +25,33 @@
     </table>
     <table class="${BASE_CLASS}-months" aria-hidden="true">
         <tbody>
-        ${repeat(3, `<tr>${repeat(4, `<td><time is="local-time" data-format="MMM">`)}`)}
+        ${repeat(3, `<tr>${repeat(4, `<td>`)}`)}
         </tbody>
     </table>
 </div>`);
 
-    PICKER_TEMPLATE.find(`.${BASE_CLASS}-days`).findAll("time").forEach((time, index) => {
-        time.set("datetime", new Date(ampm(2001, 2002), 0, index).toISOString());
+    PICKER_TEMPLATE.find(`.${BASE_CLASS}-days`).findAll("th").forEach((th, index) => {
+        var date = new Date(Date.UTC(2010, 1, index + 1));
+        var formattedValue;
+        try {
+            formattedValue = date.toLocaleDateString(HTML.lang, {weekday: "short"});
+        } catch (err) {
+            formattedValue = date.toUTCString().split(",")[0].slice(0, 2).toLowerCase();
+        }
+
+        th.value(formattedValue);
     });
 
-    PICKER_TEMPLATE.find(`.${BASE_CLASS}-months`).findAll("time").forEach((time, index) => {
-        time.set("datetime", `2001-${++index < 10 ? "0" + index : index}-02`);
+    PICKER_TEMPLATE.find(`.${BASE_CLASS}-months`).findAll("td").forEach((td, index) => {
+        var date = new Date(Date.UTC(2010, index));
+        var formattedValue;
+        try {
+            formattedValue = date.toLocaleDateString(HTML.lang, {month: "short"});
+        } catch (err) {
+            formattedValue = date.toUTCString().split(" ")[2];
+        }
+
+        td.value(formattedValue);
     });
 
     DOM.extend("input[type=date]", {
@@ -161,9 +177,17 @@
             }
 
             // update calendar caption
-            caption
-                .set("data-format", expanded ? "yyyy" : "MMMM yyyy")
-                .set("datetime", new Date(year, month).toISOString());
+            var formattedValue = year;
+            if (!expanded) {
+                var d = new Date(year, month);
+                try {
+                    formattedValue = d.toLocaleDateString(HTML.lang, {month: "long", year: "numeric"});
+                } catch (err) {
+                    formattedValue = d.toUTCString().split(" ").slice(2, 4).join(" ");
+                }
+            }
+
+            caption.value(formattedValue);
         },
         _syncValue(invalidatePicker, propName) {
             var formattedValue = new Date(this.get(propName));

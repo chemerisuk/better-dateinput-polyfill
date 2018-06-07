@@ -14,9 +14,7 @@
     "web-components"
   ],
   "peerDependencies": {
-    "better-dom": "^3.0.0",
-    "better-i18n-plugin": "~2.0.0",
-    "better-time-element": "~1.0.0"
+    "better-dom": "^3.0.0"
   },
   "devDependencies": {
     "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"
@@ -32,8 +30,6 @@
     "publish": "gulp gh-pages $npm_package_config_gulp"
   },
   "karmaFiles": [
-    "bower_components/better-dom/dist/better-dom.js",
-    "bower_components/better-i18n-plugin/dist/better-i18n-plugin.js",
-    "bower_components/better-time-element/dist/better-time-element.js"
+    "bower_components/better-dom/dist/better-dom.js"
   ]
 }
