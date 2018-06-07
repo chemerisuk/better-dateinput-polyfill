@@ -13,18 +13,6 @@
 }
 
 @media screen {
-    .btr-dateinput-value {
-        position: absolute;
-        display: inline-block;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-
-        border-style: solid;
-        border-color: transparent;
-        pointer-events: none;
-    }
-
     .btr-dateinput-calendar {
         position: absolute;
         visibility: hidden; /* initially calendar is hidden */
@@ -196,17 +184,17 @@
         text-decoration: none;
     }
 
-    /* fix firefox issue with color:transparent */
-    .btr-dateinput-value + input::-moz-placeholder {
-        color: var(--color-graytext);
+    /* hide original input text */
+    .btr-dateinput-calendar + input {
+        color: transparent !important;
     }
 
-    /* #66: IE Placeholders disappearing */
-    .btr-dateinput-value + input:-ms-input-placeholder {
-        color: var(--color-graytext) !important;
+    /* disable text selection */
+    .btr-dateinput-calendar + input::selection {
+        background: transparent;
     }
 
-    .btr-dateinput-value + input::-webkit-input-placeholder {
-        color: var(--color-graytext);
+    .btr-dateinput-calendar + input::-moz-selection {
+        background: transparent;
     }
 }

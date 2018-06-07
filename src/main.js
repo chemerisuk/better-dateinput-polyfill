@@ -46,8 +46,6 @@
             const offset = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
             const font = ["font-style", "font-size", "/", "line-height", "font-family"].map(p => p === "/" ? p : this.css(p)).join(" ");
             this._wrap = (value) => `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><text x='${offset}' y='50%' dominant-baseline='central' style='font:${font};fill:${color}' >${value}</text></svg>")`;
-            // hide original input text
-            this.css("color", "transparent");
 
             var picker = PICKER_TEMPLATE.clone(true),
                 calenderDays = picker.find(`.${BASE_CLASS}-body`),
@@ -61,7 +59,7 @@
                 .on("blur", this._blurPicker.bind(this, picker))
                 .on("change", this._syncValue.bind(this, invalidatePicker, "value"))
                 .on("keydown", ["which"], this._keydownPicker.bind(this, picker))
-                .before(picker.hide())//, label)
+                .before(picker.hide())
                 .closest("form").on("reset", this._syncValue.bind(this, invalidatePicker, "defaultValue"));
 
             picker
