@@ -104,79 +104,13 @@
             pickerRoot.importStyles(PICKER_CSS);
             pickerBody.set(PICKER_BODY_HTML);
 
-            const calenderDays = pickerBody.find("tbody");
-            const calendarMonths = pickerBody.find("table+table");
             const calendarCaption = pickerBody.find("b");
-            const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays, picker);
+            const calenderDays = pickerBody.find("table tbody");
+            const calendarMonths = pickerBody.find("table+table tbody");
+            const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays);
+            const resetValue = this._syncValue.bind(this, picker, invalidatePicker, "defaultValue");
 
-            pickerBody.on("picker:invalidate", ["detail"], (detail) => {
-                const year = detail.getUTCFullYear();
-                // update calendar caption
-                if (picker.expanded) {
-                    calendarCaption.value(year);
-                } else {
-                    const month = detail.getUTCMonth();
-
-                    calendarCaption.value(localeMonthYear(month, year));
-                }
-            });
-
-            calenderDays.on("picker:invalidate", ["detail"], (detail) => {
-                const month = detail.getUTCMonth();
-                const date = detail.getUTCDate();
-                const year = detail.getUTCFullYear();
-                const range = readDateRange(this);
-                const iterDate = new Date(Date.UTC(year, month, 0));
-                // move to beginning of the first week in current month
-                iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
-                // update days picker
-                calenderDays.findAll("td").forEach((day) => {
-                    iterDate.setUTCDate(iterDate.getUTCDate() + 1);
-
-                    var mDiff = month - iterDate.getUTCMonth(),
-                        selectedValue = null,
-                        disabledValue = null;
-
-                    if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
-
-                    if (iterDate < range[0] || iterDate > range[1]) {
-                        disabledValue = "true";
-                    } else if (mDiff > 0 || mDiff < 0) {
-                        selectedValue = "false";
-                    } else if (date === iterDate.getUTCDate()) {
-                        selectedValue = "true";
-                    }
-
-                    day._ts = iterDate.getTime();
-                    day.set("aria-selected", selectedValue);
-                    day.set("aria-disabled", disabledValue);
-                    day.value(iterDate.getUTCDate());
-                });
-            });
-
-            calendarMonths.on("picker:invalidate", ["detail"], (detail) => {
-                const month = detail.getUTCMonth();
-                const year = detail.getUTCFullYear();
-                const range = readDateRange(this);
-                const iterDate = new Date(Date.UTC(year, month, 1));
-
-                calendarMonths.findAll("td").forEach((day, index) => {
-                    iterDate.setUTCMonth(index);
-
-                    var mDiff = month - iterDate.getUTCMonth(),
-                        selectedValue = null;
-
-                    if (iterDate < range[0] || iterDate > range[1]) {
-                        selectedValue = "false";
-                    } else if (!mDiff) {
-                        selectedValue = "true";
-                    }
-
-                    day._ts = iterDate.getTime();
-                    day.set("aria-selected", selectedValue);
-                });
-            });
-
+            // define expanded property for the picker element
             Object.defineProperty(picker[0], "expanded", {
                 configurable: false,
                 enumerable: true,
@@ -188,56 +122,130 @@
                         picker.set("aria-expanded", expanded);
                         pickerBody.set("aria-expanded", expanded);
 
-                        invalidatePicker();
+                        invalidatePicker(expanded);
                     }
                 }
             });
+
             // sync picker visibility on focus/blur
             this.on("focus", this._focusPicker.bind(this, picker));
             this.on("click", this._focusPicker.bind(this, picker));
             this.on("blur", this._blurPicker.bind(this, picker));
-            this.on("change", this._syncValue.bind(this, invalidatePicker, "value"));
+            this.on("change", this._syncValue.bind(this, picker, invalidatePicker, "value"));
             this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
+            this.closest("form").on("reset", resetValue);
 
-            this.closest("form").on("reset",
-                this._syncValue.bind(this, invalidatePicker, "defaultValue"));
-            pickerBody.on("mousedown", ["target"],
-                this._clickPicker.bind(this, picker, calendarMonths));
-            calendarCaption.on("click",
-                this._clickPickerCaption.bind(this, picker));
+            // picker invalidate handlers
+            calenderDays.on("picker:invalidate", ["detail"],
+                this._invalidateDays.bind(this, calenderDays));
+            calendarMonths.on("picker:invalidate", ["detail"],
+                this._invalidateMonths.bind(this, calendarMonths));
+            pickerBody.on("picker:invalidate", ["detail"],
+                this._invalidateCaption.bind(this, calendarCaption, picker));
 
-            this._syncValue(invalidatePicker, "defaultValue"); // restore initial value
+            // picker click handlers
+            pickerBody.on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths));
+            calendarCaption.on("click", this._clickPickerCaption.bind(this, picker));
+
+            resetValue(); // present initial value
+
             // display calendar for autofocused elements
             if (DOM.get("activeElement") === this[0]) {
                 picker.show();
             }
         },
-        _invalidatePicker(calendarMonths, calenderDays, picker) {
-            var value = new Date(this.value());
-            if (isNaN(value.getTime())) {
-                value = new Date();
+        _invalidatePicker(calendarMonths, calenderDays, expanded, dateValue) {
+            if (!dateValue) {
+                dateValue = new Date(this.value());
             }
 
-            if (picker.get("expanded")) {
-                calendarMonths.fire("picker:invalidate", value);
+            if (isNaN(dateValue.getTime())) {
+                dateValue = new Date();
+            }
+
+            const target = expanded ? calendarMonths : calenderDays;
+            // refresh current picker
+            target.fire("picker:invalidate", dateValue);
+        },
+        _invalidateDays(calenderDays, dateValue) {
+            const month = dateValue.getUTCMonth();
+            const date = dateValue.getUTCDate();
+            const year = dateValue.getUTCFullYear();
+            const range = readDateRange(this);
+            const iterDate = new Date(Date.UTC(year, month, 0));
+            // move to beginning of the first week in current month
+            iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
+            // update days picker
+            calenderDays.findAll("td").forEach((day) => {
+                iterDate.setUTCDate(iterDate.getUTCDate() + 1);
+
+                var mDiff = month - iterDate.getUTCMonth(),
+                    selectedValue = null,
+                    disabledValue = null;
+
+                if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
+
+                if (iterDate < range[0] || iterDate > range[1]) {
+                    disabledValue = "true";
+                } else if (mDiff > 0 || mDiff < 0) {
+                    selectedValue = "false";
+                } else if (date === iterDate.getUTCDate()) {
+                    selectedValue = "true";
+                }
+
+                day._ts = iterDate.getTime();
+                day.set("aria-selected", selectedValue);
+                day.set("aria-disabled", disabledValue);
+                day.value(iterDate.getUTCDate());
+            });
+        },
+        _invalidateMonths(calendarMonths, dateValue) {
+            const month = dateValue.getUTCMonth();
+            const year = dateValue.getUTCFullYear();
+            const range = readDateRange(this);
+            const iterDate = new Date(Date.UTC(year, month, 1));
+
+            calendarMonths.findAll("td").forEach((day, index) => {
+                iterDate.setUTCMonth(index);
+
+                var mDiff = month - iterDate.getUTCMonth(),
+                    selectedValue = null;
+
+                if (iterDate < range[0] || iterDate > range[1]) {
+                    selectedValue = "false";
+                } else if (!mDiff) {
+                    selectedValue = "true";
+                }
+
+                day._ts = iterDate.getTime();
+                day.set("aria-selected", selectedValue);
+            });
+        },
+        _invalidateCaption(calendarCaption, picker, dateValue) {
+            const year = dateValue.getUTCFullYear();
+            // update calendar caption
+            if (picker.expanded) {
+                calendarCaption.value(year);
             } else {
-                calenderDays.fire("picker:invalidate", value);
+                const month = dateValue.getUTCMonth();
+
+                calendarCaption.value(localeMonthYear(month, year));
             }
         },
-        _syncValue(invalidatePicker, propName) {
-            const date = new Date(this.get(propName));
+        _syncValue(picker, invalidatePicker, propName) {
+            const dateValue = new Date(this.get(propName));
             var formattedValue = "";
-            if (!isNaN(date)) {
+            if (!isNaN(dateValue.getTime())) {
                 try {
-                    formattedValue = date.toLocaleDateString(HTML.lang, JSON.parse(this.get("data-format")));
+                    formattedValue = dateValue.toLocaleDateString(HTML.lang, JSON.parse(this.get("data-format")));
                 } catch (err) {
-                    formattedValue = date.toLocaleDateString(HTML.lang);
+                    formattedValue = dateValue.toLocaleDateString(HTML.lang);
                 }
             }
             // update displayed text
             this.css("background-image", this._wrap(formattedValue));
-
-            invalidatePicker();
+            // update picker state
+            invalidatePicker(picker.get("expanded"), dateValue);
         },
         _clickPicker(picker, calendarMonths, target) {
             var targetDate;
@@ -260,7 +268,7 @@
                 } else {
                     targetDate = new Date(target._ts);
                 }
-
+                // switch to date calendar mode
                 picker.set("expanded", false);
             } else if (target.matches("td")) {
                 if (!isNaN(target._ts)) {
@@ -316,8 +324,7 @@
                 else if (which === 72 || which === 37) { delta = -1; }
 
                 if (delta) {
-                    var expanded = picker.get("aria-expanded") === "true";
-
+                    const expanded = picker.get("expanded");
                     if (expanded && (which === 40 || which === 38)) {
                         currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
                     } else if (expanded && (which === 37 || which === 39)) {
@@ -351,10 +358,14 @@
             if (HTML.clientHeight < offset.bottom + pickerOffset.height) {
                 marginTop = -pickerOffset.height;
             }
-            // always reset picker mode to the default
-            picker.set("expanded", false);
-            // always recalculate picker top position
-            picker.css("margin-top", marginTop).show();
+
+            picker
+                // always reset picker mode to the default
+                .set("expanded", false)
+                // always recalculate picker top position
+                .css("margin-top", marginTop)
+                // show picker
+                .show();
         },
         _clickPickerCaption(picker) {
             picker.set("expanded", !picker.get("expanded"));
