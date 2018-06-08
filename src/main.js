@@ -260,8 +260,14 @@ table+table[aria-hidden=true] {
                 this._invalidateCaption.bind(this, calendarCaption, picker));
 
             // picker click handlers
-            pickerBody.on("mousedown", ["target"], this._clickPicker.bind(this, picker, calendarMonths));
-            calendarCaption.on("click", this._clickPickerCaption.bind(this, picker));
+            pickerBody.on("mousedown", "a", ["target"],
+                this._clickPickerButton.bind(this, picker));
+            pickerBody.on("mousedown", "td", ["target"],
+                this._clickPickerDay.bind(this, picker));
+            calendarCaption.on("mousedown",
+                this._clickPickerCaption.bind(this, picker));
+            // prevent input from loosing the focus outline
+            pickerBody.on("mousedown", () => false);
 
             resetValue(); // present initial value
 
@@ -365,22 +371,25 @@ table+table[aria-hidden=true] {
             // update picker state
             invalidatePicker(picker.get("expanded"), dateValue);
         },
-        _clickPicker(picker, calendarMonths, target) {
+        _clickPickerButton(picker, target) {
+            var targetDate = new Date(this.value());
+
+            if (isNaN(targetDate.getTime())) targetDate = new Date();
+
+            var sign = target.next("a")[0] ? -1 : 1;
+
+            if (picker.get("expanded")) {
+                targetDate.setUTCFullYear(targetDate.getUTCFullYear() + sign);
+            } else {
+                targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
+            }
+
+            this.value(formatISODate(targetDate)).fire("change");
+        },
+        _clickPickerDay(picker, target) {
             var targetDate;
 
-            if (target.matches("a")) {
-                targetDate = new Date(this.value());
-
-                if (isNaN(targetDate.getTime())) targetDate = new Date();
-
-                var sign = target.next("a")[0] ? -1 : 1;
-
-                if (picker.get("expanded")) {
-                    targetDate.setUTCFullYear(targetDate.getUTCFullYear() + sign);
-                } else {
-                    targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
-                }
-            } else if (calendarMonths.contains(target)) {
+            if (picker.get("expanded")) {
                 if (isNaN(target._ts)) {
                     targetDate = new Date();
                 } else {
@@ -388,9 +397,10 @@ table+table[aria-hidden=true] {
                 }
                 // switch to date calendar mode
                 picker.set("expanded", false);
-            } else if (target.matches("td")) {
+            } else {
                 if (!isNaN(target._ts)) {
                     targetDate = new Date(target._ts);
+
                     picker.hide();
                 }
             }
@@ -398,8 +408,9 @@ table+table[aria-hidden=true] {
             if (targetDate != null) {
                 this.value(formatISODate(targetDate)).fire("change");
             }
-            // prevent input from loosing focus
-            return false;
+        },
+        _clickPickerCaption(picker) {
+            picker.set("expanded", !picker.get("expanded"));
         },
         _keydownPicker(picker, which) {
             var delta, currentDate;
@@ -472,9 +483,6 @@ table+table[aria-hidden=true] {
                 .css("margin-top", marginTop)
                 // show picker
                 .show();
-        },
-        _clickPickerCaption(picker) {
-            picker.set("expanded", !picker.get("expanded"));
         }
     });
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17));
