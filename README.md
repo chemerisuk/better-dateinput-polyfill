@@ -11,28 +11,20 @@ Why another date picker? The problem is that most of existing solutions do not f
 * submitted value always has `yyyy-MM-dd` [RFC 3339] format
 * [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for current and future content
 * `placeholder` attribute works as expected in browsers that support it
-* fully customizable date picker, including [displayed value format](https://github.com/chemerisuk/better-time-element#custom-formats) via `data-format` attribute
+* fully customizable date picker, including [displayed value format](https://github.com/chemerisuk/better-dateinput-polyfill#change-default-date-presentation-format) via `data-format` attribute
 * control when to apply the polyfill using [data-polyfill](#forcing-the-polyfill) attribute
-* [full i18n support](https://github.com/chemerisuk/better-i18n-plugin#multilingual-live-extensions) (localized files located at [better-time-element](https://github.com/chemerisuk/better-time-element))
 * US variant for days of week is supported (use `<html lang="en-US">`)
-* * keyboard and accessibility friendly
+* keyboard and accessibility friendly
 
 ## Installation
-The simplest way is to use [bower](http://bower.io/):
-
 ```sh
-$ bower install better-dateinput-polyfill
+$ npm install better-dateinput-polyfill better-dom@latest
 ```
 
-This will clone the latest version of the __better-dateinput-polyfill__ with dependencies into the `bower_components` directory at the root of your project.
-
-Then append the following script on your page:
-
+Then append the following scripts to your page:
 ```html
-<script src="bower_components/better-dom/dist/better-dom.js"></script>
-<script src="bower_components/better-i18n-plugin/dist/better-i18n-plugin.js"></script>
-<script src="bower_components/better-time-element/dist/better-time-element.js"></script>
-<script src="bower_components/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
+<script src="node_modules/better-dom/dist/better-dom.js"></script>
+<script src="node_modules/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
 ```
 
 ## Forcing the polyfill
@@ -41,12 +33,16 @@ Sometimes it's useful to override browser implemetation with the consistent cont
 ```html
 <!-- force polyfill only on mobile devices -->
 <input type="date" data-polyfill="mobile">
-
 <!-- force polyfill on any device -->
 <input type="date" data-polyfill="all">
-
 <!-- does not polyfill anywhere -->
 <input type="date" data-polyfill="none">
+```
+
+## Change default date presentation format
+Version 3 uses [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) methods to format presented date value according to the current page locale. You can customize it by specifying `data-format` attribute with [options for the Date#toLocaleString](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString) call as a stringified JSON object:
+```html
+<input type="date" data-format='{"month":"short","year":"numeric","day":"numeric"}'>
 ```
 
 ## Contributing
@@ -57,13 +53,11 @@ $ npm install -g gulp
 ```
 
 Now you can download project dependencies:
-
 ```sh
 $ npm install
 ```
 
 The project uses set of ES6 transpilers to compile the output file. You can use command below to start development: 
-
 ```sh
 $ npm start
 ```
@@ -73,19 +67,19 @@ After any change it recompiles `build/better-dateinput-polyfill.js` and runs uni
 ## Browser support
 #### Desktop
 * Chrome
-* Safari 6.0+
-* Firefox 16+
-* Opera 12.10+
-* Internet Explorer 8+ (see [notes](https://github.com/chemerisuk/better-dom#notes-about-old-ies))
+* Safari
+* Firefox
+* Opera
+* Edge
+* Internet Explorer 10+
 
 #### Mobile
-* iOS Safari 6+
-* Android 2.3+
-* Chrome for Android
+* iOS Safari 7+
+* Chrome for Android 30+
 
 [npm-url]: https://www.npmjs.com/package/better-dateinput-polyfill
 [npm-version]: https://img.shields.io/npm/v/better-dateinput-polyfill.svg
-[npm-downloads]: https://img.shields.io/npm/dt/better-dateinput-polyfill.svg
+[npm-downloads]: https://img.shields.io/npm/dm/better-dateinput-polyfill.svg
 
 [travis-url]: http://travis-ci.org/chemerisuk/better-dateinput-polyfill
 [travis-image]: http://img.shields.io/travis/chemerisuk/better-dateinput-polyfill/master.svg
