@@ -6,7 +6,7 @@
 
     .btr-dateinput-picker > object {
         width: 17rem;
-        max-height: 17rem;
+        max-height: calc(2px + 17rem);
         box-shadow: 0 0 15px #AAA;
         background: #FFF;
         position: absolute;
@@ -24,7 +24,7 @@
     }
 
     .btr-dateinput-picker[aria-expanded=true] > object {
-        max-height: 13.25rem;
+        max-height: calc(13.375rem + 2px);
     }
 
     /* hide original input text */

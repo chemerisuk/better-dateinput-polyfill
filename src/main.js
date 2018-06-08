@@ -83,19 +83,17 @@ b {
 }
 
 table {
-    width: 100%;
+    width: calc(100% - 2px);
     table-layout: fixed;
     border-spacing: 0;
     border-collapse: collapse;
     text-align: center;
     line-height: 2;
+    margin: 1px;
 }
 
 thead {
-    border-top: 1px solid #EEE;
-    border-bottom: 1px solid graytext;
-    background: #DDD;
-
+    background: lightgray;
     font-size: smaller;
     font-weight: bold;
 }
@@ -105,11 +103,14 @@ thead {
 }
 
 [aria-selected=true] {
-    font-weight: bold;
+    outline: 1px solid graytext;
 }
 
-a:hover, td:hover, [aria-selected=true]:hover, [aria-disabled=true], [aria-selected=true] {
-    background-color: rgba(0,0,0,0.05);
+a:hover,
+td:hover,
+[aria-disabled=true],
+[aria-selected=true] {
+    background-color: whitesmoke;
 }
 
 table+table {
