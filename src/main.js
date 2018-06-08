@@ -1,4 +1,4 @@
-(function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL, PICKER_CSS) {
+(function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
     "use strict"; /* globals html:false */
 
     var HTML = DOM.get("documentElement"),
@@ -53,9 +53,82 @@
 </div>`);
 
     const PICKER_BODY_HTML = html`
+<style>
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    line-height: 2.5;
+    text-align: center;
+
+    cursor: default;
+    user-select: none;
+
+    margin: 0;
+    overflow: hidden;
+    /* improve font on OSX */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    width: 2.5em;
+    height: 2.5em;
+    position: absolute;
+    text-decoration: none;
+    color: inherit;
+}
+
+b {
+    display: block;
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;
+    border-spacing: 0;
+    border-collapse: collapse;
+    text-align: center;
+    line-height: 2;
+}
+
+thead {
+    border-top: 1px solid #EEE;
+    border-bottom: 1px solid graytext;
+    background: #DDD;
+
+    font-size: smaller;
+    font-weight: bold;
+}
+
+[aria-selected=false], [aria-disabled=true] {
+    color: graytext;
+}
+
+[aria-selected=true] {
+    font-weight: bold;
+}
+
+a:hover, td:hover, [aria-selected=true]:hover, [aria-disabled=true], [aria-selected=true] {
+    background-color: rgba(0,0,0,0.05);
+}
+
+table+table {
+    line-height: 3.5;
+    background: white;
+    position: absolute;
+    top: 2.5em;
+    left: 0;
+    opacity: 1;
+    transition: 0.1s ease-out;
+}
+
+table+table[aria-hidden=true] {
+    opacity: 0;
+}
+</style>
 <a style="left:0">&#x25C4;</a>
 <a style="right:0">&#x25BA;</a>
-<b aria-hidden="true" style="display:block;cursor:pointer"></b>
+<b></b>
 <table>
     <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
     <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
@@ -110,8 +183,6 @@
         _initPicker(svg, object, picker) {
             const pickerRoot = DOM.constructor(object.contentDocument);
             const pickerBody = pickerRoot.find("body");
-
-            pickerRoot.importStyles(PICKER_CSS);
             pickerBody.set(PICKER_BODY_HTML);
 
             const calendarCaption = pickerBody.find("b");
@@ -130,6 +201,7 @@
                 set(expanded) {
                     if (typeof expanded === "boolean") {
                         picker.set("aria-expanded", expanded);
+
                         if (expanded) {
                             calendarMonths.show();
                         } else {
@@ -238,7 +310,7 @@
         _invalidateCaption(calendarCaption, picker, dateValue) {
             const year = dateValue.getUTCFullYear();
             // update calendar caption
-            if (picker.expanded) {
+            if (picker.get("expanded")) {
                 calendarCaption.value(year);
             } else {
                 const month = dateValue.getUTCMonth();
@@ -387,70 +459,4 @@
             picker.set("expanded", !picker.get("expanded"));
         }
     });
-}(window.DOM, 32, 9, 13, 27, 8, 46, 17, `
-body {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    line-height: 2.5;
-    text-align: center;
-
-    cursor: default;
-    user-select: none;
-
-    margin: 0;
-    overflow: hidden;
-    /* improve font on OSX */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-    width: 2.5em;
-    height: 2.5em;
-    position: absolute;
-    text-decoration: none;
-    color: inherit;
-}
-
-table {
-    width: 100%;
-    table-layout: fixed;
-    border-spacing: 0;
-    border-collapse: collapse;
-    text-align: center;
-    line-height: 2;
-}
-
-thead {
-    border-top: 1px solid #EEE;
-    border-bottom: 1px solid graytext;
-    background: #DDD;
-
-    font-size: smaller;
-    font-weight: bold;
-}
-
-[aria-selected=false], [aria-disabled=true] {
-    color: graytext;
-}
-
-[aria-selected=true] {
-    font-weight: bold;
-}
-
-a:hover, td:hover, [aria-selected=true]:hover, [aria-disabled=true], [aria-selected=true] {
-    background-color: rgba(0,0,0,0.05);
-}
-
-table+table {
-    line-height: 3.5;
-    background: white;
-    position: absolute;
-    top: 2.5em;
-    left: 0;
-    opacity: 1;
-    transition: 0.1s ease-out;
-}
-
-table+table[aria-hidden=true] {
-    opacity: 0;
-}`));
+}(window.DOM, 32, 9, 13, 27, 8, 46, 17));

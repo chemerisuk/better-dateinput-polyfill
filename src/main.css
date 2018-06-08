@@ -24,7 +24,7 @@
     }
 
     .btr-dateinput-picker[aria-expanded=true] > object {
-        max-height: 13rem;
+        max-height: 13.25rem;
     }
 
     /* hide original input text */
