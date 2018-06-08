@@ -53,14 +53,14 @@
 </div>`);
 
     const PICKER_BODY_HTML = html`
-<a unselectable="on" style="left:0">&#x25C4;</a>
-<a unselectable="on" style="right:0">&#x25BA;</a>
+<a style="left:0">&#x25C4;</a>
+<a style="right:0">&#x25BA;</a>
 <b aria-hidden="true" style="display:block;cursor:pointer"></b>
-<table aria-hidden="true">
+<table>
     <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
     <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
 </table>
-<table aria-hidden="true">
+<table>
     <tbody>${repeat(3, (_, i) => "<tr>" + repeat(4, (_, j) => "<td>" + localeMonth(i * 4 + j)))}</tbody>
 </table>`;
 
@@ -115,8 +115,8 @@
             pickerBody.set(PICKER_BODY_HTML);
 
             const calendarCaption = pickerBody.find("b");
-            const calenderDays = pickerBody.find("table tbody");
-            const calendarMonths = pickerBody.find("table+table tbody");
+            const calenderDays = pickerBody.find("table");
+            const calendarMonths = pickerBody.find("table+table");
             const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays);
             const resetValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "defaultValue");
 
@@ -130,7 +130,11 @@
                 set(expanded) {
                     if (typeof expanded === "boolean") {
                         picker.set("aria-expanded", expanded);
-                        pickerBody.set("aria-expanded", expanded);
+                        if (expanded) {
+                            calendarMonths.show();
+                        } else {
+                            calendarMonths.hide();
+                        }
 
                         invalidatePicker(expanded);
                     }
@@ -386,10 +390,11 @@
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17, `
 body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 0.85em;
-    line-height: 2.5em;
+    line-height: 2.5;
     text-align: center;
+
     cursor: default;
+    user-select: none;
 
     margin: 0;
     overflow: hidden;
@@ -402,9 +407,8 @@ a {
     width: 2.5em;
     height: 2.5em;
     position: absolute;
-    color: inherit;
-    display: block;
     text-decoration: none;
+    color: inherit;
 }
 
 table {
@@ -412,22 +416,17 @@ table {
     table-layout: fixed;
     border-spacing: 0;
     border-collapse: collapse;
+    text-align: center;
+    line-height: 2;
 }
 
 thead {
     border-top: 1px solid #EEE;
     border-bottom: 1px solid graytext;
-    font-size: 0.85em;
     background: #DDD;
-    font-weight: bold;
-}
 
-td, th {
-    width: 2.5em;
-    height: 2.25em;
-    line-height: 2.25;
-    padding: 0;
-    text-align: center;
+    font-size: smaller;
+    font-weight: bold;
 }
 
 [aria-selected=false], [aria-disabled=true] {
@@ -443,18 +442,15 @@ a:hover, td:hover, [aria-selected=true]:hover, [aria-disabled=true], [aria-selec
 }
 
 table+table {
-    position: absolute;
-    top: 2.25em;
-    left: 0;
-    visibility: hidden;
+    line-height: 3.5;
     background: white;
+    position: absolute;
+    top: 2.5em;
+    left: 0;
+    opacity: 1;
+    transition: 0.1s ease-out;
 }
 
-table+table td {
-    line-height: 4;
-    height: 4em;
-}
-
-[aria-expanded=true] table+table {
-    visibility: inherit;
+table+table[aria-hidden=true] {
+    opacity: 0;
 }`));
