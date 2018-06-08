@@ -41,6 +41,11 @@
         }
     }
 
+    const SVG_TEMPLATE = DOM.create(html`
+<svg xmlns="http://www.w3.org/2000/svg">
+    <text dominant-baseline="central" y="50%"></text>
+</svg>`);
+
     const PICKER_TEMPLATE = DOM.create(html`
 <div tabindex="-1" class="btr-dateinput-picker">
     <object data="about:blank" type="text/html" width="100%" height="100%">
@@ -63,14 +68,19 @@
         constructor() {
             if (this._isNative()) return false;
 
-            const color = this.css("color");
+            const svg = SVG_TEMPLATE.clone(true);
             const offset = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
-            const font = ["font-style", "font-size", "/", "line-height", "font-family"].map(p => p === "/" ? p : this.css(p)).join(" ");
-            this._wrap = (value) => `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><text x='${offset}' y='50%' dominant-baseline='central' style='font:${font};fill:${color}' >${value}</text></svg>")`;
+
+            svg.find("text")
+                .css("fill", this.css("color"))
+                .css("font", this.css("font"))
+                // property x is a read-only SVGAnimatedLengthList object
+                // therefore use attribute instead
+                [0].setAttribute("x", offset);
 
             const picker = PICKER_TEMPLATE.clone(true);
             const object = picker.get("firstChild");
-            object.onload = this._initPicker.bind(this, object, picker);
+            object.onload = this._initPicker.bind(this, svg, object, picker);
 
             picker.css("z-index", 1 + (this.css("z-index") | 0));
 
@@ -97,7 +107,7 @@
                 return false;
             }
         },
-        _initPicker(object, picker) {
+        _initPicker(svg, object, picker) {
             const pickerRoot = DOM.constructor(object.contentDocument);
             const pickerBody = pickerRoot.find("body");
 
@@ -108,7 +118,7 @@
             const calenderDays = pickerBody.find("table tbody");
             const calendarMonths = pickerBody.find("table+table tbody");
             const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays);
-            const resetValue = this._syncValue.bind(this, picker, invalidatePicker, "defaultValue");
+            const resetValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "defaultValue");
 
             // define expanded property for the picker element
             Object.defineProperty(picker[0], "expanded", {
@@ -131,7 +141,7 @@
             this.on("focus", this._focusPicker.bind(this, picker));
             this.on("click", this._focusPicker.bind(this, picker));
             this.on("blur", this._blurPicker.bind(this, picker));
-            this.on("change", this._syncValue.bind(this, picker, invalidatePicker, "value"));
+            this.on("change", this._syncValue.bind(this, svg, picker, invalidatePicker, "value"));
             this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
             this.closest("form").on("reset", resetValue);
 
@@ -232,7 +242,7 @@
                 calendarCaption.value(localeMonthYear(month, year));
             }
         },
-        _syncValue(picker, invalidatePicker, propName) {
+        _syncValue(svg, picker, invalidatePicker, propName) {
             const dateValue = new Date(this.get(propName));
             var formattedValue = "";
             if (!isNaN(dateValue.getTime())) {
@@ -242,8 +252,10 @@
                     formattedValue = dateValue.toLocaleDateString(HTML.lang);
                 }
             }
+            // modify internal element state
+            svg.find("text").value(formattedValue);
             // update displayed text
-            this.css("background-image", this._wrap(formattedValue));
+            this.css("background-image", `url('data:image/svg+xml;utf8,${svg.get("outerHTML")}')`);
             // update picker state
             invalidatePicker(picker.get("expanded"), dateValue);
         },
