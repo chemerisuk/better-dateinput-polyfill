@@ -201,8 +201,8 @@ table+table[aria-hidden=true] {
                 get: valueDescriptor.get,
                 set: (value) => {
                     if (typeof value === "string") {
-                        const range = readDateRange(this);
                         const dateValue = new Date(value);
+                        const range = readDateRange(this);
 
                         if (dateValue < range[0]) {
                             value = formatISODate(range[0]);
@@ -413,9 +413,10 @@ table+table[aria-hidden=true] {
             picker.set("expanded", !picker.get("expanded"));
         },
         _keydownPicker(picker, which) {
-            var delta, currentDate;
-            // ENTER key should submit form if calendar is hidden
-            if (which === VK_ENTER && picker.get("aria-hidden") === "true") return true;
+            if (which === VK_ENTER && picker.get("aria-hidden") === "true") {
+                // ENTER key should submit form if calendar is hidden
+                return true;
+            }
 
             if (which === VK_SPACE) {
                 // SPACE key toggles calendar visibility
@@ -435,7 +436,7 @@ table+table[aria-hidden=true] {
                 // CONTROL toggles calendar mode
                 picker.set("expanded", !picker.get("expanded"));
             } else {
-                currentDate = new Date(this.value());
+                var delta, currentDate = new Date(this.value());
 
                 if (isNaN(currentDate.getTime())) currentDate = new Date();
 

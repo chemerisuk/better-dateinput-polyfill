@@ -1,7 +1,11 @@
 language: node_js
 node_js:
-  - 4.2
+  - 8
+git:
+  depth: 1
+cache:
+  directories:
+    - node_modules
 before_install:
+  - npm install better-dom@latest
   - npm install -g gulp
-  - npm install -g bower
-  - bower install
