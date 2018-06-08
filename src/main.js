@@ -123,6 +123,7 @@ table+table {
 }
 
 table+table[aria-hidden=true] {
+    pointer-events: none;
     opacity: 0;
 }
 </style>
@@ -190,6 +191,33 @@ table+table[aria-hidden=true] {
             const calendarMonths = pickerBody.find("table+table");
             const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays);
             const resetValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "defaultValue");
+            const updateValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "value");
+
+            // patch value property on the original input
+            const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+            Object.defineProperty(this[0], "value", {
+                configurable: false,
+                enumerable: true,
+                get: valueDescriptor.get,
+                set: (value) => {
+                    if (typeof value === "string") {
+                        const range = readDateRange(this);
+                        const dateValue = new Date(value);
+
+                        if (dateValue < range[0]) {
+                            value = formatISODate(range[0]);
+                        } else if (dateValue > range[1]) {
+                            value = formatISODate(range[1]);
+                        } else if (isNaN(dateValue.getTime())) {
+                            value = "";
+                        }
+
+                        valueDescriptor.set.call(this[0], value);
+
+                        updateValue();
+                    }
+                }
+            });
 
             // define expanded property for the picker element
             Object.defineProperty(picker[0], "expanded", {
@@ -217,8 +245,10 @@ table+table[aria-hidden=true] {
             this.on("focus", this._focusPicker.bind(this, picker));
             this.on("click", this._focusPicker.bind(this, picker));
             this.on("blur", this._blurPicker.bind(this, picker));
-            this.on("change", this._syncValue.bind(this, svg, picker, invalidatePicker, "value"));
+            this.on("change", updateValue);
             this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
+
+            // form events do not trigger any state change
             this.closest("form").on("reset", resetValue);
 
             // picker invalidate handlers
@@ -366,14 +396,6 @@ table+table[aria-hidden=true] {
             }
 
             if (targetDate != null) {
-                var range = readDateRange(this);
-
-                if (targetDate < range[0]) {
-                    targetDate = range[0];
-                } else if (targetDate > range[1]) {
-                    targetDate = range[1];
-                }
-
                 this.value(formatISODate(targetDate)).fire("change");
             }
             // prevent input from loosing focus
@@ -421,11 +443,7 @@ table+table[aria-hidden=true] {
                         currentDate.setUTCDate(currentDate.getUTCDate() + delta);
                     }
 
-                    var range = readDateRange(this);
-
-                    if (!(currentDate < range[0] || currentDate > range[1])) {
-                        this.value(formatISODate(currentDate)).fire("change");
-                    }
+                    this.value(formatISODate(currentDate)).fire("change");
                 }
             }
             // prevent default action except if it was TAB so
