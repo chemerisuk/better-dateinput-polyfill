@@ -4,7 +4,7 @@
 
   var HTML = DOM.get("documentElement"),
       ampm = function ampm(pos, neg) {
-    return HTML.lang === "en_US" ? pos : neg;
+    return HTML.lang === "en-US" ? pos : neg;
   },
       formatISODate = function formatISODate(value) {
     return value.toISOString().split("T")[0];
@@ -62,7 +62,7 @@
 
   var SVG_TEMPLATE = DOM.create('<svg xmlns="http://www.w3.org/2000/svg"><text dominant-baseline="central" y="50%"></text></svg>');
   var PICKER_TEMPLATE = DOM.create('<div tabindex="-1" class="btr-dateinput-picker"><object data="about:blank" type="text/html" width="100%" height="100%"></object></div>');
-  var PICKER_BODY_HTML = "<style>body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:2.5;text-align:center;cursor:default;user-select:none;margin:0;overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}a{width:2.5em;height:2.5em;position:absolute;text-decoration:none;color:inherit}b{display:block;cursor:pointer}table{width:calc(100% - 2px);table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2;margin:1px}thead{background:#d3d3d3;font-size:smaller;font-weight:700}[aria-disabled=true],[aria-selected=false]{color:graytext}[aria-selected=true]{outline:1px solid graytext}[aria-disabled=true],[aria-selected=true],a:hover,td:hover{background-color:#f5f5f5}table+table{line-height:3.5;background:#fff;position:absolute;top:2.5em;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{pointer-events:none;opacity:0}</style><a style=\"left:0\">&#x25C4;</a> <a style=\"right:0\">&#x25BA;</a> <b></b><table><thead>" + repeat(7, function (_, i) {
+  var PICKER_BODY_HTML = "<style>body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:2.5rem;text-align:center;cursor:default;user-select:none;margin:0;overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}a{width:3rem;height:2.5rem;position:absolute;text-decoration:none;color:inherit}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}td,th{padding:0}thead{background:#d3d3d3;font-size:smaller;font-weight:700}[aria-disabled=true],[aria-selected=false]{color:graytext}[aria-selected=true]{box-shadow:inset 0 0 0 1px graytext}[aria-disabled=true],[aria-selected=true],a:hover,td:hover{background-color:#f5f5f5}table+table{line-height:3.75rem;background:#fff;position:absolute;top:2.5em;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden;opacity:0}</style><a style=\"left:0\">&#x25C4;</a> <a style=\"right:0\">&#x25BA;</a> <b></b><table><thead>" + repeat(7, function (_, i) {
     return "<th>" + localeWeekday(i);
   }) + "</thead><tbody>" + repeat(7, "<tr>" + repeat(7, "<td>") + "</tr>") + "</tbody></table><table><tbody>" + repeat(3, function (_, i) {
     return "<tr>" + repeat(4, function (_, j) {
@@ -172,7 +172,6 @@
       }); // sync picker visibility on focus/blur
 
       this.on("focus", this._focusPicker.bind(this, picker));
-      this.on("click", this._focusPicker.bind(this, picker));
       this.on("blur", this._blurPicker.bind(this, picker));
       this.on("change", updateValue);
       this.on("keydown", ["which"], this._keydownPicker.bind(this, picker)); // form events do not trigger any state change
@@ -181,15 +180,17 @@
 
       calenderDays.on("picker:invalidate", ["detail"], this._invalidateDays.bind(this, calenderDays));
       calendarMonths.on("picker:invalidate", ["detail"], this._invalidateMonths.bind(this, calendarMonths));
-      pickerBody.on("picker:invalidate", ["detail"], this._invalidateCaption.bind(this, calendarCaption, picker)); // picker click handlers
+      pickerBody.on("picker:invalidate", ["detail"], this._invalidateCaption.bind(this, calendarCaption, picker));
+      var clickEventName = "orientation" in window ? "touchend" : "mousedown"; // picker click handlers
 
-      pickerBody.on("mousedown", "a", ["target"], this._clickPickerButton.bind(this, picker));
-      pickerBody.on("mousedown", "td", ["target"], this._clickPickerDay.bind(this, picker));
-      calendarCaption.on("mousedown", this._clickPickerCaption.bind(this, picker)); // prevent input from loosing the focus outline
+      pickerBody.on(clickEventName, "a", ["target"], this._clickPickerButton.bind(this, picker));
+      pickerBody.on(clickEventName, "td", ["target"], this._clickPickerDay.bind(this, picker));
+      calendarCaption.on(clickEventName, this._clickPickerCaption.bind(this, picker)); // prevent input from loosing the focus outline
 
-      pickerBody.on("mousedown", function () {
+      pickerBody.on(clickEventName, function () {
         return false;
       });
+      this.on(clickEventName, this._focusPicker.bind(this, picker));
       resetValue(); // present initial value
       // display calendar for autofocused elements
 
@@ -406,4 +407,4 @@
     }
   });
 })(window.DOM, 32, 9, 13, 27, 8, 46, 17);
-DOM.importStyles("@media screen", ".btr-dateinput-picker{display:inline-block;vertical-align:bottom}.btr-dateinput-picker>object{width:17rem;max-height:calc(2px + 17rem);box-shadow:0 0 15px #AAA;background:#FFF;position:absolute;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}.btr-dateinput-picker[aria-hidden=true]>object{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);pointer-events:none}.btr-dateinput-picker[aria-expanded=true]>object{max-height:calc(13.375rem + 2px)}.btr-dateinput-picker+input{color:transparent!important}.btr-dateinput-picker+input::selection{background:transparent}.btr-dateinput-picker+input::-moz-selection{background:transparent}");
+DOM.importStyles("@media screen", ".btr-dateinput-picker{display:inline-block;vertical-align:bottom}.btr-dateinput-picker>object{width:21rem;max-height:calc(2.5rem*8);box-shadow:0 0 15px gray;background:white;position:absolute;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}.btr-dateinput-picker[aria-hidden=true]>object{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);visibility:hidden;height:0}.btr-dateinput-picker[aria-expanded=true]>object{max-height:calc(2.5rem + 2.5rem*1.5*3)}.btr-dateinput-picker+input{color:transparent!important}.btr-dateinput-picker+input::selection{background:transparent}.btr-dateinput-picker+input::-moz-selection{background:transparent}");
