@@ -2,7 +2,7 @@
     "use strict"; /* globals html:false */
 
     var HTML = DOM.get("documentElement"),
-        ampm = (pos, neg) => HTML.lang === "en_US" ? pos : neg,
+        ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
