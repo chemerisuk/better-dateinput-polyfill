@@ -47,10 +47,10 @@
 </svg>`);
 
     const PICKER_TEMPLATE = DOM.create(html`
-<div tabindex="-1" class="btr-dateinput-picker">
+<dateinput-picker tabindex="-1">
     <object data="about:blank" type="text/html" width="100%" height="100%">
     </object>
-</div>`);
+</dateinput-picker>`);
 
     const PICKER_BODY_HTML = html`
 <style>
@@ -117,7 +117,7 @@ td:hover,
 }
 
 table+table {
-    line-height: 3.75rem;
+    line-height: 3.75rem; /* var(--cell-height) * 1.5 */
     background: white;
     position: absolute;
     top: 2.5em;

@@ -4,12 +4,12 @@
 }
 
 @media screen {
-    .btr-dateinput-picker {
+    dateinput-picker {
         display: inline-block;
         vertical-align: bottom;
     }
 
-    .btr-dateinput-picker > object {
+    dateinput-picker > object {
         width: 21rem;
         max-height: calc(var(--cell-height) * 8);
         box-shadow: 0 0 15px gray;
@@ -22,28 +22,28 @@
         transition: 0.1s ease-out;
     }
 
-    .btr-dateinput-picker[aria-hidden=true] > object {
+    dateinput-picker[aria-hidden=true] > object {
         opacity: 0;
         transform: skew(-25deg) scaleX(0.75);
         visibility: hidden;
         height: 0; /* fixes wierd iOS overlapping */
     }
 
-    .btr-dateinput-picker[aria-expanded=true] > object {
+    dateinput-picker[aria-expanded=true] > object {
         max-height: calc(var(--cell-height) + var(--month-cell-height) * 3);
     }
 
     /* hide original input text */
-    .btr-dateinput-picker + input {
+    dateinput-picker + input {
         color: transparent !important;
     }
 
     /* disable text selection */
-    .btr-dateinput-picker + input::selection {
+    dateinput-picker + input::selection {
         background: transparent;
     }
 
-    .btr-dateinput-picker + input::-moz-selection {
+    dateinput-picker + input::-moz-selection {
         background: transparent;
     }
 }
