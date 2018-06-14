@@ -88,7 +88,7 @@ table {
     border-spacing: 0;
     border-collapse: collapse;
     text-align: center;
-    line-height: 2;
+    line-height: 2.5rem;
     margin: 1px;
 }
 
@@ -244,7 +244,6 @@ table+table[aria-hidden=true] {
 
             // sync picker visibility on focus/blur
             this.on("focus", this._focusPicker.bind(this, picker));
-            this.on("click", this._focusPicker.bind(this, picker));
             this.on("blur", this._blurPicker.bind(this, picker));
             this.on("change", updateValue);
             this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
@@ -260,15 +259,18 @@ table+table[aria-hidden=true] {
             pickerBody.on("picker:invalidate", ["detail"],
                 this._invalidateCaption.bind(this, calendarCaption, picker));
 
+            const clickEventName = "orientation" in window ? "touchend" : "mousedown";
             // picker click handlers
-            pickerBody.on("mousedown", "a", ["target"],
+            pickerBody.on(clickEventName, "a", ["target"],
                 this._clickPickerButton.bind(this, picker));
-            pickerBody.on("mousedown", "td", ["target"],
+            pickerBody.on(clickEventName, "td", ["target"],
                 this._clickPickerDay.bind(this, picker));
-            calendarCaption.on("mousedown",
+            calendarCaption.on(clickEventName,
                 this._clickPickerCaption.bind(this, picker));
             // prevent input from loosing the focus outline
-            pickerBody.on("mousedown", () => false);
+            pickerBody.on(clickEventName, () => false);
+
+            this.on(clickEventName, this._focusPicker.bind(this, picker));
 
             resetValue(); // present initial value
 

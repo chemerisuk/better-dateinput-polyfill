@@ -5,10 +5,10 @@
     }
 
     .btr-dateinput-picker > object {
-        width: 17rem;
-        max-height: calc(2px + 17rem);
-        box-shadow: 0 0 15px #AAA;
-        background: #FFF;
+        width: 20rem;
+        max-height: calc((2.5rem + 2px) * 8);
+        box-shadow: 0 0 15px gray;
+        background: white;
         position: absolute;
 
         opacity: 1;
@@ -21,6 +21,7 @@
         opacity: 0;
         transform: skew(-25deg) scaleX(0.75);
         visibility: hidden;
+        height: 0; /* fixes wierd iOS overlapping */
     }
 
     .btr-dateinput-picker[aria-expanded=true] > object {
