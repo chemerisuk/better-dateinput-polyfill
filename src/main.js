@@ -56,7 +56,7 @@
 <style>
 body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    line-height: 2.5;
+    line-height: 2.5rem;
     text-align: center;
 
     cursor: default;
@@ -70,8 +70,8 @@ body {
 }
 
 a {
-    width: 2.5em;
-    height: 2.5em;
+    width: 3rem;
+    height: 2.5rem;
     position: absolute;
     text-decoration: none;
     color: inherit;
@@ -83,13 +83,16 @@ b {
 }
 
 table {
-    width: calc(100% - 2px);
+    width: 100%;
     table-layout: fixed;
     border-spacing: 0;
     border-collapse: collapse;
     text-align: center;
     line-height: 2.5rem;
-    margin: 1px;
+}
+
+td, th {
+    padding: 0;
 }
 
 thead {
@@ -103,7 +106,7 @@ thead {
 }
 
 [aria-selected=true] {
-    outline: 1px solid graytext;
+    box-shadow: inset 0 0 0 1px graytext;
 }
 
 a:hover,
@@ -114,7 +117,7 @@ td:hover,
 }
 
 table+table {
-    line-height: 3.5;
+    line-height: 3.75rem;
     background: white;
     position: absolute;
     top: 2.5em;
@@ -124,7 +127,7 @@ table+table {
 }
 
 table+table[aria-hidden=true] {
-    pointer-events: none;
+    visibility: hidden;
     opacity: 0;
 }
 </style>

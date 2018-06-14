@@ -1,3 +1,8 @@
+:root {
+    --cell-height: 2.5rem;
+    --month-cell-height: var(--cell-height) * 1.5;
+}
+
 @media screen {
     .btr-dateinput-picker {
         display: inline-block;
@@ -5,8 +10,8 @@
     }
 
     .btr-dateinput-picker > object {
-        width: 20rem;
-        max-height: calc((2.5rem + 2px) * 8);
+        width: 21rem;
+        max-height: calc(var(--cell-height) * 8);
         box-shadow: 0 0 15px gray;
         background: white;
         position: absolute;
@@ -25,7 +30,7 @@
     }
 
     .btr-dateinput-picker[aria-expanded=true] > object {
-        max-height: calc(13.375rem + 2px);
+        max-height: calc(var(--cell-height) + var(--month-cell-height) * 3);
     }
 
     /* hide original input text */
