@@ -1,6 +1,8 @@
 (function(DOM, VK_SPACE, VK_TAB, VK_ENTER, VK_ESCAPE, VK_BACKSPACE, VK_DELETE, VK_CONTROL) {
     "use strict"; /* globals html:false */
 
+    const CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
+
     var HTML = DOM.get("documentElement"),
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
         formatISODate = (value) => value.toISOString().split("T")[0],
@@ -196,9 +198,10 @@ table+table[aria-hidden=true] {
             const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays);
             const resetValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "defaultValue");
             const updateValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "value");
+            const toggleState = this._togglePicker.bind(this, picker, invalidatePicker);
 
-            const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
             // patch value property for the input element
+            const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
             Object.defineProperty(this[0], "value", {
                 configurable: false,
                 enumerable: true,
@@ -206,33 +209,11 @@ table+table[aria-hidden=true] {
                 set: this._setValue.bind(this, valueDescriptor.set, updateValue)
             });
 
-            // define expanded property for the picker element
-            Object.defineProperty(picker[0], "expanded", {
-                configurable: false,
-                enumerable: true,
-                get() {
-                    return picker.get("aria-expanded") === "true";
-                },
-                set(expanded) {
-                    if (typeof expanded === "boolean") {
-                        picker.set("aria-expanded", expanded);
-
-                        if (expanded) {
-                            calendarMonths.show();
-                        } else {
-                            calendarMonths.hide();
-                        }
-
-                        invalidatePicker(expanded);
-                    }
-                }
-            });
-
             // sync picker visibility on focus/blur
-            this.on("focus", this._focusPicker.bind(this, picker));
+            this.on("focus", this._focusPicker.bind(this, picker, toggleState));
             this.on("blur", this._blurPicker.bind(this, picker));
             this.on("change", updateValue);
-            this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
+            this.on("keydown", ["which"], this._keydownPicker.bind(this, picker, toggleState));
 
             // form events do not trigger any state change
             this.closest("form").on("reset", resetValue);
@@ -245,18 +226,17 @@ table+table[aria-hidden=true] {
             pickerBody.on("picker:invalidate", ["detail"],
                 this._invalidateCaption.bind(this, calendarCaption, picker));
 
-            const clickEventName = "orientation" in window ? "touchend" : "mousedown";
             // picker click handlers
-            pickerBody.on(clickEventName, "a", ["target"],
+            pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"],
                 this._clickPickerButton.bind(this, picker));
-            pickerBody.on(clickEventName, "td", ["target"],
-                this._clickPickerDay.bind(this, picker));
-            calendarCaption.on(clickEventName,
-                this._clickPickerCaption.bind(this, picker));
+            pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"],
+                this._clickPickerDay.bind(this, picker, toggleState));
+            calendarCaption.on(CLICK_EVENT_TYPE, toggleState);
             // prevent input from loosing the focus outline
-            pickerBody.on(clickEventName, () => false);
+            pickerBody.on(CLICK_EVENT_TYPE, () => false);
 
-            this.on(clickEventName, this._focusPicker.bind(this, picker));
+            this.on(CLICK_EVENT_TYPE,
+                this._focusPicker.bind(this, picker, toggleState));
 
             resetValue(); // present initial value
 
@@ -293,6 +273,12 @@ table+table[aria-hidden=true] {
             const target = expanded ? calendarMonths : calenderDays;
             // refresh current picker
             target.fire("picker:invalidate", dateValue);
+
+            if (expanded) {
+                calendarMonths.show();
+            } else {
+                calendarMonths.hide();
+            }
         },
         _invalidateDays(calenderDays, dateValue) {
             const month = dateValue.getUTCMonth();
@@ -351,7 +337,7 @@ table+table[aria-hidden=true] {
         _invalidateCaption(calendarCaption, picker, dateValue) {
             const year = dateValue.getUTCFullYear();
             // update calendar caption
-            if (picker.get("expanded")) {
+            if (picker.get("aria-expanded") === "true") {
                 calendarCaption.value(year);
             } else {
                 const month = dateValue.getUTCMonth();
@@ -374,7 +360,7 @@ table+table[aria-hidden=true] {
             // update displayed text
             this.css("background-image", `url('data:image/svg+xml;utf8,${svg.get("outerHTML")}')`);
             // update picker state
-            invalidatePicker(picker.get("expanded"), dateValue);
+            invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
         },
         _clickPickerButton(picker, target) {
             var targetDate = new Date(this.value());
@@ -383,7 +369,7 @@ table+table[aria-hidden=true] {
 
             var sign = target.next("a")[0] ? -1 : 1;
 
-            if (picker.get("expanded")) {
+            if (picker.get("aria-expanded") === "true") {
                 targetDate.setUTCFullYear(targetDate.getUTCFullYear() + sign);
             } else {
                 targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
@@ -391,17 +377,17 @@ table+table[aria-hidden=true] {
 
             this.value(formatISODate(targetDate)).fire("change");
         },
-        _clickPickerDay(picker, target) {
+        _clickPickerDay(picker, toggleState, target) {
             var targetDate;
 
-            if (picker.get("expanded")) {
+            if (picker.get("aria-expanded") === "true") {
                 if (isNaN(target._ts)) {
                     targetDate = new Date();
                 } else {
                     targetDate = new Date(target._ts);
                 }
                 // switch to date calendar mode
-                picker.set("expanded", false);
+                toggleState(false);
             } else {
                 if (!isNaN(target._ts)) {
                     targetDate = new Date(target._ts);
@@ -414,10 +400,16 @@ table+table[aria-hidden=true] {
                 this.value(formatISODate(targetDate)).fire("change");
             }
         },
-        _clickPickerCaption(picker) {
-            picker.set("expanded", !picker.get("expanded"));
+        _togglePicker(picker, invalidatePicker, force) {
+            if (typeof force !== "boolean") {
+                force = picker.get("aria-expanded") !== "true";
+            }
+
+            picker.set("aria-expanded", force);
+
+            invalidatePicker(force);
         },
-        _keydownPicker(picker, which) {
+        _keydownPicker(picker, toggleState, which) {
             if (which === VK_ENTER && picker.get("aria-hidden") === "true") {
                 // ENTER key should submit form if calendar is hidden
                 return true;
@@ -426,7 +418,8 @@ table+table[aria-hidden=true] {
             if (which === VK_SPACE) {
                 // SPACE key toggles calendar visibility
                 if (!this.get("readonly")) {
-                    picker.set("expanded", false);
+                    toggleState(false);
+
                     if (picker.get("aria-hidden") === "true") {
                         picker.show();
                     } else {
@@ -439,7 +432,7 @@ table+table[aria-hidden=true] {
                 this.value("").fire("change"); // BACKSPACE, DELETE clear value
             } else if (which === VK_CONTROL) {
                 // CONTROL toggles calendar mode
-                picker.set("expanded", !picker.get("expanded"));
+                toggleState();
             } else {
                 var delta, currentDate = new Date(this.value());
 
@@ -451,7 +444,7 @@ table+table[aria-hidden=true] {
                 else if (which === 72 || which === 37) { delta = -1; }
 
                 if (delta) {
-                    const expanded = picker.get("expanded");
+                    const expanded = picker.get("aria-expanded") === "true";
                     if (expanded && (which === 40 || which === 38)) {
                         currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
                     } else if (expanded && (which === 37 || which === 39)) {
@@ -470,25 +463,20 @@ table+table[aria-hidden=true] {
         _blurPicker(picker) {
             picker.hide();
         },
-        _focusPicker(picker) {
+        _focusPicker(picker, toggleState) {
             if (this.get("readonly")) return false;
 
             var offset = this.offset();
             var pickerOffset = picker.offset();
             var marginTop = offset.height;
-
             // #3: move calendar to the top when passing cross browser window bounds
             if (HTML.clientHeight < offset.bottom + pickerOffset.height) {
                 marginTop = -pickerOffset.height;
             }
-
-            picker
-                // always reset picker mode to the default
-                .set("expanded", false)
-                // always recalculate picker top position
-                .css("margin-top", marginTop)
-                // show picker
-                .show();
+            // always reset picker mode to the default
+            toggleState(false);
+            // always recalculate picker top position
+            picker.css("margin-top", marginTop).show();
         }
     });
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17));
