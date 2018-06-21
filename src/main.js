@@ -197,30 +197,13 @@ table+table[aria-hidden=true] {
             const resetValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "defaultValue");
             const updateValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "value");
 
-            // patch value property on the original input
             const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+            // patch value property for the input element
             Object.defineProperty(this[0], "value", {
                 configurable: false,
                 enumerable: true,
                 get: valueDescriptor.get,
-                set: (value) => {
-                    if (typeof value === "string") {
-                        const dateValue = new Date(value);
-                        const range = readDateRange(this);
-
-                        if (dateValue < range[0]) {
-                            value = formatISODate(range[0]);
-                        } else if (dateValue > range[1]) {
-                            value = formatISODate(range[1]);
-                        } else if (isNaN(dateValue.getTime())) {
-                            value = "";
-                        }
-
-                        valueDescriptor.set.call(this[0], value);
-
-                        updateValue();
-                    }
-                }
+                set: this._setValue.bind(this, valueDescriptor.set, updateValue)
             });
 
             // define expanded property for the picker element
@@ -281,6 +264,22 @@ table+table[aria-hidden=true] {
             if (DOM.get("activeElement") === this[0]) {
                 picker.show();
             }
+        },
+        _setValue(setter, updateValue, value) {
+            const dateValue = new Date(String(value));
+            const range = readDateRange(this);
+
+            if (dateValue < range[0]) {
+                value = formatISODate(range[0]);
+            } else if (dateValue > range[1]) {
+                value = formatISODate(range[1]);
+            } else if (isNaN(dateValue.getTime())) {
+                value = "";
+            }
+
+            setter.call(this[0], value);
+
+            updateValue();
         },
         _invalidatePicker(calendarMonths, calenderDays, expanded, dateValue) {
             if (!dateValue) {
