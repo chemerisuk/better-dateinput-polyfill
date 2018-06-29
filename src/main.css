@@ -33,9 +33,10 @@
         max-height: calc(var(--cell-height) + var(--month-cell-height) * 3);
     }
 
-    /* hide original input text */
+    /* hide original input text and caret */
     dateinput-picker + input {
         color: transparent !important;
+        caret-color: transparent !important;
     }
 
     /* disable text selection */
