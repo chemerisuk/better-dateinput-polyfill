@@ -1,4 +1,4 @@
-# better-dateinput-polyfill<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
+# better-dateinput-polyfill<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
 > `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
 
 Why another date picker? The problem is that most of existing solutions do not follow standards regarding to `value` property format, that should have “a valid full-date as defined in [RFC 3339]”. In other words representation of date can vary, but the string value should have `yyyy-MM-dd` format. It helps to work with such values consistently regarding on the current language.
@@ -9,7 +9,7 @@ Why another date picker? The problem is that most of existing solutions do not f
 
 * normalizes `input[type=date]` presentation for desktop browsers
 * submitted value always has `yyyy-MM-dd` [RFC 3339] format
-* [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for current and future content
+* [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for the current and future content
 * `placeholder` attribute works as expected in browsers that support it
 * fully customizable date picker, including [displayed value format](https://github.com/chemerisuk/better-dateinput-polyfill#change-default-date-presentation-format) via `data-format` attribute
 * control when to apply the polyfill using [data-polyfill](#forcing-the-polyfill) attribute
@@ -86,6 +86,3 @@ After any change it recompiles `build/better-dateinput-polyfill.js` and runs uni
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-dateinput-polyfill
 [coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-dateinput-polyfill/master.svg
-
-[bower-url]: https://github.com/chemerisuk/better-dateinput-polyfill
-[bower-image]: http://img.shields.io/bower/v/better-dateinput-polyfill.svg
