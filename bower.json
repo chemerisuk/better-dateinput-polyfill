@@ -1,6 +1,6 @@
 {
   "name": "better-dateinput-polyfill",
-  "version": "3.0.0-rc.2",
+  "version": "3.0.0",
   "main": [
     "dist/better-dateinput-polyfill.js"
   ],
