@@ -13,96 +13,106 @@ describe("better-dateinput-polyfill", function() {
         label = DOM.mock("<span>");
     });
 
-    describe("SPACE", () => {
-        it("hides visible picker", () => {
-            var showSpy = spyOn(picker, "show");
-            var hideSpy = spyOn(picker, "hide");
+    describe("keyboard", () => {
+        var toggleState;
 
-            el._keydownPicker(picker, 32);
-            expect(hideSpy).toHaveBeenCalled();
-            expect(showSpy).not.toHaveBeenCalled();
+        beforeEach(() => {
+            toggleState = jasmine.createSpy();
         });
 
-        it("shows hidden picker", () => {
-            var showSpy = spyOn(picker, "show");
-            var hideSpy = spyOn(picker, "hide");
+        describe("SPACE", () => {
+            it("hides visible picker", () => {
+                var showSpy = spyOn(picker, "show");
+                var hideSpy = spyOn(picker, "hide");
 
-            spyOn(picker, "get").and.callFake((prop) => {
-                if (prop === "aria-hidden") {
-                    return "true";
-                }
+                el._keydownPicker(picker, toggleState, 32);
+                expect(hideSpy).toHaveBeenCalled();
+                expect(showSpy).not.toHaveBeenCalled();
             });
 
-            el._keydownPicker(picker, 32);
-            expect(showSpy).toHaveBeenCalled();
-            expect(hideSpy).not.toHaveBeenCalled();
+            it("shows hidden picker", () => {
+                var showSpy = spyOn(picker, "show");
+                var hideSpy = spyOn(picker, "hide");
+
+                picker.set("aria-hidden", "true");
+                el._keydownPicker(picker, toggleState, 32);
+                expect(showSpy).toHaveBeenCalled();
+                expect(hideSpy).not.toHaveBeenCalled();
+            });
+
+            it("does nothing for readonly input", () => {
+                var showSpy = spyOn(picker, "show");
+                var hideSpy = spyOn(picker, "hide");
+
+                el.set("readonly", true);
+                el._keydownPicker(picker, toggleState, 32);
+                expect(hideSpy).not.toHaveBeenCalled();
+                expect(showSpy).not.toHaveBeenCalled();
+            });
         });
 
-        it("does nothing for readonly input", () => {
-            var showSpy = spyOn(picker, "show");
-            var hideSpy = spyOn(picker, "hide");
-
-            el.set("readonly", true);
-            el._keydownPicker(picker, 32);
-            expect(hideSpy).not.toHaveBeenCalled();
-            expect(showSpy).not.toHaveBeenCalled();
+        describe("ESC", () => {
+            it("hides calendar", function() {
+                var spy = spyOn(picker, "hide");
+                expect(el._keydownPicker(picker, toggleState, 27)).toBe(false);
+                expect(spy).toHaveBeenCalled();
+            });
         });
-    });
 
-    it("should hide calendar on escape key", function() {
-        var spy = spyOn(picker, "hide");
-        expect(el._keydownPicker(picker, 27)).toBe(false);
-        expect(spy).toHaveBeenCalled();
-    });
+        describe("TAB", () => {
+            it("performs default behavior", function() {
+                expect(el._keydownPicker(picker, toggleState, 9)).toBe(true);
+            });
+        });
 
-    it("does not prevent default action for tab", function() {
-        expect(el._keydownPicker(picker, 9)).toBe(true);
-    });
+        describe("BACKSPACE or DELETE", () => {
+            it("reset calendar value", function() {
+                var spy = spyOn(el, "value").and.returnValue(el);
 
-    it("should reset calendar value on backspace or delete keys", function() {
-        var spy = spyOn(el, "value").and.returnValue(el);
+                el._keydownPicker(picker, toggleState, 8);
+                expect(spy).toHaveBeenCalledWith("");
 
-        el._keydownPicker(picker, 8);
-        expect(spy).toHaveBeenCalledWith("");
+                spy.calls.reset();
 
-        spy.calls.reset();
+                el._keydownPicker(picker, toggleState, 46);
+                expect(spy).toHaveBeenCalledWith("");
+            });
+        });
 
-        el._keydownPicker(picker, 46);
-        expect(spy).toHaveBeenCalledWith("");
-    });
+        describe("CONTROL", () => {
+            it("toggles calendar mode", function() {
+                el._keydownPicker(picker, toggleState, 17);
+                expect(toggleState).toHaveBeenCalled();
+            });
+        });
 
-    it("toggles calendar mode on control key", function() {
-        expect(picker.get("expanded")).not.toBe("true");
-        el._keydownPicker(picker, 17);
-        expect(picker.get("expanded")).toBe("true");
-        el._keydownPicker(picker, 17);
-        expect(picker.get("expanded")).toBe("false");
-    });
+        describe("ARROW keys", () => {
+            it("navigate calendar day", function() {
+                function expectKey(key, expected) {
+                    el._keydownPicker(picker, toggleState, key);
+                    expect(el.value()).toBe(expected);
+                    el.value("2000-01-01");
+                }
 
-    it("should handle arrow keys", function() {
-        function expectKey(key, expected) {
-            el._keydownPicker(picker, key);
-            expect(el.value()).toBe(expected);
-            el.value("2000-01-01");
-        }
+                el.value("2000-01-01");
 
-        el.value("2000-01-01");
+                expectKey(74, "2000-01-08");
+                expectKey(40, "2000-01-08");
+                expectKey(75, "1999-12-25");
+                expectKey(38, "1999-12-25");
+                expectKey(76, "2000-01-02");
+                expectKey(39, "2000-01-02");
+                expectKey(72, "1999-12-31");
+                expectKey(37, "1999-12-31");
 
-        expectKey(74, "2000-01-08");
-        expectKey(40, "2000-01-08");
-        expectKey(75, "1999-12-25");
-        expectKey(38, "1999-12-25");
-        expectKey(76, "2000-01-02");
-        expectKey(39, "2000-01-02");
-        expectKey(72, "1999-12-31");
-        expectKey(37, "1999-12-31");
-
-        picker.set("expanded", "true");
-        // cases with shift key
-        expectKey(39, "2000-02-01");
-        expectKey(37, "1999-12-01");
-        expectKey(40, "2000-05-01");
-        expectKey(38, "1999-09-01");
+                picker.set("aria-expanded", "true");
+                // cases with shift key
+                expectKey(39, "2000-02-01");
+                expectKey(37, "1999-12-01");
+                expectKey(40, "2000-05-01");
+                expectKey(38, "1999-09-01");
+            });
+        });
     });
 
     // it("changes month/year", function() {
@@ -206,14 +216,15 @@ describe("better-dateinput-polyfill", function() {
 
     it("should display calendar on focus", function() {
         var spy = spyOn(picker, "show");
+        var toggleState = jasmine.createSpy();
 
-        el._focusPicker(picker);
+        el._focusPicker(picker, toggleState);
         expect(spy.calls.count()).toBe(1);
-        el._focusPicker(picker);
+        el._focusPicker(picker, toggleState);
         expect(spy.calls.count()).toBe(2);
 
         el.set("readonly", true);
-        el._focusPicker(picker);
+        el._focusPicker(picker, toggleState);
         expect(spy.calls.count()).toBe(2);
     });
 
@@ -225,24 +236,6 @@ describe("better-dateinput-polyfill", function() {
 
     //     expect(el.value()).toBe("2000-10-20");
     // });
-
-    describe("caption", () => {
-        var pickerCaption;
-        var calendarDaysMain;
-
-        beforeEach(() => {
-            pickerCaption = DOM.mock();
-            calendarDaysMain = DOM.mock();
-        });
-
-        it("updates visible value format on click", () => {
-            expect(picker.get("expanded")).not.toBe("true");
-            el._clickPickerCaption(picker);
-            expect(picker.get("expanded")).toBe("true");
-            el._clickPickerCaption(picker);
-            expect(picker.get("expanded")).not.toBe("true");
-        });
-    });
 
     describe("data-polyfill", () => {
         it("skips when value is 'none'", () => {

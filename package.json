@@ -14,7 +14,7 @@
     "web-components"
   ],
   "peerDependencies": {
-    "better-dom": "^4.0.0-rc.2"
+    "better-dom": "^4.0.0"
   },
   "devDependencies": {
     "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"
