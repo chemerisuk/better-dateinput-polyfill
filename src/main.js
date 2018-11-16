@@ -138,7 +138,7 @@ table+table {
 }
 
 table+table[aria-hidden=true] {
-    visibility: hidden;
+    visibility: hidden !important;
     opacity: 0;
 }
 </style>
