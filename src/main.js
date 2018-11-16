@@ -2,6 +2,7 @@
     "use strict"; /* globals html:false */
 
     const CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
+    const IE = "ScriptEngineMajorVersion" in window;
 
     var HTML = DOM.get("documentElement"),
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
@@ -49,10 +50,7 @@
 </svg>`);
 
     const PICKER_TEMPLATE = DOM.create(html`
-<dateinput-picker tabindex="-1">
-    <object data="about:blank" type="text/html" width="100%" height="100%">
-    </object>
-</dateinput-picker>`);
+<dateinput-picker tabindex="-1"></dateinput-picker>`);
 
     const PICKER_BODY_HTML = html`
 <style>
@@ -159,12 +157,23 @@ table+table[aria-hidden=true] {
                 [0].setAttribute("x", offset);
 
             const picker = PICKER_TEMPLATE.clone(true);
-            const object = picker.get("firstChild");
+            const object = DOM.create("<object>")[0];
+            object.type = "text/html";
+            object.width = "100%";
+            object.height = "100%";
             object.onload = this._initPicker.bind(this, svg, object, picker);
+            // non-IE: must be BEFORE the element added to the document
+            if (!IE) {
+                object.data = "about:blank";
+            }
 
             picker.css("z-index", 1 + (this.css("z-index") | 0));
 
-            this.before(picker.hide());
+            this.before(picker.append(DOM.constructor(object)).hide());
+            // IE: must be AFTER the element added to the document
+            if (IE) {
+                object.data = "about:blank";
+            }
         },
         _isNative() {
             var polyfillType = this.get("data-polyfill"),
