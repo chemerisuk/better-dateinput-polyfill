@@ -3,6 +3,14 @@
 
     const CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
     const IE = "ScriptEngineMajorVersion" in window;
+    const INTL_SUPPORTED = (function() {
+        try {
+            new Date().toLocaleString("i");
+        } catch (err) {
+            return err instanceof RangeError;
+        }
+        return false;
+    }());
 
     var HTML = DOM.get("documentElement"),
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
@@ -19,29 +27,32 @@
 
     function localeWeekday(index) {
         var date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
-        try {
-            return date.toLocaleDateString(HTML.lang, {weekday: "short"});
-        } catch (err) {
-            return date.toUTCString().split(",")[0].slice(0, 2).toLowerCase();
+        if (INTL_SUPPORTED) {
+            try {
+                return date.toLocaleDateString(HTML.lang, {weekday: "short"});
+            } catch (err) {}
         }
+        return date.toUTCString().split(",")[0].slice(0, 2).toLowerCase();
     }
 
     function localeMonth(index) {
         var date = new Date(Date.UTC(2010, index));
-        try {
-            return date.toLocaleDateString(HTML.lang, {month: "short"});
-        } catch (err) {
-            return date.toUTCString().split(" ")[2];
+        if (INTL_SUPPORTED) {
+            try {
+                return date.toLocaleDateString(HTML.lang, {month: "short"});
+            } catch (err) {}
         }
+        return date.toUTCString().split(" ")[2];
     }
 
     function localeMonthYear(month, year) {
         var date = new Date(year, month);
-        try {
-            return date.toLocaleDateString(HTML.lang, {month: "long", year: "numeric"});
-        } catch (err) {
-            return date.toUTCString().split(" ").slice(2, 4).join(" ");
+        if (INTL_SUPPORTED) {
+            try {
+                return date.toLocaleDateString(HTML.lang, {month: "long", year: "numeric"});
+            } catch (err) {}
         }
+        return date.toUTCString().split(" ").slice(2, 4).join(" ");
     }
 
     const SVG_TEMPLATE = DOM.create(html`
