@@ -14,7 +14,7 @@
 
     var HTML = DOM.get("documentElement"),
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
-        formatISODate = (value) => value.toISOString().split("T")[0],
+        formatDateValue = (date) => [date.getFullYear(), ("00" + (date.getMonth() + 1)).slice(-2), ("00" + date.getDate()).slice(-2)].join("-"),
         readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
 
     function repeat(times, fn) {
@@ -255,13 +255,14 @@ table+table[aria-hidden=true] {
             }
         },
         _setValue(setter, updateValue, value) {
-            const dateValue = new Date(String(value));
+            const valueParts = value.split("-").map(parseFloat);
+            const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
             const range = readDateRange(this);
 
             if (dateValue < range[0]) {
-                value = formatISODate(range[0]);
+                value = formatDateValue(range[0]);
             } else if (dateValue > range[1]) {
-                value = formatISODate(range[1]);
+                value = formatDateValue(range[1]);
             } else if (isNaN(dateValue.getTime())) {
                 value = "";
             }
@@ -272,7 +273,8 @@ table+table[aria-hidden=true] {
         },
         _invalidatePicker(calendarMonths, calenderDays, expanded, dateValue) {
             if (!dateValue) {
-                dateValue = new Date(this.value());
+                const valueParts = this.value().split("-").map(parseFloat);
+                dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
             }
 
             if (isNaN(dateValue.getTime())) {
@@ -290,47 +292,47 @@ table+table[aria-hidden=true] {
             }
         },
         _invalidateDays(calenderDays, dateValue) {
-            const month = dateValue.getUTCMonth();
-            const date = dateValue.getUTCDate();
-            const year = dateValue.getUTCFullYear();
+            const month = dateValue.getMonth();
+            const date = dateValue.getDate();
+            const year = dateValue.getFullYear();
             const range = readDateRange(this);
-            const iterDate = new Date(Date.UTC(year, month, 0));
+            const iterDate = new Date(year, month, 1);
             // move to beginning of the first week in current month
-            iterDate.setUTCDate(iterDate.getUTCDate() - iterDate.getUTCDay() - ampm(1, 0));
+            iterDate.setDate(1 - iterDate.getDay() - ampm(1, 0));
             // update days picker
             calenderDays.findAll("td").forEach((day) => {
-                iterDate.setUTCDate(iterDate.getUTCDate() + 1);
+                iterDate.setDate(iterDate.getDate() + 1);
 
-                var mDiff = month - iterDate.getUTCMonth(),
+                var mDiff = month - iterDate.getMonth(),
                     selectedValue = null,
                     disabledValue = null;
 
-                if (year !== iterDate.getUTCFullYear()) mDiff *= -1;
+                if (year !== iterDate.getFullYear()) mDiff *= -1;
 
                 if (iterDate < range[0] || iterDate > range[1]) {
                     disabledValue = "true";
                 } else if (mDiff > 0 || mDiff < 0) {
                     selectedValue = "false";
-                } else if (date === iterDate.getUTCDate()) {
+                } else if (date === iterDate.getDate()) {
                     selectedValue = "true";
                 }
 
                 day._ts = iterDate.getTime();
                 day.set("aria-selected", selectedValue);
                 day.set("aria-disabled", disabledValue);
-                day.value(iterDate.getUTCDate());
+                day.value(iterDate.getDate());
             });
         },
         _invalidateMonths(calendarMonths, dateValue) {
-            const month = dateValue.getUTCMonth();
-            const year = dateValue.getUTCFullYear();
+            const month = dateValue.getMonth();
+            const year = dateValue.getFullYear();
             const range = readDateRange(this);
-            const iterDate = new Date(Date.UTC(year, month, 1));
+            const iterDate = new Date(year, month, 1);
 
             calendarMonths.findAll("td").forEach((day, index) => {
-                iterDate.setUTCMonth(index);
+                iterDate.setMonth(index);
 
-                var mDiff = month - iterDate.getUTCMonth(),
+                var mDiff = month - iterDate.getMonth(),
                     selectedValue = null;
 
                 if (iterDate < range[0] || iterDate > range[1]) {
@@ -344,18 +346,17 @@ table+table[aria-hidden=true] {
             });
         },
         _invalidateCaption(calendarCaption, picker, dateValue) {
-            const year = dateValue.getUTCFullYear();
+            const year = dateValue.getFullYear();
             // update calendar caption
             if (picker.get("aria-expanded") === "true") {
                 calendarCaption.value(year);
             } else {
-                const month = dateValue.getUTCMonth();
-
-                calendarCaption.value(localeMonthYear(month, year));
+                calendarCaption.value(localeMonthYear(dateValue.getMonth(), year));
             }
         },
         _syncValue(picker, invalidatePicker, propName) {
-            const dateValue = new Date(this.get(propName));
+            const valueParts = this.get(propName).split("-").map(parseFloat);
+            const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
             var formattedValue = "";
             if (!isNaN(dateValue.getTime())) {
                 try {
@@ -377,19 +378,20 @@ table+table[aria-hidden=true] {
             invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
         },
         _clickPickerButton(picker, target) {
-            var targetDate = new Date(this.value());
+            const valueParts = this.value().split("-").map(parseFloat);
+            var targetDate = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
 
             if (isNaN(targetDate.getTime())) targetDate = new Date();
 
             var sign = target.next("a")[0] ? -1 : 1;
 
             if (picker.get("aria-expanded") === "true") {
-                targetDate.setUTCFullYear(targetDate.getUTCFullYear() + sign);
+                targetDate.setFullYear(targetDate.getFullYear() + sign);
             } else {
-                targetDate.setUTCMonth(targetDate.getUTCMonth() + sign);
+                targetDate.setMonth(targetDate.getMonth() + sign);
             }
 
-            this.value(formatISODate(targetDate)).fire("change");
+            this.value(formatDateValue(targetDate)).fire("change");
         },
         _clickPickerDay(picker, toggleState, target) {
             var targetDate;
@@ -411,7 +413,7 @@ table+table[aria-hidden=true] {
             }
 
             if (targetDate != null) {
-                this.value(formatISODate(targetDate)).fire("change");
+                this.value(formatDateValue(targetDate)).fire("change");
             }
         },
         _togglePicker(picker, invalidatePicker, force) {
@@ -448,7 +450,8 @@ table+table[aria-hidden=true] {
                 // CONTROL toggles calendar mode
                 toggleState();
             } else {
-                var delta, currentDate = new Date(this.value());
+                const valueParts = this.value().split("-").map(parseFloat);
+                var delta, currentDate = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
 
                 if (isNaN(currentDate.getTime())) currentDate = new Date();
 
@@ -460,14 +463,14 @@ table+table[aria-hidden=true] {
                 if (delta) {
                     const expanded = picker.get("aria-expanded") === "true";
                     if (expanded && (which === 40 || which === 38)) {
-                        currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 4 : -4));
+                        currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 4 : -4));
                     } else if (expanded && (which === 37 || which === 39)) {
-                        currentDate.setUTCMonth(currentDate.getUTCMonth() + (delta > 0 ? 1 : -1));
+                        currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 1 : -1));
                     } else {
-                        currentDate.setUTCDate(currentDate.getUTCDate() + delta);
+                        currentDate.setDate(currentDate.getDate() + delta);
                     }
 
-                    this.value(formatISODate(currentDate)).fire("change");
+                    this.value(formatDateValue(currentDate)).fire("change");
                 }
             }
             // prevent default action except if it was TAB so
