@@ -55,11 +55,6 @@
         return date.toUTCString().split(" ").slice(2, 4).join(" ");
     }
 
-    const SVG_TEMPLATE = DOM.create(html`
-<svg xmlns="http://www.w3.org/2000/svg">
-    <text dominant-baseline="central" y="50%"></text>
-</svg>`);
-
     const PICKER_TEMPLATE = DOM.create(html`
 <dateinput-picker tabindex="-1"></dateinput-picker>`);
 
@@ -157,22 +152,16 @@ table+table[aria-hidden=true] {
         constructor() {
             if (this._isNative()) return false;
 
-            const svg = SVG_TEMPLATE.clone(true);
-            const offset = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
-
-            svg.find("text")
-                .css("fill", this.css("color"))
-                .css("font", this.css("font"))
-                // property x is a read-only SVGAnimatedLengthList object
-                // therefore use attribute instead
-                [0].setAttribute("x", offset);
+            this._svgTextColor = this.css("color");
+            this._svgTextFont = this.css("font");
+            this._svgTextOffset = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
 
             const picker = PICKER_TEMPLATE.clone(true);
             const object = DOM.create("<object>")[0];
             object.type = "text/html";
             object.width = "100%";
             object.height = "100%";
-            object.onload = this._initPicker.bind(this, svg, object, picker);
+            object.onload = this._initPicker.bind(this, object, picker);
             // non-IE: must be BEFORE the element added to the document
             if (!IE) {
                 object.data = "about:blank";
@@ -207,7 +196,7 @@ table+table[aria-hidden=true] {
                 return false;
             }
         },
-        _initPicker(svg, object, picker) {
+        _initPicker(object, picker) {
             const pickerRoot = DOM.constructor(object.contentDocument);
             const pickerBody = pickerRoot.find("body");
             pickerBody.set(PICKER_BODY_HTML);
@@ -216,8 +205,8 @@ table+table[aria-hidden=true] {
             const calenderDays = pickerBody.find("table");
             const calendarMonths = pickerBody.find("table+table");
             const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays);
-            const resetValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "defaultValue");
-            const updateValue = this._syncValue.bind(this, svg, picker, invalidatePicker, "value");
+            const resetValue = this._syncValue.bind(this, picker, invalidatePicker, "defaultValue");
+            const updateValue = this._syncValue.bind(this, picker, invalidatePicker, "value");
             const toggleState = this._togglePicker.bind(this, picker, invalidatePicker);
 
             // patch value property for the input element
@@ -365,20 +354,25 @@ table+table[aria-hidden=true] {
                 calendarCaption.value(localeMonthYear(month, year));
             }
         },
-        _syncValue(svg, picker, invalidatePicker, propName) {
+        _syncValue(picker, invalidatePicker, propName) {
             const dateValue = new Date(this.get(propName));
             var formattedValue = "";
             if (!isNaN(dateValue.getTime())) {
                 try {
                     formattedValue = dateValue.toLocaleDateString(HTML.lang, JSON.parse(this.get("data-format")));
                 } catch (err) {
-                    formattedValue = dateValue.toLocaleDateString(HTML.lang);
+                    formattedValue = dateValue.toLocaleDateString();
                 }
             }
-            // modify internal element state
-            svg.find("text").value(formattedValue);
-            // update displayed text
-            this.css("background-image", `url('data:image/svg+xml;utf8,${svg.get("outerHTML")}')`);
+
+            const svgContent = html`
+<svg xmlns="http://www.w3.org/2000/svg">
+    <text dominant-baseline="central" x="${this._svgTextOffset}" y="50%" style="font:${this._svgTextFont}">${formattedValue}</text>
+</svg>`;
+
+            // FIXME: fill="${this._svgTextColor}" does not work properly
+
+            this.css("background-image", `url(data:image/svg+xml,${encodeURIComponent(svgContent)})`);
             // update picker state
             invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
         },
