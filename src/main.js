@@ -37,7 +37,7 @@
                 return date.toLocaleDateString(HTML.lang, {weekday: "short"});
             } catch (err) {}
         }
-        return date.toUTCString().split(",")[0].slice(0, 2).toLowerCase();
+        return date.toUTCString().split(",")[0].slice(0, 2);
     }
 
     function localeMonth(index) {
@@ -241,7 +241,7 @@ table+table[aria-hidden=true] {
             }
         },
         _setValue(setter, updateValue, value) {
-            const valueParts = value.split("-").map(parseFloat);
+            const valueParts = value.split("-");
             const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
             const range = readDateRange(this);
 
@@ -259,7 +259,7 @@ table+table[aria-hidden=true] {
         },
         _invalidatePicker(calendarMonths, calenderDays, expanded, dateValue) {
             if (!dateValue) {
-                const valueParts = this.value().split("-").map(parseFloat);
+                const valueParts = this.value().split("-");
                 dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
             }
 
@@ -342,7 +342,7 @@ table+table[aria-hidden=true] {
         },
         _syncValue(picker, invalidatePicker, propName) {
             var displayValue = this.get(propName);
-            const valueParts = displayValue.split("-").map(parseFloat);
+            const valueParts = displayValue.split("-");
             const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
             if (!isNaN(dateValue.getTime())) {
                 if (INTL_SUPPORTED) {
@@ -363,7 +363,7 @@ table+table[aria-hidden=true] {
             invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
         },
         _clickPickerButton(picker, target) {
-            const valueParts = this.value().split("-").map(parseFloat);
+            const valueParts = this.value().split("-");
             var targetDate = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
 
             if (isNaN(targetDate.getTime())) targetDate = new Date();
@@ -435,7 +435,7 @@ table+table[aria-hidden=true] {
                 // CONTROL toggles calendar mode
                 toggleState();
             } else {
-                const valueParts = this.value().split("-").map(parseFloat);
+                const valueParts = this.value().split("-");
                 var delta, currentDate = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
 
                 if (isNaN(currentDate.getTime())) currentDate = new Date();
