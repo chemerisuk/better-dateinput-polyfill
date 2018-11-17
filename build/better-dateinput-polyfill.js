@@ -105,7 +105,9 @@
         return a + b;
       });
       var picker = DOM.create("<dateinput-picker tabindex='-1'>");
-      picker.on("ready", ["detail"], this._initPicker.bind(this, picker));
+      picker.on("load", {
+        capture: true
+      }, ["target"], this._initPicker.bind(this, picker));
       picker.css("z-index", 1 + (this.css("z-index") | 0));
       this.before(picker.hide());
     },
@@ -123,8 +125,10 @@
 
       return TYPE_SUPPORTED;
     },
-    _initPicker: function _initPicker(picker, pickerRoot) {
+    _initPicker: function _initPicker(picker, object) {
+      var pickerRoot = DOM.constructor(object.get("contentDocument"));
       var pickerBody = pickerRoot.find("body");
+      pickerBody.set(PICKER_BODY_HTML);
       var calendarCaption = pickerBody.find("b");
       var calenderDays = pickerBody.find("table");
       var calendarMonths = pickerBody.find("table+table");
@@ -159,7 +163,11 @@
 
       pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"], this._clickPickerButton.bind(this, picker));
       pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this, picker, toggleState));
-      calendarCaption.on(CLICK_EVENT_TYPE, toggleState);
+      calendarCaption.on(CLICK_EVENT_TYPE, toggleState); // prevent input from loosing the focus outline
+
+      pickerBody.on(CLICK_EVENT_TYPE, function () {
+        return false;
+      });
       this.on(CLICK_EVENT_TYPE, this._focusPicker.bind(this, picker, toggleState));
       resetValue(); // present initial value
       // display calendar for autofocused elements
@@ -407,8 +415,7 @@
   });
   DOM.extend("dateinput-picker", {
     constructor: function constructor() {
-      var object = DOM.create("<object type='text/html' width='100%' height='100%'>");
-      object.on("load", ["target"], this._loadObject.bind(this)); // non-IE: must be BEFORE the element added to the document
+      var object = DOM.create("<object type='text/html' width='100%' height='100%'>"); // non-IE: must be BEFORE the element added to the document
 
       if (!IE) {
         object.set("data", "about:blank");
@@ -420,17 +427,6 @@
       if (IE) {
         object.set("data", "about:blank");
       }
-    },
-    _loadObject: function _loadObject(object) {
-      var pickerRoot = DOM.constructor(object.get("contentDocument"));
-      var pickerBody = pickerRoot.find("body"); // init picker widget content
-
-      pickerBody.set(PICKER_BODY_HTML); // prevent input from loosing the focus outline
-
-      pickerBody.on(CLICK_EVENT_TYPE, function () {
-        return false;
-      });
-      this.fire("ready", pickerRoot);
     }
   });
 })(window.DOM, 32, 9, 13, 27, 8, 46, 17);
