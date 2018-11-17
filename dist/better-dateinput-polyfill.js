@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.0.1 Fri, 16 Nov 2018 14:02:06 GMT
+ * @version 3.0.2 Sat, 17 Nov 2018 10:13:37 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2018 Maksim Chemerisuk
  * @license MIT
@@ -20,6 +20,12 @@
     }
 
     return false;
+  }();
+
+  var TYPE_SUPPORTED = function () {
+    // use a stronger type support detection that handles old WebKit browsers:
+    // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
+    return DOM.create("<input type='date'>").value("_").value() !== "_";
   }();
 
   var HTML = DOM.get("documentElement"),
@@ -86,7 +92,6 @@
     return date.toUTCString().split(" ").slice(2, 4).join(" ");
   }
 
-  var PICKER_TEMPLATE = DOM.create('<dateinput-picker tabindex="-1"></dateinput-picker>');
   var PICKER_BODY_HTML = "<style>body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:2.5rem;text-align:center;cursor:default;user-select:none;margin:0;overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}a{width:3rem;height:2.5rem;position:absolute;text-decoration:none;color:inherit}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}td,th{padding:0}thead{background:#d3d3d3;font-size:smaller;font-weight:700}[aria-disabled=true],[aria-selected=false]{color:graytext}[aria-selected=true]{box-shadow:inset 0 0 0 1px graytext}[aria-disabled=true],[aria-selected=true],a:hover,td:hover{background-color:#f5f5f5}table+table{line-height:3.75rem;background:#fff;position:absolute;top:2.5em;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}</style><a style=\"left:0\">&#x25C4;</a> <a style=\"right:0\">&#x25BA;</a> <b></b><table><thead>" + repeat(7, function (_, i) {
     return "<th>" + localeWeekday(i);
   }) + "</thead><tbody>" + repeat(7, "<tr>" + repeat(7, "<td>") + "</tr>") + "</tbody></table><table><tbody>" + repeat(3, function (_, i) {
@@ -106,46 +111,29 @@
       }).reduce(function (a, b) {
         return a + b;
       });
-      var picker = PICKER_TEMPLATE.clone(true);
-      var object = DOM.create("<object>")[0];
-      object.type = "text/html";
-      object.width = "100%";
-      object.height = "100%";
-      object.onload = this._initPicker.bind(this, object, picker); // non-IE: must be BEFORE the element added to the document
-
-      if (!IE) {
-        object.data = "about:blank";
-      }
-
+      var picker = DOM.create("<dateinput-picker tabindex='-1'>");
+      picker.on("load", {
+        capture: true
+      }, ["target"], this._initPicker.bind(this, picker));
       picker.css("z-index", 1 + (this.css("z-index") | 0));
-      this.before(picker.append(DOM.constructor(object)).hide()); // IE: must be AFTER the element added to the document
-
-      if (IE) {
-        object.data = "about:blank";
-      }
+      this.before(picker.hide());
     },
     _isNative: function _isNative() {
       var polyfillType = this.get("data-polyfill"),
           deviceType = "orientation" in window ? "mobile" : "desktop";
       if (polyfillType === "none") return true;
 
-      if (!polyfillType || polyfillType !== deviceType && polyfillType !== "all") {
-        // use a stronger type support detection that handles old WebKit browsers:
-        // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
-        if (this[0].type === "date") return true; // persist current value to restore it later
-
-        this.set("defaultValue", this.value()); // if browser allows invalid value then it doesn't support the feature
-
-        return this.value("_").value() !== "_";
-      } else {
-        // remove native control
+      if (polyfillType && (polyfillType === deviceType || polyfillType === "all")) {
+        // remove native browser implementation
         this.set("type", "text"); // force applying the polyfill
 
         return false;
       }
+
+      return TYPE_SUPPORTED;
     },
-    _initPicker: function _initPicker(object, picker) {
-      var pickerRoot = DOM.constructor(object.contentDocument);
+    _initPicker: function _initPicker(picker, object) {
+      var pickerRoot = DOM.constructor(object.get("contentDocument"));
       var pickerBody = pickerRoot.find("body");
       pickerBody.set(PICKER_BODY_HTML);
       var calendarCaption = pickerBody.find("b");
@@ -430,6 +418,22 @@
       toggleState(false); // always recalculate picker top position
 
       picker.css("margin-top", marginTop).show();
+    }
+  });
+  DOM.extend("dateinput-picker", {
+    constructor: function constructor() {
+      var object = DOM.create("<object type='text/html' width='100%' height='100%'>"); // non-IE: must be BEFORE the element added to the document
+
+      if (!IE) {
+        object.set("data", "about:blank");
+      } // add object element to the document
+
+
+      this.append(object); // IE: must be AFTER the element added to the document
+
+      if (IE) {
+        object.set("data", "about:blank");
+      }
     }
   });
 })(window.DOM, 32, 9, 13, 27, 8, 46, 17);
