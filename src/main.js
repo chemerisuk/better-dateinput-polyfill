@@ -159,8 +159,8 @@ table+table[aria-hidden=true] {
             this._svgTextOptions.dy = ["padding-top", "border-top-width"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b) / 2;
 
             const picker = DOM.create("<dateinput-picker tabindex='-1'>");
-            // register 'ready' event handler
-            picker.on("load", {capture: true, once: true}, ["target"], this._initPicker.bind(this, picker));
+            // used internally to notify when the picker is ready
+            picker._readyCallback = this._initPicker.bind(this, picker);
             // disable text selection in IE and add picker to the document
             this.set("unselectable", "on").before(picker.hide());
         },
@@ -179,11 +179,7 @@ table+table[aria-hidden=true] {
 
             return TYPE_SUPPORTED;
         },
-        _initPicker(picker, object) {
-            const pickerRoot = DOM.constructor(object.get("contentDocument"));
-            const pickerBody = pickerRoot.find("body");
-            pickerBody.set(PICKER_BODY_HTML);
-
+        _initPicker(picker, pickerBody) {
             const calendarCaption = pickerBody.find("b");
             const calenderDays = pickerBody.find("table");
             const calendarMonths = pickerBody.find("table+table");
@@ -486,12 +482,24 @@ table+table[aria-hidden=true] {
             if (!IE) {
                 object.set("data", "about:blank");
             }
+            // load content when <object> is ready
+            this.on("load", {capture: true, once: true}, ["target"], this._loadContent.bind(this));
             // add object element to the document
             this.append(object);
             // IE: must be AFTER the element added to the document
             if (IE) {
                 object.set("data", "about:blank");
             }
+        },
+        _loadContent(object) {
+            const pickerRoot = DOM.constructor(object.get("contentDocument"));
+            const pickerBody = pickerRoot.find("body");
+            // initialize picker content
+            pickerBody.set(PICKER_BODY_HTML);
+            // trigger callback
+            this._readyCallback(pickerBody);
+            // cleanup function reference
+            delete this._readyCallback;
         }
     });
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17));
