@@ -9,3 +9,4 @@ cache:
 before_install:
   - npm install better-dom@latest
   - npm install -g gulp
+install: npm install
