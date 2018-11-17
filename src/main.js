@@ -202,6 +202,13 @@ table+table[aria-hidden=true] {
                 set: this._setValue.bind(this, valueDescriptor.set, updateValue)
             });
 
+            Object.defineProperty(this[0], "valueAsDate", {
+                configurable: false,
+                enumerable: true,
+                get: this._getValueAsDate.bind(this),
+                set: this._setValueAsDate.bind(this)
+            });
+
             // sync picker visibility on focus/blur
             this.on("focus", this._focusPicker.bind(this, picker, toggleState));
             this.on("blur", this._blurPicker.bind(this, picker));
@@ -254,6 +261,27 @@ table+table[aria-hidden=true] {
             setter.call(this[0], value);
 
             updateValue();
+        },
+        _getValueAsDate() {
+            var value = this.value();
+            var parts = value.split(/\D/);
+
+            var dateValue = new Date(parts[0], --parts[1], parts[2]);
+
+            if (!isNaN(dateValue.getTime())) {
+                return dateValue;
+            }
+
+            return null;
+        },
+        _setValueAsDate(dateValue) {
+            if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
+                var day = ("0" + dateValue.getDate()).slice(-2),
+                    month = ("0" + (dateValue.getMonth() + 1)).slice(-2),
+                    year = dateValue.getFullYear();
+
+                this.value = [year, month, day].join('-');
+            }
         },
         _invalidatePicker(calendarMonths, calenderDays, expanded, dateValue) {
             if (!dateValue) {
