@@ -159,13 +159,10 @@ table+table[aria-hidden=true] {
             this._svgTextOptions.dy = ["padding-top", "border-top-width"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b) / 2;
 
             const picker = DOM.create("<dateinput-picker tabindex='-1'>");
-
-            picker.on("load", {capture: true}, ["target"], this._initPicker.bind(this, picker));
-            picker.css("z-index", 1 + (this.css("z-index") | 0));
-
-            this.before(picker.hide());
-            // hide selection on IE
-            this.set("unselectable", "on");
+            // register 'ready' event handler
+            picker.on("load", {capture: true, once: true}, ["target"], this._initPicker.bind(this, picker));
+            // disable text selection in IE and add picker to the document
+            this.set("unselectable", "on").before(picker.hide());
         },
         _isNative() {
             var polyfillType = this.get("data-polyfill"),
