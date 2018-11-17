@@ -11,6 +11,11 @@
         }
         return false;
     }());
+    const TYPE_SUPPORTED = (function() {
+        // use a stronger type support detection that handles old WebKit browsers:
+        // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
+        return DOM.create("<input type='date'>").value("_").value() !== "_";
+    }());
 
     var HTML = DOM.get("documentElement"),
         ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
@@ -54,9 +59,6 @@
         }
         return date.toUTCString().split(" ").slice(2, 4).join(" ");
     }
-
-    const PICKER_TEMPLATE = DOM.create(html`
-<dateinput-picker tabindex="-1"></dateinput-picker>`);
 
     const PICKER_BODY_HTML = html`
 <style>
@@ -156,7 +158,7 @@ table+table[aria-hidden=true] {
             this._svgTextFont = this.css("font");
             this._svgTextOffset = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
 
-            const picker = PICKER_TEMPLATE.clone(true);
+            const picker = DOM.create("<dateinput-picker>");
             const object = DOM.create("<object>")[0];
             object.type = "text/html";
             object.width = "100%";
@@ -167,6 +169,7 @@ table+table[aria-hidden=true] {
                 object.data = "about:blank";
             }
 
+            picker.set("tabindex", -1);
             picker.css("z-index", 1 + (this.css("z-index") | 0));
 
             this.before(picker.append(DOM.constructor(object)).hide());
@@ -181,20 +184,14 @@ table+table[aria-hidden=true] {
 
             if (polyfillType === "none") return true;
 
-            if (!polyfillType || polyfillType !== deviceType && polyfillType !== "all") {
-                // use a stronger type support detection that handles old WebKit browsers:
-                // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
-                if (this[0].type === "date") return true;
-                // persist current value to restore it later
-                this.set("defaultValue", this.value());
-                // if browser allows invalid value then it doesn't support the feature
-                return this.value("_").value() !== "_";
-            } else {
-                // remove native control
+            if (polyfillType && (polyfillType === deviceType || polyfillType === "all")) {
+                // remove native browser implementation
                 this.set("type", "text");
                 // force applying the polyfill
                 return false;
             }
+
+            return TYPE_SUPPORTED;
         },
         _initPicker(object, picker) {
             const pickerRoot = DOM.constructor(object.contentDocument);
