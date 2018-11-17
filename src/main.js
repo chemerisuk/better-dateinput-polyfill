@@ -110,11 +110,11 @@ thead {
 }
 
 [aria-selected=false], [aria-disabled=true] {
-    color: graytext;
+    color: gray;
 }
 
 [aria-selected=true] {
-    box-shadow: inset 0 0 0 1px graytext;
+    box-shadow: inset 0 0 0 1px gray;
 }
 
 a:hover,
