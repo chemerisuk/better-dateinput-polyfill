@@ -154,10 +154,9 @@ table+table[aria-hidden=true] {
         constructor() {
             if (this._isNative()) return false;
 
-            this._svgTextColor = this.css("color");
-            this._svgTextFont = this.css("font");
-            this._svgTextOffsetX = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
-            this._svgTextOffsetY = ["padding-top", "border-top-width"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b) / 2;
+            this._svgTextOptions = this.css(["color", "font", "padding-left", "border-left-width", "text-indent", "padding-top", "border-top-width"]);
+            this._svgTextOptions.dx = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b);
+            this._svgTextOptions.dy = ["padding-top", "border-top-width"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b) / 2;
 
             const picker = DOM.create("<dateinput-picker tabindex='-1'>");
 
@@ -356,7 +355,7 @@ table+table[aria-hidden=true] {
 
             const backgroundText = html`
 <svg xmlns="http://www.w3.org/2000/svg">
-    <text x="${this._svgTextOffsetX}" y="50%" dy="${this._svgTextOffsetY}" fill="${this._svgTextColor}" style="font:${this._svgTextFont}">${displayValue}</text>
+    <text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayValue}</text>
 </svg>`;
 
             this.css("background-image", `url('data:image/svg+xml,${encodeURIComponent(backgroundText)}')`);
