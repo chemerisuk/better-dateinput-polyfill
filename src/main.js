@@ -156,7 +156,8 @@ table+table[aria-hidden=true] {
 
             this._svgTextColor = this.css("color");
             this._svgTextFont = this.css("font");
-            this._svgTextOffset = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
+            this._svgTextOffsetX = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
+            this._svgTextOffsetY = ["padding-top", "border-top-width"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b) / 2;
 
             const picker = DOM.create("<dateinput-picker tabindex='-1'>");
 
@@ -164,6 +165,8 @@ table+table[aria-hidden=true] {
             picker.css("z-index", 1 + (this.css("z-index") | 0));
 
             this.before(picker.hide());
+            // hide selection on IE
+            this.set("unselectable", "on");
         },
         _isNative() {
             var polyfillType = this.get("data-polyfill"),
@@ -339,25 +342,24 @@ table+table[aria-hidden=true] {
             }
         },
         _syncValue(picker, invalidatePicker, propName) {
-            const valueParts = this.get(propName).split("-").map(parseFloat);
+            var displayValue = this.get(propName);
+            const valueParts = displayValue.split("-").map(parseFloat);
             const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
-            var formattedValue = "";
             if (!isNaN(dateValue.getTime())) {
-                try {
-                    formattedValue = dateValue.toLocaleDateString(HTML.lang, JSON.parse(this.get("data-format")));
-                } catch (err) {
-                    formattedValue = dateValue.toLocaleDateString();
+                if (INTL_SUPPORTED) {
+                    const formatOptions = this.get("data-format");
+                    try {
+                        displayValue = dateValue.toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
+                    } catch (err) {}
                 }
             }
 
-            const svgContent = html`
+            const backgroundText = html`
 <svg xmlns="http://www.w3.org/2000/svg">
-    <text dominant-baseline="central" x="${this._svgTextOffset}" y="50%" style="font:${this._svgTextFont}">${formattedValue}</text>
+    <text x="${this._svgTextOffsetX}" y="50%" dy="${this._svgTextOffsetY}" fill="${this._svgTextColor}" style="font:${this._svgTextFont}">${displayValue}</text>
 </svg>`;
 
-            // FIXME: fill="${this._svgTextColor}" does not work properly
-
-            this.css("background-image", `url(data:image/svg+xml,${encodeURIComponent(svgContent)})`);
+            this.css("background-image", `url('data:image/svg+xml,${encodeURIComponent(backgroundText)}')`);
             // update picker state
             invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
         },
