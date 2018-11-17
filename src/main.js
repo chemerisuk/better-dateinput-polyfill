@@ -158,25 +158,12 @@ table+table[aria-hidden=true] {
             this._svgTextFont = this.css("font");
             this._svgTextOffset = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this.css(p))).reduce((a, b) => a + b);
 
-            const picker = DOM.create("<dateinput-picker>");
-            const object = DOM.create("<object>")[0];
-            object.type = "text/html";
-            object.width = "100%";
-            object.height = "100%";
-            object.onload = this._initPicker.bind(this, object, picker);
-            // non-IE: must be BEFORE the element added to the document
-            if (!IE) {
-                object.data = "about:blank";
-            }
+            const picker = DOM.create("<dateinput-picker tabindex='-1'>");
 
-            picker.set("tabindex", -1);
+            picker.on("load", {capture: true}, ["target"], this._initPicker.bind(this, picker));
             picker.css("z-index", 1 + (this.css("z-index") | 0));
 
-            this.before(picker.append(DOM.constructor(object)).hide());
-            // IE: must be AFTER the element added to the document
-            if (IE) {
-                object.data = "about:blank";
-            }
+            this.before(picker.hide());
         },
         _isNative() {
             var polyfillType = this.get("data-polyfill"),
@@ -193,8 +180,8 @@ table+table[aria-hidden=true] {
 
             return TYPE_SUPPORTED;
         },
-        _initPicker(object, picker) {
-            const pickerRoot = DOM.constructor(object.contentDocument);
+        _initPicker(picker, object) {
+            const pickerRoot = DOM.constructor(object.get("contentDocument"));
             const pickerBody = pickerRoot.find("body");
             pickerBody.set(PICKER_BODY_HTML);
 
@@ -491,6 +478,22 @@ table+table[aria-hidden=true] {
             toggleState(false);
             // always recalculate picker top position
             picker.css("margin-top", marginTop).show();
+        }
+    });
+
+    DOM.extend("dateinput-picker", {
+        constructor() {
+            const object = DOM.create("<object type='text/html' width='100%' height='100%'>");
+            // non-IE: must be BEFORE the element added to the document
+            if (!IE) {
+                object.set("data", "about:blank");
+            }
+            // add object element to the document
+            this.append(object);
+            // IE: must be AFTER the element added to the document
+            if (IE) {
+                object.set("data", "about:blank");
+            }
         }
     });
 }(window.DOM, 32, 9, 13, 27, 8, 46, 17));
