@@ -100,8 +100,8 @@ DOM.extend("input[type=date]", {
         const picker = DOM.create("<dateinput-picker tabindex='-1'>");
         // used internally to notify when the picker is ready
         picker._readyCallback = this._initPicker.bind(this, picker);
-        // disable text selection in IE and add picker to the document
-        this.set("unselectable", "on").before(picker.hide());
+        // add <dateinput-picker> to the document
+        this.before(picker.hide());
     },
     _isNative() {
         var polyfillType = this.get("data-polyfill"),
