@@ -1,6 +1,6 @@
 :root {
     --cell-height: 2.5rem;
-    --month-cell-height: calc(var(--cell-height) * 1.5);
+    --month-cell-height: 3.75rem;
 }
 
 dateinput-picker {
