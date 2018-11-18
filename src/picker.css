@@ -1,6 +1,11 @@
+:root {
+    --cell-height: 2.5rem;
+    --month-cell-height: calc(var(--cell-height) * 1.5);
+}
+
 body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    line-height: 2.5rem;
+    line-height: var(--cell-height);
     text-align: center;
 
     cursor: default;
@@ -15,7 +20,7 @@ body {
 
 a {
     width: 3rem;
-    height: 2.5rem;
+    height: var(--cell-height);
     position: absolute;
     text-decoration: none;
     color: inherit;
@@ -32,7 +37,7 @@ table {
     border-spacing: 0;
     border-collapse: collapse;
     text-align: center;
-    line-height: 2.5rem;
+    line-height: var(--cell-height);
 }
 
 td, th {
@@ -61,10 +66,10 @@ td:hover,
 }
 
 table+table {
-    line-height: 3.75rem; /* var(--cell-height) * 1.5 */
+    line-height: var(--month-cell-height);
     background: white;
     position: absolute;
-    top: 2.5em;
+    top: var(--cell-height);
     left: 0;
     opacity: 1;
     transition: 0.1s ease-out;
