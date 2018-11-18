@@ -3,13 +3,6 @@
 import MAIN_CSS from "./main.css";
 import PICKER_CSS from "./picker.css";
 
-const VK_SPACE = 32;
-const VK_TAB = 9;
-const VK_ENTER = 13;
-const VK_ESCAPE = 27;
-const VK_BACKSPACE = 8;
-const VK_DELETE = 46;
-const VK_CONTROL = 17;
 const CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
 const IE = "ScriptEngineMajorVersion" in window;
 
@@ -76,12 +69,13 @@ const PICKER_BODY_HTML = html`
 <a style="right:0">&#x25BA;</a>
 <b></b>
 <table>
-<thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
-<tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
+    <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
+    <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
 </table>
 <table>
-<tbody>${repeat(3, (_, i) => "<tr>" + repeat(4, (_, j) => "<td>" + localeMonth(i * 4 + j)))}</tbody>
-</table>`;
+    <tbody>${repeat(3, (_, i) => "<tr>" + repeat(4, (_, j) => "<td>" + localeMonth(i * 4 + j)))}</tbody>
+</table>
+`;
 
 DOM.extend("input[type=date]", {
     constructor() {
@@ -191,30 +185,19 @@ DOM.extend("input[type=date]", {
         updateValue();
     },
     _getValueAsDate() {
-        var value = this.value();
-        var parts = value.split(/\D/);
-        var dateValue = new Date(parts[0], --parts[1], parts[2]);
-        if (!isNaN(dateValue.getTime())) {
-            return dateValue;
-        }
-        return null;
+        const valueParts = this.value().split("-");
+        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
+
+        return isNaN(dateValue.getTime()) ? null : dateValue;
     },
     _setValueAsDate(dateValue) {
         if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
-            var day = ("0" + dateValue.getDate()).slice(-2),
-                month = ("0" + (dateValue.getMonth() + 1)).slice(-2),
-                year = dateValue.getFullYear();
-            this.value = [year, month, day].join("-");
+            this.value(formatDateValue(dateValue));
         }
     },
     _invalidatePicker(calendarMonths, calenderDays, expanded, dateValue) {
-        if (!dateValue) {
-            const valueParts = this.value().split("-");
-            dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
-        }
-
-        if (isNaN(dateValue.getTime())) {
-            dateValue = new Date();
+        if (!dateValue || isNaN(dateValue.getTime())) {
+            dateValue = this.get("valueAsDate") || new Date();
         }
 
         const target = expanded ? calendarMonths : calenderDays;
@@ -304,21 +287,18 @@ DOM.extend("input[type=date]", {
         }
 
         const backgroundText = html`
-<svg xmlns="http://www.w3.org/2000/svg">
-<text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayValue}</text>
-</svg>`;
+        <svg xmlns="http://www.w3.org/2000/svg">
+            <text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayValue}</text>
+        </svg>
+        `;
 
         this.css("background-image", `url('data:image/svg+xml,${encodeURIComponent(backgroundText)}')`);
         // update picker state
         invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
     },
     _clickPickerButton(picker, target) {
-        const valueParts = this.value().split("-");
-        var targetDate = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
-
-        if (isNaN(targetDate.getTime())) targetDate = new Date();
-
-        var sign = target.next("a")[0] ? -1 : 1;
+        const sign = target.next("a")[0] ? -1 : 1;
+        const targetDate = this.get("valueAsDate") || new Date();
 
         if (picker.get("aria-expanded") === "true") {
             targetDate.setFullYear(targetDate.getFullYear() + sign);
@@ -361,12 +341,12 @@ DOM.extend("input[type=date]", {
         invalidatePicker(force);
     },
     _keydownPicker(picker, toggleState, which) {
-        if (which === VK_ENTER && picker.get("aria-hidden") === "true") {
+        if (which === 13 && picker.get("aria-hidden") === "true") {
             // ENTER key should submit form if calendar is hidden
             return true;
         }
 
-        if (which === VK_SPACE) {
+        if (which === 32) {
             // SPACE key toggles calendar visibility
             if (!this.get("readonly")) {
                 toggleState(false);
@@ -377,18 +357,15 @@ DOM.extend("input[type=date]", {
                     picker.hide();
                 }
             }
-        } else if (which === VK_ESCAPE || which === VK_TAB || which === VK_ENTER) {
+        } else if (which === 27 || which === 9 || which === 13) {
             picker.hide(); // ESC, TAB or ENTER keys hide calendar
-        } else if (which === VK_BACKSPACE || which === VK_DELETE) {
+        } else if (which === 8 || which === 46) {
             this.value("").fire("change"); // BACKSPACE, DELETE clear value
-        } else if (which === VK_CONTROL) {
+        } else if (which === 17) {
             // CONTROL toggles calendar mode
             toggleState();
         } else {
-            const valueParts = this.value().split("-");
-            var delta, currentDate = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
-
-            if (isNaN(currentDate.getTime())) currentDate = new Date();
+            var delta;
 
             if (which === 74 || which === 40) { delta = 7; }
             else if (which === 75 || which === 38) { delta = -7; }
@@ -396,7 +373,9 @@ DOM.extend("input[type=date]", {
             else if (which === 72 || which === 37) { delta = -1; }
 
             if (delta) {
+                const currentDate = this.get("valueAsDate") || new Date();
                 const expanded = picker.get("aria-expanded") === "true";
+
                 if (expanded && (which === 40 || which === 38)) {
                     currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 4 : -4));
                 } else if (expanded && (which === 37 || which === 39)) {
@@ -410,7 +389,7 @@ DOM.extend("input[type=date]", {
         }
         // prevent default action except if it was TAB so
         // do not allow to change the value manually
-        return which === VK_TAB;
+        return which === 9;
     },
     _blurPicker(picker) {
         picker.hide();
