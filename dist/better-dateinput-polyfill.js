@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.1.1 Sun, 18 Nov 2018 12:33:26 GMT
+ * @version 3.1.2 Sun, 18 Nov 2018 13:15:41 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2018 Maksim Chemerisuk
  * @license MIT
@@ -10,8 +10,8 @@
 (function () {
   "use strict";
 
-  var MAIN_CSS = "dateinput-picker{display:inline-block;vertical-align:bottom}dateinput-picker>object{width:21rem;max-height:calc(2.5rem*8);box-shadow:0 0 15px gray;background:white;position:absolute;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}dateinput-picker[aria-hidden=true]>object{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);visibility:hidden;height:0}dateinput-picker[aria-expanded=true]>object{max-height:calc(2.5rem + calc(2.5rem*1.5)*3)}dateinput-picker+input{color:transparent!important;caret-color:transparent!important}dateinput-picker+input::selection{background:transparent}dateinput-picker+input::-moz-selection{background:transparent}";
-  var PICKER_CSS = "body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;line-height:2.5rem;text-align:center;cursor:default;-webkit-user-select:none;-ms-user-select:none;user-select:none;margin:0;overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}a{width:3rem;height:2.5rem;position:absolute;text-decoration:none;color:inherit}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}td,th{padding:0}thead{background:lightgray;font-size:smaller;font-weight:700}[aria-selected=false],[aria-disabled=true]{color:gray}[aria-selected=true]{box-shadow:inset 0 0 0 1px gray}a:hover,td:hover,[aria-disabled=true],[aria-selected=true]{background-color:whitesmoke}table+table{line-height:calc(2.5rem*1.5);background:white;position:absolute;top:2.5rem;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}";
+  var MAIN_CSS = "dateinput-picker{display:inline-block;vertical-align:bottom}dateinput-picker>object{width:21rem;max-height:calc(2.5rem*8);box-shadow:0 0 15px gray;background:white;position:absolute;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}dateinput-picker[aria-hidden=true]>object{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);visibility:hidden;height:0}dateinput-picker[aria-expanded=true]>object{max-height:calc(2.5rem + 3.75rem*3)}dateinput-picker+input{color:transparent!important;caret-color:transparent!important}dateinput-picker+input::selection{background:transparent}dateinput-picker+input::-moz-selection{background:transparent}";
+  var PICKER_CSS = "body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;line-height:2.5rem;text-align:center;cursor:default;-webkit-user-select:none;-ms-user-select:none;user-select:none;margin:0;overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}a{width:3rem;height:2.5rem;position:absolute;text-decoration:none;color:inherit}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}td,th{padding:0}thead{background:lightgray;font-size:smaller;font-weight:700}[aria-selected=false],[aria-disabled=true]{color:gray}[aria-selected=true]{box-shadow:inset 0 0 0 1px gray}a:hover,td:hover,[aria-disabled=true],[aria-selected=true]{background-color:whitesmoke}table+table{line-height:3.75rem;background:white;position:absolute;top:2.5rem;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}";
   var CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
   var IE = "ScriptEngineMajorVersion" in window;
 
@@ -39,9 +39,8 @@
     return [date.getFullYear(), ("0" + (date.getMonth() + 1)).slice(-2), ("0" + date.getDate()).slice(-2)].join("-");
   },
       parseLocalDate = function parseLocalDate(value) {
-    var valueParts = value.split("-"); // set hours to '12' to fix Safari bug in Date#toLocaleString
-
-    var dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2], 12);
+    var valueParts = value.split("-");
+    var dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
     return isNaN(dateValue.getTime()) ? null : dateValue;
   };
 
@@ -82,7 +81,8 @@
   }
 
   function localeMonthYear(month, year) {
-    var date = new Date(year, month);
+    // set hours to '12' to fix Safari bug in Date#toLocaleString
+    var date = new Date(year, month, 12);
 
     if (INTL_SUPPORTED) {
       try {
@@ -121,9 +121,9 @@
       }) / 2;
       var picker = DOM.create("<dateinput-picker tabindex='-1'>"); // used internally to notify when the picker is ready
 
-      picker._readyCallback = this._initPicker.bind(this, picker); // disable text selection in IE and add picker to the document
+      picker._readyCallback = this._initPicker.bind(this, picker); // add <dateinput-picker> to the document
 
-      this.set("unselectable", "on").before(picker.hide());
+      this.before(picker.hide());
     },
     _isNative: function _isNative() {
       var polyfillType = this.get("data-polyfill"),
@@ -305,13 +305,13 @@
           var formatOptions = this.get("data-format");
 
           try {
-            displayText = dateValue.toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
+            // set hours to '12' to fix Safari bug in Date#toLocaleString
+            displayText = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12).toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
           } catch (err) {}
         }
       }
 
-      var backgroundText = "<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"" + this._svgTextOptions.dx + "\" y=\"50%\" dy=\"" + this._svgTextOptions.dy + "\" fill=\"" + this._svgTextOptions.color + "\" style=\"font:" + this._svgTextOptions.font + "\">" + displayText + "</text></svg>";
-      this.css("background-image", "url('data:image/svg+xml," + encodeURIComponent(backgroundText) + "')"); // update picker state
+      this.css("background-image", "url('data:image/svg+xml," + encodeURIComponent("<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"" + this._svgTextOptions.dx + "\" y=\"50%\" dy=\"" + this._svgTextOptions.dy + "\" fill=\"" + this._svgTextOptions.color + "\" style=\"font:" + this._svgTextOptions.font + "\">" + displayText + "</text></svg>") + "')"); // update picker state
 
       invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
     },
