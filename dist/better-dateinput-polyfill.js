@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.1.0 Sun, 18 Nov 2018 08:05:59 GMT
+ * @version 3.1.1 Sun, 18 Nov 2018 12:33:26 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2018 Maksim Chemerisuk
  * @license MIT
@@ -36,11 +36,12 @@
     return HTML.lang === "en-US" ? pos : neg;
   },
       formatLocalDate = function formatLocalDate(date) {
-    return [date.getFullYear(), ("00" + (date.getMonth() + 1)).slice(-2), ("00" + date.getDate()).slice(-2)].join("-");
+    return [date.getFullYear(), ("0" + (date.getMonth() + 1)).slice(-2), ("0" + date.getDate()).slice(-2)].join("-");
   },
       parseLocalDate = function parseLocalDate(value) {
-    var valueParts = value.split("-");
-    var dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
+    var valueParts = value.split("-"); // set hours to '12' to fix Safari bug in Date#toLocaleString
+
+    var dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2], 12);
     return isNaN(dateValue.getTime()) ? null : dateValue;
   };
 
