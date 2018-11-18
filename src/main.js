@@ -23,8 +23,13 @@ const TYPE_SUPPORTED = (function() {
 
 var HTML = DOM.get("documentElement"),
     ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
-    formatDateValue = (date) => [date.getFullYear(), ("00" + (date.getMonth() + 1)).slice(-2), ("00" + date.getDate()).slice(-2)].join("-"),
-    readDateRange = (el) => ["min", "max"].map((x) => new Date(el.get(x) || ""));
+    formatLocalDate = (date) => [date.getFullYear(), ("00" + (date.getMonth() + 1)).slice(-2), ("00" + date.getDate()).slice(-2)].join("-"),
+    parseLocalDate = (value) => {
+        const valueParts = value.split("-");
+        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
+
+        return isNaN(dateValue.getTime()) ? null : dateValue;
+    };
 
 function repeat(times, fn) {
     if (typeof fn === "string") {
@@ -168,16 +173,19 @@ DOM.extend("input[type=date]", {
         }
     },
     _setValue(setter, updateValue, value) {
-        const valueParts = value.split("-");
-        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
-        const range = readDateRange(this);
+        const dateValue = parseLocalDate(value);
 
-        if (dateValue < range[0]) {
-            value = formatDateValue(range[0]);
-        } else if (dateValue > range[1]) {
-            value = formatDateValue(range[1]);
-        } else if (isNaN(dateValue.getTime())) {
+        if (!dateValue) {
             value = "";
+        } else {
+            const min = parseLocalDate(this.get("min")) || Number.MIN_VALUE;
+            const max = parseLocalDate(this.get("max")) || Number.MAX_VALUE;
+
+            if (dateValue < min) {
+                value = formatLocalDate(min);
+            } else if (dateValue > max) {
+                value = formatLocalDate(max);
+            }
         }
 
         setter.call(this[0], value);
@@ -185,14 +193,11 @@ DOM.extend("input[type=date]", {
         updateValue();
     },
     _getValueAsDate() {
-        const valueParts = this.value().split("-");
-        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
-
-        return isNaN(dateValue.getTime()) ? null : dateValue;
+        return parseLocalDate(this.value());
     },
     _setValueAsDate(dateValue) {
         if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
-            this.value(formatDateValue(dateValue));
+            this.value(formatLocalDate(dateValue));
         }
     },
     _invalidatePicker(calendarMonths, calenderDays, expanded, dateValue) {
@@ -214,7 +219,8 @@ DOM.extend("input[type=date]", {
         const month = dateValue.getMonth();
         const date = dateValue.getDate();
         const year = dateValue.getFullYear();
-        const range = readDateRange(this);
+        const min = parseLocalDate(this.get("min")) || Number.MIN_VALUE;
+        const max = parseLocalDate(this.get("max")) || Number.MAX_VALUE;
         const iterDate = new Date(year, month, 1);
         // move to beginning of the first week in current month
         iterDate.setDate(1 - iterDate.getDay() - ampm(1, 0));
@@ -228,7 +234,7 @@ DOM.extend("input[type=date]", {
 
             if (year !== iterDate.getFullYear()) mDiff *= -1;
 
-            if (iterDate < range[0] || iterDate > range[1]) {
+            if (iterDate < min || iterDate > max) {
                 disabledValue = "true";
             } else if (mDiff > 0 || mDiff < 0) {
                 selectedValue = "false";
@@ -245,7 +251,8 @@ DOM.extend("input[type=date]", {
     _invalidateMonths(calendarMonths, dateValue) {
         const month = dateValue.getMonth();
         const year = dateValue.getFullYear();
-        const range = readDateRange(this);
+        const min = parseLocalDate(this.get("min")) || Number.MIN_VALUE;
+        const max = parseLocalDate(this.get("max")) || Number.MAX_VALUE;
         const iterDate = new Date(year, month, 1);
 
         calendarMonths.findAll("td").forEach((day, index) => {
@@ -254,7 +261,7 @@ DOM.extend("input[type=date]", {
             var mDiff = month - iterDate.getMonth(),
                 selectedValue = null;
 
-            if (iterDate < range[0] || iterDate > range[1]) {
+            if (iterDate < min || iterDate > max) {
                 selectedValue = "false";
             } else if (!mDiff) {
                 selectedValue = "true";
@@ -274,21 +281,20 @@ DOM.extend("input[type=date]", {
         }
     },
     _syncValue(picker, invalidatePicker, propName) {
-        var displayValue = this.get(propName);
-        const valueParts = displayValue.split("-");
-        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
-        if (!isNaN(dateValue.getTime())) {
+        var displayText = this.get(propName);
+        const dateValue = parseLocalDate(displayText);
+        if (dateValue) {
             if (INTL_SUPPORTED) {
                 const formatOptions = this.get("data-format");
                 try {
-                    displayValue = dateValue.toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
+                    displayText = dateValue.toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
                 } catch (err) {}
             }
         }
 
         const backgroundText = html`
         <svg xmlns="http://www.w3.org/2000/svg">
-            <text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayValue}</text>
+            <text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayText}</text>
         </svg>
         `;
 
@@ -306,7 +312,7 @@ DOM.extend("input[type=date]", {
             targetDate.setMonth(targetDate.getMonth() + sign);
         }
 
-        this.value(formatDateValue(targetDate)).fire("change");
+        this.value(formatLocalDate(targetDate)).fire("change");
     },
     _clickPickerDay(picker, toggleState, target) {
         var targetDate;
@@ -328,7 +334,7 @@ DOM.extend("input[type=date]", {
         }
 
         if (targetDate != null) {
-            this.value(formatDateValue(targetDate)).fire("change");
+            this.value(formatLocalDate(targetDate)).fire("change");
         }
     },
     _togglePicker(picker, invalidatePicker, force) {
@@ -384,7 +390,7 @@ DOM.extend("input[type=date]", {
                     currentDate.setDate(currentDate.getDate() + delta);
                 }
 
-                this.value(formatDateValue(currentDate)).fire("change");
+                this.value(formatLocalDate(currentDate)).fire("change");
             }
         }
         // prevent default action except if it was TAB so
