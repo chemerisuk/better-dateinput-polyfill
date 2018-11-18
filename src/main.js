@@ -32,8 +32,7 @@ var HTML = DOM.get("documentElement"),
     },
     parseLocalDate = (value) => {
         const valueParts = value.split("-");
-        // set hours to '12' to fix Safari bug in Date#toLocaleString
-        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2], 12);
+        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
 
         return isNaN(dateValue.getTime()) ? null : dateValue;
     };
@@ -67,7 +66,8 @@ function localeMonth(index) {
 }
 
 function localeMonthYear(month, year) {
-    var date = new Date(year, month);
+    // set hours to '12' to fix Safari bug in Date#toLocaleString
+    var date = new Date(year, month, 12);
     if (INTL_SUPPORTED) {
         try {
             return date.toLocaleDateString(HTML.lang, {month: "long", year: "numeric"});
@@ -294,18 +294,18 @@ DOM.extend("input[type=date]", {
             if (INTL_SUPPORTED) {
                 const formatOptions = this.get("data-format");
                 try {
-                    displayText = dateValue.toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
+                    // set hours to '12' to fix Safari bug in Date#toLocaleString
+                    displayText = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12)
+                        .toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
                 } catch (err) {}
             }
         }
 
-        const backgroundText = html`
+        this.css("background-image", `url('data:image/svg+xml,${encodeURIComponent(html`
         <svg xmlns="http://www.w3.org/2000/svg">
             <text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayText}</text>
         </svg>
-        `;
-
-        this.css("background-image", `url('data:image/svg+xml,${encodeURIComponent(backgroundText)}')`);
+        `)}')`);
         // update picker state
         invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
     },
