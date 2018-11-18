@@ -23,10 +23,17 @@ const TYPE_SUPPORTED = (function() {
 
 var HTML = DOM.get("documentElement"),
     ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
-    formatLocalDate = (date) => [date.getFullYear(), ("00" + (date.getMonth() + 1)).slice(-2), ("00" + date.getDate()).slice(-2)].join("-"),
+    formatLocalDate = (date) => {
+        return [
+            date.getFullYear(),
+            ("0" + (date.getMonth() + 1)).slice(-2),
+            ("0" + date.getDate()).slice(-2)
+        ].join("-");
+    },
     parseLocalDate = (value) => {
         const valueParts = value.split("-");
-        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
+        // set hours to '12' to fix Safari bug in Date#toLocaleString
+        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2], 12);
 
         return isNaN(dateValue.getTime()) ? null : dateValue;
     };
