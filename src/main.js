@@ -3,8 +3,9 @@
 import MAIN_CSS from "./main.css";
 import PICKER_CSS from "./picker.css";
 
-const CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
-const IE = "ScriptEngineMajorVersion" in window;
+const HTML = DOM.get("documentElement");
+const DEVICE_TYPE = "orientation" in window ? "mobile" : "desktop";
+const CLICK_EVENT_TYPE = DEVICE_TYPE === "mobile" ? "touchend" : "mousedown";
 
 const INTL_SUPPORTED = (function() {
     try {
@@ -21,21 +22,24 @@ const TYPE_SUPPORTED = (function() {
     return DOM.create("<input type='date'>").value("_").value() !== "_";
 }());
 
-var HTML = DOM.get("documentElement"),
-    ampm = (pos, neg) => HTML.lang === "en-US" ? pos : neg,
-    formatLocalDate = (date) => {
-        return [
-            date.getFullYear(),
-            ("0" + (date.getMonth() + 1)).slice(-2),
-            ("0" + date.getDate()).slice(-2)
-        ].join("-");
-    },
-    parseLocalDate = (value) => {
-        const valueParts = value.split("-");
-        const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
+function ampm(pos, neg) {
+    return HTML.lang === "en-US" ? pos : neg;
+}
 
-        return isNaN(dateValue.getTime()) ? null : dateValue;
-    };
+function formatLocalDate(date) {
+    return [
+        date.getFullYear(),
+        ("0" + (date.getMonth() + 1)).slice(-2),
+        ("0" + date.getDate()).slice(-2)
+    ].join("-");
+}
+
+function parseLocalDate(value) {
+    const valueParts = value.split("-");
+    const dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
+
+    return isNaN(dateValue.getTime()) ? null : dateValue;
+}
 
 function repeat(times, fn) {
     if (typeof fn === "string") {
@@ -91,7 +95,7 @@ const PICKER_BODY_HTML = html`
 
 DOM.extend("input[type=date]", {
     constructor() {
-        if (this._isNative()) return false;
+        if (this._isPolyfillEnabled()) return false;
 
         this._svgTextOptions = this.css(["color", "font", "padding-left", "border-left-width", "text-indent", "padding-top", "border-top-width"]);
         this._svgTextOptions.dx = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b);
@@ -103,13 +107,12 @@ DOM.extend("input[type=date]", {
         // add <dateinput-picker> to the document
         this.before(picker.hide());
     },
-    _isNative() {
-        var polyfillType = this.get("data-polyfill"),
-            deviceType = "orientation" in window ? "mobile" : "desktop";
+    _isPolyfillEnabled() {
+        const polyfillType = this.get("data-polyfill");
 
         if (polyfillType === "none") return true;
 
-        if (polyfillType && (polyfillType === deviceType || polyfillType === "all")) {
+        if (polyfillType && (polyfillType === DEVICE_TYPE || polyfillType === "all")) {
             // remove native browser implementation
             this.set("type", "text");
             // force applying the polyfill
@@ -426,6 +429,7 @@ DOM.extend("input[type=date]", {
 
 DOM.extend("dateinput-picker", {
     constructor() {
+        const IE = "ScriptEngineMajorVersion" in window;
         const object = DOM.create("<object type='text/html' width='100%' height='100%'>");
         // non-IE: must be BEFORE the element added to the document
         if (!IE) {

@@ -240,18 +240,18 @@ describe("better-dateinput-polyfill", function() {
     describe("data-polyfill", () => {
         it("skips when value is 'none'", () => {
             el.set("data-polyfill", "none");
-            expect(el._isNative()).toBe(true);
+            expect(el._isPolyfillEnabled()).toBe(true);
         });
 
         it("forces polyfill if value is 'all'", () => {
             el.set("data-polyfill", "all");
-            expect(el._isNative()).toBe(false);
+            expect(el._isPolyfillEnabled()).toBe(false);
             expect(el.get("type")).toBe("text");
         });
 
         it("supports desktop value", () => {
             el.set("data-polyfill", "desktop");
-            expect(el._isNative()).toBe(false);
+            expect(el._isPolyfillEnabled()).toBe(false);
             expect(el.get("type")).toBe("text");
         });
     });
