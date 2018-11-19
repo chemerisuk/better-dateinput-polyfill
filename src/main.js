@@ -125,10 +125,8 @@ DOM.extend("input[type=date]", {
         const calendarCaption = pickerBody.find("b");
         const calenderDays = pickerBody.find("table");
         const calendarMonths = pickerBody.find("table+table");
-        const invalidatePicker = this._invalidatePicker.bind(this, calendarMonths, calenderDays);
-        const resetValue = this._syncValue.bind(this, picker, invalidatePicker, "defaultValue");
-        const updateValue = this._syncValue.bind(this, picker, invalidatePicker, "value");
-        const toggleState = this._togglePicker.bind(this, picker, invalidatePicker);
+        const resetValue = this._syncValue.bind(this, picker, "defaultValue");
+        const updateValue = this._syncValue.bind(this, picker, "value");
 
         // patch value property for the input element
         const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
@@ -147,10 +145,11 @@ DOM.extend("input[type=date]", {
         });
 
         // sync picker visibility on focus/blur
-        this.on("focus", this._focusPicker.bind(this, picker, toggleState));
+        this.on("focus", this._focusPicker.bind(this, picker));
         this.on("blur", this._blurPicker.bind(this, picker));
         this.on("change", updateValue);
-        this.on("keydown", ["which"], this._keydownPicker.bind(this, picker, toggleState));
+        this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
+        this.on(CLICK_EVENT_TYPE, this._focusPicker.bind(this, picker));
 
         // form events do not trigger any state change
         this.closest("form").on("reset", resetValue);
@@ -167,13 +166,11 @@ DOM.extend("input[type=date]", {
         pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"],
             this._clickPickerButton.bind(this, picker));
         pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"],
-            this._clickPickerDay.bind(this, picker, toggleState));
-        calendarCaption.on(CLICK_EVENT_TYPE, toggleState);
-        // prevent input from loosing the focus outline
-        pickerBody.on(CLICK_EVENT_TYPE, () => false);
-
-        this.on(CLICK_EVENT_TYPE,
-            this._focusPicker.bind(this, picker, toggleState));
+            this._clickPickerDay.bind(this, picker));
+        calendarCaption.on(CLICK_EVENT_TYPE, () => {
+            picker.toggleState(picker.get("aria-expanded") !== "true");
+            picker.invalidateState(this.get("valueAsDate"));
+        });
 
         resetValue(); // present initial value
 
@@ -208,21 +205,6 @@ DOM.extend("input[type=date]", {
     _setValueAsDate(dateValue) {
         if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
             this.value(formatLocalDate(dateValue));
-        }
-    },
-    _invalidatePicker(calendarMonths, calenderDays, expanded, dateValue) {
-        if (!dateValue || isNaN(dateValue.getTime())) {
-            dateValue = this.get("valueAsDate") || new Date();
-        }
-
-        const target = expanded ? calendarMonths : calenderDays;
-        // refresh current picker
-        target.fire("picker:invalidate", dateValue);
-
-        if (expanded) {
-            calendarMonths.show();
-        } else {
-            calendarMonths.hide();
         }
     },
     _invalidateDays(calenderDays, dateValue) {
@@ -290,7 +272,7 @@ DOM.extend("input[type=date]", {
             calendarCaption.value(localeMonthYear(dateValue.getMonth(), year));
         }
     },
-    _syncValue(picker, invalidatePicker, propName) {
+    _syncValue(picker, propName) {
         var displayText = this.get(propName);
         const dateValue = parseLocalDate(displayText);
         if (dateValue) {
@@ -310,7 +292,7 @@ DOM.extend("input[type=date]", {
         </svg>
         `)}')`);
         // update picker state
-        invalidatePicker(picker.get("aria-expanded") === "true", dateValue);
+        picker.invalidateState(dateValue);
     },
     _clickPickerButton(picker, target) {
         const sign = target.next("a")[0] ? -1 : 1;
@@ -324,7 +306,7 @@ DOM.extend("input[type=date]", {
 
         this.value(formatLocalDate(targetDate)).fire("change");
     },
-    _clickPickerDay(picker, toggleState, target) {
+    _clickPickerDay(picker, target) {
         var targetDate;
 
         if (picker.get("aria-expanded") === "true") {
@@ -334,7 +316,7 @@ DOM.extend("input[type=date]", {
                 targetDate = new Date(target._ts);
             }
             // switch to date calendar mode
-            toggleState(false);
+            picker.toggleState(false);
         } else {
             if (!isNaN(target._ts)) {
                 targetDate = new Date(target._ts);
@@ -347,16 +329,7 @@ DOM.extend("input[type=date]", {
             this.value(formatLocalDate(targetDate)).fire("change");
         }
     },
-    _togglePicker(picker, invalidatePicker, force) {
-        if (typeof force !== "boolean") {
-            force = picker.get("aria-expanded") !== "true";
-        }
-
-        picker.set("aria-expanded", force);
-
-        invalidatePicker(force);
-    },
-    _keydownPicker(picker, toggleState, which) {
+    _keydownPicker(picker, which) {
         if (which === 13 && picker.get("aria-hidden") === "true") {
             // ENTER key should submit form if calendar is hidden
             return true;
@@ -365,7 +338,8 @@ DOM.extend("input[type=date]", {
         if (which === 32) {
             // SPACE key toggles calendar visibility
             if (!this.get("readonly")) {
-                toggleState(false);
+                picker.toggleState(false);
+                picker.invalidateState(this.get("valueAsDate"));
 
                 if (picker.get("aria-hidden") === "true") {
                     picker.show();
@@ -379,7 +353,8 @@ DOM.extend("input[type=date]", {
             this.value("").fire("change"); // BACKSPACE, DELETE clear value
         } else if (which === 17) {
             // CONTROL toggles calendar mode
-            toggleState();
+            picker.toggleState(picker.get("aria-expanded") !== "true");
+            picker.invalidateState(this.get("valueAsDate"));
         } else {
             var delta;
 
@@ -410,7 +385,7 @@ DOM.extend("input[type=date]", {
     _blurPicker(picker) {
         picker.hide();
     },
-    _focusPicker(picker, toggleState) {
+    _focusPicker(picker) {
         if (this.get("readonly")) return false;
 
         var offset = this.offset();
@@ -421,7 +396,8 @@ DOM.extend("input[type=date]", {
             marginTop = -pickerOffset.height;
         }
         // always reset picker mode to the default
-        toggleState(false);
+        picker.toggleState(false);
+        picker.invalidateState(this.get("valueAsDate"));
         // always recalculate picker top position
         picker.css("margin-top", marginTop).show();
     }
@@ -450,10 +426,34 @@ DOM.extend("dateinput-picker", {
         // initialize picker content
         pickerRoot.importStyles(PICKER_CSS);
         pickerBody.set(PICKER_BODY_HTML);
+        // internal references
+        this._calenderDays = pickerBody.find("table");
+        this._calendarMonths = pickerBody.find("table+table");
+        // prevent input from loosing the focus outline
+        pickerBody.on(CLICK_EVENT_TYPE, () => false);
         // trigger callback
         this._readyCallback(pickerBody);
         // cleanup function reference
         delete this._readyCallback;
+    },
+    toggleState(expanded) {
+        this.set("aria-expanded", expanded);
+    },
+    invalidateState(dateValue) {
+        if (!dateValue || isNaN(dateValue.getTime())) {
+            dateValue = new Date();
+        }
+
+        const expanded = this.get("aria-expanded") === "true";
+        const target = expanded ? this._calendarMonths : this._calenderDays;
+        // refresh current picker
+        target.fire("picker:invalidate", dateValue);
+
+        if (expanded) {
+            this._calendarMonths.show();
+        } else {
+            this._calendarMonths.hide();
+        }
     }
 });
 
