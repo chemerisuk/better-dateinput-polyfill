@@ -51,6 +51,7 @@ function repeat(times, fn) {
 
 function localeWeekday(index) {
     var date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
+    /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
             return date.toLocaleDateString(HTML.lang, {weekday: "short"});
@@ -61,6 +62,7 @@ function localeWeekday(index) {
 
 function localeMonth(index) {
     var date = new Date(Date.UTC(2010, index));
+    /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
             return date.toLocaleDateString(HTML.lang, {month: "short"});
@@ -72,6 +74,7 @@ function localeMonth(index) {
 function localeMonthYear(month, year) {
     // set hours to '12' to fix Safari bug in Date#toLocaleString
     var date = new Date(year, month, 12);
+    /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
             return date.toLocaleDateString(HTML.lang, {month: "long", year: "numeric"});
@@ -297,12 +300,12 @@ DOM.extend("dateinput-picker", {
         pickerRoot.importStyles(PICKER_CSS);
         pickerBody.set(PICKER_BODY_HTML);
         // internal references
-        this._calenderDays = pickerBody.find("table");
+        this._calendarDays = pickerBody.find("table");
         this._calendarMonths = pickerBody.find("table+table");
         this._calendarCaption = pickerBody.find("b");
 
         // picker invalidate handlers
-        this._calenderDays.on("picker:invalidate", ["detail"], this._invalidateDays.bind(this));
+        this._calendarDays.on("picker:invalidate", ["detail"], this._invalidateDays.bind(this));
         this._calendarMonths.on("picker:invalidate", ["detail"], this._invalidateMonths.bind(this));
         pickerBody.on("picker:invalidate", ["detail"], this._invalidateCaption.bind(this));
 
@@ -331,7 +334,7 @@ DOM.extend("dateinput-picker", {
         // move to beginning of the first week in current month
         iterDate.setDate(1 - iterDate.getDay() - ampm(1, 0));
         // update days picker
-        this._calenderDays.findAll("td").forEach((day) => {
+        this._calendarDays.findAll("td").forEach((day) => {
             iterDate.setDate(iterDate.getDate() + 1);
 
             var mDiff = month - iterDate.getMonth(),
@@ -433,7 +436,7 @@ DOM.extend("dateinput-picker", {
     },
     invalidateState() {
         const expanded = this.get("aria-expanded") === "true";
-        const target = expanded ? this._calendarMonths : this._calenderDays;
+        const target = expanded ? this._calendarMonths : this._calendarDays;
         const dateValue = this._parentInput.get("valueAsDate") || new Date();
         // refresh current picker
         target.fire("picker:invalidate", dateValue);

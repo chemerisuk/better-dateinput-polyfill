@@ -1,31 +1,22 @@
 describe("better-dateinput-polyfill", function() {
-    // function formatDateISO(value) {
-    //     return value.toISOString().split("T")[0];
-    // }
-
-    var el, picker, months, caption, label;
+    var el, picker;
 
     beforeEach(function() {
         el = DOM.mock("<input type='date'>");
-        picker = DOM.mock("<div>");
-        months = DOM.mock();
-        caption = DOM.mock();
-        label = DOM.mock("<span>");
+        picker = DOM.mock("<dateinput-picker>");
+
+        picker._parentInput = el;
+        picker._calendarMonths = DOM.mock();
+        picker._calendarDays = DOM.mock();
     });
 
     describe("keyboard", () => {
-        var toggleState;
-
-        beforeEach(() => {
-            toggleState = jasmine.createSpy();
-        });
-
         describe("SPACE", () => {
             it("hides visible picker", () => {
                 var showSpy = spyOn(picker, "show");
                 var hideSpy = spyOn(picker, "hide");
 
-                el._keydownPicker(picker, toggleState, 32);
+                el._keydownInput(picker, 32);
                 expect(hideSpy).toHaveBeenCalled();
                 expect(showSpy).not.toHaveBeenCalled();
             });
@@ -35,7 +26,7 @@ describe("better-dateinput-polyfill", function() {
                 var hideSpy = spyOn(picker, "hide");
 
                 picker.set("aria-hidden", "true");
-                el._keydownPicker(picker, toggleState, 32);
+                el._keydownInput(picker, 32);
                 expect(showSpy).toHaveBeenCalled();
                 expect(hideSpy).not.toHaveBeenCalled();
             });
@@ -45,7 +36,7 @@ describe("better-dateinput-polyfill", function() {
                 var hideSpy = spyOn(picker, "hide");
 
                 el.set("readonly", true);
-                el._keydownPicker(picker, toggleState, 32);
+                el._keydownInput(picker, 32);
                 expect(hideSpy).not.toHaveBeenCalled();
                 expect(showSpy).not.toHaveBeenCalled();
             });
@@ -54,14 +45,14 @@ describe("better-dateinput-polyfill", function() {
         describe("ESC", () => {
             it("hides calendar", function() {
                 var spy = spyOn(picker, "hide");
-                expect(el._keydownPicker(picker, toggleState, 27)).toBe(false);
+                expect(el._keydownInput(picker, 27)).toBe(false);
                 expect(spy).toHaveBeenCalled();
             });
         });
 
         describe("TAB", () => {
             it("performs default behavior", function() {
-                expect(el._keydownPicker(picker, toggleState, 9)).toBe(true);
+                expect(el._keydownInput(picker, 9)).toBe(true);
             });
         });
 
@@ -69,27 +60,28 @@ describe("better-dateinput-polyfill", function() {
             it("reset calendar value", function() {
                 var spy = spyOn(el, "value").and.returnValue(el);
 
-                el._keydownPicker(picker, toggleState, 8);
+                el._keydownInput(picker, 8);
                 expect(spy).toHaveBeenCalledWith("");
 
                 spy.calls.reset();
 
-                el._keydownPicker(picker, toggleState, 46);
+                el._keydownInput(picker, 46);
                 expect(spy).toHaveBeenCalledWith("");
             });
         });
 
         describe("CONTROL", () => {
             it("toggles calendar mode", function() {
-                el._keydownPicker(picker, toggleState, 17);
-                expect(toggleState).toHaveBeenCalled();
+                const spy = spyOn(picker, "toggleState");
+                el._keydownInput(picker, 17);
+                expect(spy).toHaveBeenCalled();
             });
         });
 
         describe("ARROW keys", () => {
             it("navigate calendar day", function() {
                 function expectKey(key, expected) {
-                    el._keydownPicker(picker, toggleState, key);
+                    el._keydownInput(picker, key);
                     expect(el.value()).toBe(expected);
                     el.value("2000-01-01");
                 }
@@ -188,7 +180,7 @@ describe("better-dateinput-polyfill", function() {
     it("should hide calendar on blur", function() {
         var hideSpy = spyOn(picker, "hide");
 
-        el._blurPicker(picker);
+        el._blurInput(picker);
         expect(hideSpy).toHaveBeenCalled();
     });
 
@@ -216,15 +208,14 @@ describe("better-dateinput-polyfill", function() {
 
     it("should display calendar on focus", function() {
         var spy = spyOn(picker, "show");
-        var toggleState = jasmine.createSpy();
 
-        el._focusPicker(picker, toggleState);
+        el._focusInput(picker);
         expect(spy.calls.count()).toBe(1);
-        el._focusPicker(picker, toggleState);
+        el._focusInput(picker);
         expect(spy.calls.count()).toBe(2);
 
         el.set("readonly", true);
-        el._focusPicker(picker, toggleState);
+        el._focusInput(picker);
         expect(spy.calls.count()).toBe(2);
     });
 
