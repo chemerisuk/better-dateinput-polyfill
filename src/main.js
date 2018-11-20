@@ -102,29 +102,11 @@ DOM.extend("input[type=date]", {
         this._svgTextOptions.dy = ["padding-top", "border-top-width"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b) / 2;
 
         const picker = DOM.create("<dateinput-picker tabindex='-1'>");
-        // used internally to notify when the picker is ready
-        picker._readyCallback = this._initPicker.bind(this, picker);
+        // store reference to the input internally
+        picker._parentInput = this;
         // add <dateinput-picker> to the document
         this.before(picker.hide());
-    },
-    _isPolyfillEnabled() {
-        const polyfillType = this.get("data-polyfill");
 
-        if (polyfillType === "none") return true;
-
-        if (polyfillType && (polyfillType === DEVICE_TYPE || polyfillType === "all")) {
-            // remove native browser implementation
-            this.set("type", "text");
-            // force applying the polyfill
-            return false;
-        }
-
-        return TYPE_SUPPORTED;
-    },
-    _initPicker(picker, pickerBody) {
-        const calendarCaption = pickerBody.find("b");
-        const calenderDays = pickerBody.find("table");
-        const calendarMonths = pickerBody.find("table+table");
         const resetValue = this._syncValue.bind(this, picker, "defaultValue");
         const updateValue = this._syncValue.bind(this, picker, "value");
 
@@ -145,39 +127,29 @@ DOM.extend("input[type=date]", {
         });
 
         // sync picker visibility on focus/blur
-        this.on("focus", this._focusPicker.bind(this, picker));
-        this.on("blur", this._blurPicker.bind(this, picker));
         this.on("change", updateValue);
-        this.on("keydown", ["which"], this._keydownPicker.bind(this, picker));
-        this.on(CLICK_EVENT_TYPE, this._focusPicker.bind(this, picker));
-
+        this.on("focus", this._focusInput.bind(this, picker));
+        this.on("blur", this._blurInput.bind(this, picker));
+        this.on("keydown", ["which"], this._keydownInput.bind(this, picker));
+        this.on(CLICK_EVENT_TYPE, this._focusInput.bind(this, picker));
         // form events do not trigger any state change
         this.closest("form").on("reset", resetValue);
 
-        // picker invalidate handlers
-        calenderDays.on("picker:invalidate", ["detail"],
-            this._invalidateDays.bind(this, calenderDays));
-        calendarMonths.on("picker:invalidate", ["detail"],
-            this._invalidateMonths.bind(this, calendarMonths));
-        pickerBody.on("picker:invalidate", ["detail"],
-            this._invalidateCaption.bind(this, calendarCaption, picker));
-
-        // picker click handlers
-        pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"],
-            this._clickPickerButton.bind(this, picker));
-        pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"],
-            this._clickPickerDay.bind(this, picker));
-        calendarCaption.on(CLICK_EVENT_TYPE, () => {
-            picker.toggleState(picker.get("aria-expanded") !== "true");
-            picker.invalidateState(this.get("valueAsDate"));
-        });
-
         resetValue(); // present initial value
+    },
+    _isPolyfillEnabled() {
+        const polyfillType = this.get("data-polyfill");
 
-        // display calendar for autofocused elements
-        if (DOM.get("activeElement") === this[0]) {
-            picker.show();
+        if (polyfillType === "none") return true;
+
+        if (polyfillType && (polyfillType === DEVICE_TYPE || polyfillType === "all")) {
+            // remove native browser implementation
+            this.set("type", "text");
+            // force applying the polyfill
+            return false;
         }
+
+        return TYPE_SUPPORTED;
     },
     _setValue(setter, updateValue, value) {
         const dateValue = parseLocalDate(value);
@@ -207,71 +179,6 @@ DOM.extend("input[type=date]", {
             this.value(formatLocalDate(dateValue));
         }
     },
-    _invalidateDays(calenderDays, dateValue) {
-        const month = dateValue.getMonth();
-        const date = dateValue.getDate();
-        const year = dateValue.getFullYear();
-        const min = parseLocalDate(this.get("min")) || Number.MIN_VALUE;
-        const max = parseLocalDate(this.get("max")) || Number.MAX_VALUE;
-        const iterDate = new Date(year, month, 1);
-        // move to beginning of the first week in current month
-        iterDate.setDate(1 - iterDate.getDay() - ampm(1, 0));
-        // update days picker
-        calenderDays.findAll("td").forEach((day) => {
-            iterDate.setDate(iterDate.getDate() + 1);
-
-            var mDiff = month - iterDate.getMonth(),
-                selectedValue = null,
-                disabledValue = null;
-
-            if (year !== iterDate.getFullYear()) mDiff *= -1;
-
-            if (iterDate < min || iterDate > max) {
-                disabledValue = "true";
-            } else if (mDiff > 0 || mDiff < 0) {
-                selectedValue = "false";
-            } else if (date === iterDate.getDate()) {
-                selectedValue = "true";
-            }
-
-            day._ts = iterDate.getTime();
-            day.set("aria-selected", selectedValue);
-            day.set("aria-disabled", disabledValue);
-            day.value(iterDate.getDate());
-        });
-    },
-    _invalidateMonths(calendarMonths, dateValue) {
-        const month = dateValue.getMonth();
-        const year = dateValue.getFullYear();
-        const min = parseLocalDate(this.get("min")) || Number.MIN_VALUE;
-        const max = parseLocalDate(this.get("max")) || Number.MAX_VALUE;
-        const iterDate = new Date(year, month, 1);
-
-        calendarMonths.findAll("td").forEach((day, index) => {
-            iterDate.setMonth(index);
-
-            var mDiff = month - iterDate.getMonth(),
-                selectedValue = null;
-
-            if (iterDate < min || iterDate > max) {
-                selectedValue = "false";
-            } else if (!mDiff) {
-                selectedValue = "true";
-            }
-
-            day._ts = iterDate.getTime();
-            day.set("aria-selected", selectedValue);
-        });
-    },
-    _invalidateCaption(calendarCaption, picker, dateValue) {
-        const year = dateValue.getFullYear();
-        // update calendar caption
-        if (picker.get("aria-expanded") === "true") {
-            calendarCaption.value(year);
-        } else {
-            calendarCaption.value(localeMonthYear(dateValue.getMonth(), year));
-        }
-    },
     _syncValue(picker, propName) {
         var displayText = this.get(propName);
         const dateValue = parseLocalDate(displayText);
@@ -291,45 +198,13 @@ DOM.extend("input[type=date]", {
             <text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayText}</text>
         </svg>
         `)}')`);
+
         // update picker state
-        picker.invalidateState(dateValue);
-    },
-    _clickPickerButton(picker, target) {
-        const sign = target.next("a")[0] ? -1 : 1;
-        const targetDate = this.get("valueAsDate") || new Date();
-
-        if (picker.get("aria-expanded") === "true") {
-            targetDate.setFullYear(targetDate.getFullYear() + sign);
-        } else {
-            targetDate.setMonth(targetDate.getMonth() + sign);
-        }
-
-        this.value(formatLocalDate(targetDate)).fire("change");
-    },
-    _clickPickerDay(picker, target) {
-        var targetDate;
-
-        if (picker.get("aria-expanded") === "true") {
-            if (isNaN(target._ts)) {
-                targetDate = new Date();
-            } else {
-                targetDate = new Date(target._ts);
-            }
-            // switch to date calendar mode
-            picker.toggleState(false);
-        } else {
-            if (!isNaN(target._ts)) {
-                targetDate = new Date(target._ts);
-
-                picker.hide();
-            }
-        }
-
-        if (targetDate != null) {
-            this.value(formatLocalDate(targetDate)).fire("change");
+        if (typeof picker.invalidateState === "function") {
+            picker.invalidateState(dateValue);
         }
     },
-    _keydownPicker(picker, which) {
+    _keydownInput(picker, which) {
         if (which === 13 && picker.get("aria-hidden") === "true") {
             // ENTER key should submit form if calendar is hidden
             return true;
@@ -382,10 +257,10 @@ DOM.extend("input[type=date]", {
         // do not allow to change the value manually
         return which === 9;
     },
-    _blurPicker(picker) {
+    _blurInput(picker) {
         picker.hide();
     },
-    _focusPicker(picker) {
+    _focusInput(picker) {
         if (this.get("readonly")) return false;
 
         var offset = this.offset();
@@ -429,12 +304,128 @@ DOM.extend("dateinput-picker", {
         // internal references
         this._calenderDays = pickerBody.find("table");
         this._calendarMonths = pickerBody.find("table+table");
+        this._calendarCaption = pickerBody.find("b");
+
+        // picker invalidate handlers
+        this._calenderDays.on("picker:invalidate", ["detail"], this._invalidateDays.bind(this));
+        this._calendarMonths.on("picker:invalidate", ["detail"], this._invalidateMonths.bind(this));
+        pickerBody.on("picker:invalidate", ["detail"], this._invalidateCaption.bind(this));
+
+        // picker click handlers
+        pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"], this._clickPickerButton.bind(this));
+        pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this));
+        this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this));
+
         // prevent input from loosing the focus outline
         pickerBody.on(CLICK_EVENT_TYPE, () => false);
-        // trigger callback
-        this._readyCallback(pickerBody);
-        // cleanup function reference
-        delete this._readyCallback;
+
+        // display calendar for autofocused elements
+        if (DOM.get("activeElement") === this._parentInput[0]) {
+            this.show();
+        }
+    },
+    _invalidateDays(dateValue) {
+        const month = dateValue.getMonth();
+        const date = dateValue.getDate();
+        const year = dateValue.getFullYear();
+        const min = parseLocalDate(this._parentInput.get("min")) || Number.MIN_VALUE;
+        const max = parseLocalDate(this._parentInput.get("max")) || Number.MAX_VALUE;
+        const iterDate = new Date(year, month, 1);
+        // move to beginning of the first week in current month
+        iterDate.setDate(1 - iterDate.getDay() - ampm(1, 0));
+        // update days picker
+        this._calenderDays.findAll("td").forEach((day) => {
+            iterDate.setDate(iterDate.getDate() + 1);
+
+            var mDiff = month - iterDate.getMonth(),
+                selectedValue = null,
+                disabledValue = null;
+
+            if (year !== iterDate.getFullYear()) mDiff *= -1;
+
+            if (iterDate < min || iterDate > max) {
+                disabledValue = "true";
+            } else if (mDiff > 0 || mDiff < 0) {
+                selectedValue = "false";
+            } else if (date === iterDate.getDate()) {
+                selectedValue = "true";
+            }
+
+            day._ts = iterDate.getTime();
+            day.set("aria-selected", selectedValue);
+            day.set("aria-disabled", disabledValue);
+            day.value(iterDate.getDate());
+        });
+    },
+    _invalidateMonths(dateValue) {
+        const month = dateValue.getMonth();
+        const year = dateValue.getFullYear();
+        const min = parseLocalDate(this._parentInput.get("min")) || Number.MIN_VALUE;
+        const max = parseLocalDate(this._parentInput.get("max")) || Number.MAX_VALUE;
+        const iterDate = new Date(year, month, 1);
+
+        this._calendarMonths.findAll("td").forEach((day, index) => {
+            iterDate.setMonth(index);
+
+            var mDiff = month - iterDate.getMonth(),
+                selectedValue = null;
+
+            if (iterDate < min || iterDate > max) {
+                selectedValue = "false";
+            } else if (!mDiff) {
+                selectedValue = "true";
+            }
+
+            day._ts = iterDate.getTime();
+            day.set("aria-selected", selectedValue);
+        });
+    },
+    _invalidateCaption(dateValue) {
+        var captionText = dateValue.getFullYear();
+        if (this.get("aria-expanded") !== "true") {
+            captionText = localeMonthYear(dateValue.getMonth(), captionText);
+        }
+        // update calendar caption
+        this._calendarCaption.value(captionText);
+    },
+    _clickCaption() {
+        this.toggleState(this.get("aria-expanded") !== "true");
+        this.invalidateState(this._parentInput.get("valueAsDate"));
+    },
+    _clickPickerButton(target) {
+        const sign = target.next("a")[0] ? -1 : 1;
+        const targetDate = this._parentInput.get("valueAsDate") || new Date();
+
+        if (this.get("aria-expanded") === "true") {
+            targetDate.setFullYear(targetDate.getFullYear() + sign);
+        } else {
+            targetDate.setMonth(targetDate.getMonth() + sign);
+        }
+
+        this._parentInput.value(formatLocalDate(targetDate)).fire("change");
+    },
+    _clickPickerDay(target) {
+        var targetDate;
+
+        if (this.get("aria-expanded") === "true") {
+            if (isNaN(target._ts)) {
+                targetDate = new Date();
+            } else {
+                targetDate = new Date(target._ts);
+            }
+            // switch to date calendar mode
+            this.toggleState(false);
+        } else {
+            if (!isNaN(target._ts)) {
+                targetDate = new Date(target._ts);
+
+                this.hide();
+            }
+        }
+
+        if (targetDate != null) {
+            this._parentInput.value(formatLocalDate(targetDate)).fire("change");
+        }
     },
     toggleState(expanded) {
         this.set("aria-expanded", expanded);
