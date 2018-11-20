@@ -105,13 +105,15 @@ DOM.extend("input[type=date]", {
         this._svgTextOptions.dy = ["padding-top", "border-top-width"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b) / 2;
 
         const picker = DOM.create("<dateinput-picker tabindex='-1'>");
-        // store reference to the input internally
+        // store reference to the input
         picker._parentInput = this;
         // add <dateinput-picker> to the document
         this.before(picker.hide());
+        // store reference to the picker
+        this._picker = picker;
 
-        const resetDisplayedText = this._syncDisplayedText.bind(this, picker, "defaultValue");
-        const updateDisplayedText = this._syncDisplayedText.bind(this, picker, "value");
+        const resetDisplayedText = this._syncDisplayedText.bind(this, "defaultValue");
+        const updateDisplayedText = this._syncDisplayedText.bind(this, "value");
 
         // patch value property for the input element
         const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
@@ -131,10 +133,10 @@ DOM.extend("input[type=date]", {
 
         // sync picker visibility on focus/blur
         this.on("change", updateDisplayedText);
-        this.on("focus", this._focusInput.bind(this, picker));
-        this.on("blur", this._blurInput.bind(this, picker));
-        this.on("keydown", ["which"], this._keydownInput.bind(this, picker));
-        this.on(CLICK_EVENT_TYPE, this._focusInput.bind(this, picker));
+        this.on("focus", this._focusInput.bind(this));
+        this.on("blur", this._blurInput.bind(this));
+        this.on("keydown", ["which"], this._keydownInput.bind(this));
+        this.on(CLICK_EVENT_TYPE, this._focusInput.bind(this));
         // form events do not trigger any state change
         this.closest("form").on("reset", resetDisplayedText);
 
@@ -182,7 +184,7 @@ DOM.extend("input[type=date]", {
             this.value(formatLocalDate(dateValue));
         }
     },
-    _syncDisplayedText(picker, propName) {
+    _syncDisplayedText(propName) {
         var displayText = this.get(propName);
         const dateValue = parseLocalDate(displayText);
         if (dateValue) {
@@ -202,8 +204,8 @@ DOM.extend("input[type=date]", {
         </svg>
         `)}')`);
     },
-    _keydownInput(picker, which) {
-        if (which === 13 && picker.get("aria-hidden") === "true") {
+    _keydownInput(which) {
+        if (which === 13 && this._picker.get("aria-hidden") === "true") {
             // ENTER key should submit form if calendar is hidden
             return true;
         }
@@ -211,23 +213,23 @@ DOM.extend("input[type=date]", {
         if (which === 32) {
             // SPACE key toggles calendar visibility
             if (!this.get("readonly")) {
-                picker.toggleState(false);
-                picker.invalidateState();
+                this._picker.toggleState(false);
+                this._picker.invalidateState();
 
-                if (picker.get("aria-hidden") === "true") {
-                    picker.show();
+                if (this._picker.get("aria-hidden") === "true") {
+                    this._picker.show();
                 } else {
-                    picker.hide();
+                    this._picker.hide();
                 }
             }
         } else if (which === 27 || which === 9 || which === 13) {
-            picker.hide(); // ESC, TAB or ENTER keys hide calendar
+            this._picker.hide(); // ESC, TAB or ENTER keys hide calendar
         } else if (which === 8 || which === 46) {
             this.empty().fire("change"); // BACKSPACE, DELETE clear value
         } else if (which === 17) {
             // CONTROL toggles calendar mode
-            picker.toggleState();
-            picker.invalidateState();
+            this._picker.toggleState();
+            this._picker.invalidateState();
         } else {
             var delta;
 
@@ -238,7 +240,7 @@ DOM.extend("input[type=date]", {
 
             if (delta) {
                 const currentDate = this.get("valueAsDate") || new Date();
-                const expanded = picker.get("aria-expanded") === "true";
+                const expanded = this._picker.get("aria-expanded") === "true";
 
                 if (expanded && (which === 40 || which === 38)) {
                     currentDate.setMonth(currentDate.getMonth() + (delta > 0 ? 4 : -4));
@@ -255,24 +257,24 @@ DOM.extend("input[type=date]", {
         // do not allow to change the value manually
         return which === 9;
     },
-    _blurInput(picker) {
-        picker.hide();
+    _blurInput() {
+        this._picker.hide();
     },
-    _focusInput(picker) {
+    _focusInput() {
         if (this.get("readonly")) return false;
 
         var offset = this.offset();
-        var pickerOffset = picker.offset();
+        var pickerOffset = this._picker.offset();
         var marginTop = offset.height;
         // #3: move calendar to the top when passing cross browser window bounds
         if (HTML.clientHeight < offset.bottom + pickerOffset.height) {
             marginTop = -pickerOffset.height;
         }
         // always reset picker mode to the default
-        picker.toggleState(false);
-        picker.invalidateState();
+        this._picker.toggleState(false);
+        this._picker.invalidateState();
         // always recalculate picker top position
-        picker.css("margin-top", marginTop).show();
+        this._picker.css("margin-top", marginTop).show();
     }
 });
 
