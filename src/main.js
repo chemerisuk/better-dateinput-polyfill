@@ -107,8 +107,8 @@ DOM.extend("input[type=date]", {
         // add <dateinput-picker> to the document
         this.before(picker.hide());
 
-        const resetValue = this._syncValue.bind(this, picker, "defaultValue");
-        const updateValue = this._syncValue.bind(this, picker, "value");
+        const resetDisplayedText = this._syncDisplayedText.bind(this, picker, "defaultValue");
+        const updateDisplayedText = this._syncDisplayedText.bind(this, picker, "value");
 
         // patch value property for the input element
         const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
@@ -116,7 +116,7 @@ DOM.extend("input[type=date]", {
             configurable: false,
             enumerable: true,
             get: valueDescriptor.get,
-            set: this._setValue.bind(this, valueDescriptor.set, updateValue)
+            set: this._setValue.bind(this, valueDescriptor.set, updateDisplayedText)
         });
 
         Object.defineProperty(this[0], "valueAsDate", {
@@ -127,15 +127,15 @@ DOM.extend("input[type=date]", {
         });
 
         // sync picker visibility on focus/blur
-        this.on("change", updateValue);
+        this.on("change", updateDisplayedText);
         this.on("focus", this._focusInput.bind(this, picker));
         this.on("blur", this._blurInput.bind(this, picker));
         this.on("keydown", ["which"], this._keydownInput.bind(this, picker));
         this.on(CLICK_EVENT_TYPE, this._focusInput.bind(this, picker));
         // form events do not trigger any state change
-        this.closest("form").on("reset", resetValue);
+        this.closest("form").on("reset", resetDisplayedText);
 
-        resetValue(); // present initial value
+        resetDisplayedText(); // present initial value
     },
     _isPolyfillEnabled() {
         const polyfillType = this.get("data-polyfill");
@@ -151,7 +151,7 @@ DOM.extend("input[type=date]", {
 
         return TYPE_SUPPORTED;
     },
-    _setValue(setter, updateValue, value) {
+    _setValue(setter, updateDisplayedText, value) {
         const dateValue = parseLocalDate(value);
 
         if (!dateValue) {
@@ -169,7 +169,7 @@ DOM.extend("input[type=date]", {
 
         setter.call(this[0], value);
 
-        updateValue();
+        updateDisplayedText();
     },
     _getValueAsDate() {
         return parseLocalDate(this.value());
@@ -179,7 +179,7 @@ DOM.extend("input[type=date]", {
             this.value(formatLocalDate(dateValue));
         }
     },
-    _syncValue(picker, propName) {
+    _syncDisplayedText(picker, propName) {
         var displayText = this.get(propName);
         const dateValue = parseLocalDate(displayText);
         if (dateValue) {
@@ -198,11 +198,6 @@ DOM.extend("input[type=date]", {
             <text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayText}</text>
         </svg>
         `)}')`);
-
-        // update picker state
-        if (typeof picker.invalidateState === "function") {
-            picker.invalidateState(dateValue);
-        }
     },
     _keydownInput(picker, which) {
         if (which === 13 && picker.get("aria-hidden") === "true") {
@@ -214,7 +209,7 @@ DOM.extend("input[type=date]", {
             // SPACE key toggles calendar visibility
             if (!this.get("readonly")) {
                 picker.toggleState(false);
-                picker.invalidateState(this.get("valueAsDate"));
+                picker.invalidateState();
 
                 if (picker.get("aria-hidden") === "true") {
                     picker.show();
@@ -225,11 +220,11 @@ DOM.extend("input[type=date]", {
         } else if (which === 27 || which === 9 || which === 13) {
             picker.hide(); // ESC, TAB or ENTER keys hide calendar
         } else if (which === 8 || which === 46) {
-            this.value("").fire("change"); // BACKSPACE, DELETE clear value
+            this.empty().fire("change"); // BACKSPACE, DELETE clear value
         } else if (which === 17) {
             // CONTROL toggles calendar mode
-            picker.toggleState(picker.get("aria-expanded") !== "true");
-            picker.invalidateState(this.get("valueAsDate"));
+            picker.toggleState();
+            picker.invalidateState();
         } else {
             var delta;
 
@@ -272,7 +267,7 @@ DOM.extend("input[type=date]", {
         }
         // always reset picker mode to the default
         picker.toggleState(false);
-        picker.invalidateState(this.get("valueAsDate"));
+        picker.invalidateState();
         // always recalculate picker top position
         picker.css("margin-top", marginTop).show();
     }
@@ -315,6 +310,8 @@ DOM.extend("dateinput-picker", {
         pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"], this._clickPickerButton.bind(this));
         pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this));
         this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this));
+
+        this._parentInput.on("change", this.invalidateState.bind(this));
 
         // prevent input from loosing the focus outline
         pickerBody.on(CLICK_EVENT_TYPE, () => false);
@@ -389,8 +386,8 @@ DOM.extend("dateinput-picker", {
         this._calendarCaption.value(captionText);
     },
     _clickCaption() {
-        this.toggleState(this.get("aria-expanded") !== "true");
-        this.invalidateState(this._parentInput.get("valueAsDate"));
+        this.toggleState();
+        this.invalidateState();
     },
     _clickPickerButton(target) {
         const sign = target.next("a")[0] ? -1 : 1;
@@ -428,15 +425,16 @@ DOM.extend("dateinput-picker", {
         }
     },
     toggleState(expanded) {
-        this.set("aria-expanded", expanded);
-    },
-    invalidateState(dateValue) {
-        if (!dateValue || isNaN(dateValue.getTime())) {
-            dateValue = new Date();
+        if (typeof expanded !== "boolean") {
+            expanded = this.get("aria-expanded") !== "true";
         }
 
+        this.set("aria-expanded", expanded);
+    },
+    invalidateState() {
         const expanded = this.get("aria-expanded") === "true";
         const target = expanded ? this._calendarMonths : this._calenderDays;
+        const dateValue = this._parentInput.get("valueAsDate") || new Date();
         // refresh current picker
         target.fire("picker:invalidate", dateValue);
 
