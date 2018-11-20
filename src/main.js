@@ -334,7 +334,7 @@ DOM.extend("dateinput-picker", {
         const max = parseLocalDate(this._parentInput.get("max")) || Number.MAX_VALUE;
         const iterDate = new Date(year, month, 1);
         // move to beginning of the first week in current month
-        iterDate.setDate(1 - iterDate.getDay() - ampm(1, 0));
+        iterDate.setDate(1 - iterDate.getDay() - ampm(1, iterDate.getDay() === 0 ? 7 : 0));
         // update days picker
         this._calendarDays.findAll("td").forEach((day) => {
             iterDate.setDate(iterDate.getDate() + 1);
