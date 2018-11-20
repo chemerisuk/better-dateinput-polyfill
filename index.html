@@ -36,11 +36,10 @@
     </style>
 </head>
 <body>
-    <form class="test-form">
+    <form class="test-form" autocomplete="off">
         <p>
             <label>Your name<br></label>
-            <input type="text" required name="name" placeholder="Dart Vaider">
-
+            <input type="text" name="name" placeholder="Dart Vaider">
         </p>
         <p>
             <label>Start date<br></label>
@@ -60,10 +59,10 @@
         </p>
         <p>
             <label>This field is hidden<br></label>
-            <input type="date" data-polyfill="all" data-format='{"month":"short","year":"numeric","day":"numeric"}' placeholder="Force starts" style="display:none;background:blue;color:white"><button type="button" onclick="this.style.display='none';this.previousSibling.style.display=''">Show dateinput</button>
+            <input type="date" name="hidden" data-polyfill="all" data-format='{"month":"short","year":"numeric","day":"numeric"}' placeholder="Force starts" style="display:none;background:blue;color:white"><button type="button" onclick="this.style.display='none';this.previousSibling.style.display=''">Show dateinput</button>
         </p>
         <p>
-            <input type="checkbox" name="accept" required/>
+            <input type="checkbox" name="accept"/>
             <label>I accept site rules</label>
         </p>
         <button type="submit">Submit</button>
