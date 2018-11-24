@@ -9,7 +9,7 @@ const CLICK_EVENT_TYPE = DEVICE_TYPE === "mobile" ? "touchend" : "mousedown";
 
 const INTL_SUPPORTED = (function() {
     try {
-        new Date().toLocaleString("i");
+        new Date().toLocaleString("_");
     } catch (err) {
         return err instanceof RangeError;
     }
@@ -50,7 +50,7 @@ function repeat(times, fn) {
 }
 
 function localeWeekday(index) {
-    var date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
+    const date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
@@ -61,7 +61,7 @@ function localeWeekday(index) {
 }
 
 function localeMonth(index) {
-    var date = new Date(Date.UTC(2010, index));
+    const date = new Date(Date.UTC(2010, index));
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
@@ -71,9 +71,9 @@ function localeMonth(index) {
     return date.toUTCString().split(" ")[2];
 }
 
-function localeMonthYear(month, year) {
+function localeMonthYear(dateValue) {
     // set hours to '12' to fix Safari bug in Date#toLocaleString
-    var date = new Date(year, month, 12);
+    const date = new Date(dateValue.getFullYear(), dateValue.getMonth(), 12);
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
@@ -315,12 +315,10 @@ DOM.extend("dateinput-picker", {
         pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"], this._clickPickerButton.bind(this));
         pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this));
         this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this));
-
-        this._parentInput.on("change", this.invalidateState.bind(this));
-
         // prevent input from loosing the focus outline
         pickerBody.on(CLICK_EVENT_TYPE, () => false);
 
+        this._parentInput.on("change", this.invalidateState.bind(this));
         // display calendar for autofocused elements
         if (DOM.get("activeElement") === this._parentInput[0]) {
             this.show();
@@ -385,7 +383,7 @@ DOM.extend("dateinput-picker", {
     _invalidateCaption(dateValue) {
         var captionText = dateValue.getFullYear();
         if (this.get("aria-expanded") !== "true") {
-            captionText = localeMonthYear(dateValue.getMonth(), captionText);
+            captionText = localeMonthYear(dateValue);
         }
         // update calendar caption
         this._calendarCaption.value(captionText);
