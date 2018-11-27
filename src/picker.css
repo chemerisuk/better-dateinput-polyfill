@@ -1,6 +1,6 @@
 :root {
     --cell-height: 2.5rem;
-    --month-cell-height: 3.75rem;
+    --month-cell-height: calc(var(--cell-height) * 1.5);
 }
 
 body {
@@ -38,6 +38,21 @@ table {
     border-collapse: collapse;
     text-align: center;
     line-height: var(--cell-height);
+
+    & + table {
+        line-height: var(--month-cell-height);
+        background: white;
+        position: absolute;
+        top: var(--cell-height);
+        left: 0;
+        opacity: 1;
+        transition: 0.1s ease-out;
+
+        &[aria-hidden=true] {
+            visibility: hidden !important;
+            opacity: 0;
+        }
+    }
 }
 
 td, th {
@@ -50,7 +65,8 @@ thead {
     font-weight: bold;
 }
 
-[aria-selected=false], [aria-disabled=true] {
+[aria-selected=false],
+[aria-disabled=true] {
     color: gray;
 }
 
@@ -63,19 +79,4 @@ td:hover,
 [aria-disabled=true],
 [aria-selected=true] {
     background-color: whitesmoke;
-}
-
-table+table {
-    line-height: var(--month-cell-height);
-    background: white;
-    position: absolute;
-    top: var(--cell-height);
-    left: 0;
-    opacity: 1;
-    transition: 0.1s ease-out;
-}
-
-table+table[aria-hidden=true] {
-    visibility: hidden !important;
-    opacity: 0;
 }

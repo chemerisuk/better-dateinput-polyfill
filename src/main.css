@@ -1,48 +1,48 @@
 :root {
     --cell-height: 2.5rem;
-    --month-cell-height: 3.75rem;
+    --month-cell-height: calc(var(--cell-height) * 1.5);
 }
 
 dateinput-picker {
     display: inline-block;
     vertical-align: bottom;
-}
 
-dateinput-picker > object {
-    width: 21rem;
-    max-height: calc(var(--cell-height) * 8);
-    box-shadow: 0 0 15px gray;
-    background: white;
-    position: absolute;
+    & > object {
+        width: 21rem;
+        max-height: calc(var(--cell-height) * 8);
+        box-shadow: 0 0 1rem gray;
+        background: white;
+        position: absolute;
 
-    opacity: 1;
-    transform: translate3d(0,0,0);
-    transform-origin: 0 0;
-    transition: 0.1s ease-out;
-}
+        opacity: 1;
+        transform: translate3d(0,0,0);
+        transform-origin: 0 0;
+        transition: 0.1s ease-out;
+    }
 
-dateinput-picker[aria-hidden=true] > object {
-    opacity: 0;
-    transform: skew(-25deg) scaleX(0.75);
-    visibility: hidden;
-    height: 0; /* fixes wierd iOS overlapping */
-}
+    &[aria-hidden=true] > object {
+        opacity: 0;
+        transform: skew(-25deg) scaleX(0.75);
+        visibility: hidden;
+        height: 0; /* fixes wierd iOS overlapping */
+    }
 
-dateinput-picker[aria-expanded=true] > object {
-    max-height: calc(var(--cell-height) + var(--month-cell-height) * 3);
-}
+    &[aria-expanded=true] > object {
+        max-height: calc(var(--cell-height) + var(--month-cell-height) * 3);
+    }
 
-/* hide original input text and caret */
-dateinput-picker + input {
-    color: transparent !important;
-    caret-color: transparent !important;
-}
+    & + input {
+        /* hide original input text and caret */
+        color: transparent !important;
+        caret-color: transparent !important;
 
-/* disable text selection */
-dateinput-picker + input::selection {
-    background: transparent;
-}
+        /* disable text selection */
+        &::selection {
+            background: transparent;
+        }
 
-dateinput-picker + input::-moz-selection {
-    background: transparent;
+        &::-moz-selection {
+            background: transparent;
+        }
+    }
 }
