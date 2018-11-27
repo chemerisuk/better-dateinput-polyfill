@@ -11,7 +11,7 @@
 }
 
 body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: system-ui;
     line-height: var(--cell-height);
     text-align: center;
 
@@ -20,17 +20,12 @@ body {
 
     margin: 0;
     overflow: hidden;
-    /* improve font on OSX */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
 a {
+    position: absolute;
     width: var(--cell-width);
     height: var(--cell-height);
-    position: absolute;
-    text-decoration: none;
-    color: inherit;
 }
 
 b {

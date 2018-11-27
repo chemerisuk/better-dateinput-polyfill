@@ -84,8 +84,8 @@ function localeMonthYear(dateValue) {
 }
 
 const PICKER_BODY_HTML = html`
-<a style="left:0">&#x25C4;</a>
-<a style="right:0">&#x25BA;</a>
+<a style="left:0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M11.5 14.06L1 8L11.5 1.94z"/></svg></a>
+<a style="right:0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M15 8L4.5 14.06L4.5 1.94z"/></svg></a>
 <b></b>
 <table>
     <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
