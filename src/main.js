@@ -3,7 +3,8 @@
 import MAIN_CSS from "./main.css";
 import PICKER_CSS from "./picker.css";
 
-const HTML = DOM.get("documentElement");
+const HTML = DOM.find("html");
+const DEFAULT_LANGUAGE = HTML.get("lang") || void 0;
 const DEVICE_TYPE = "orientation" in window ? "mobile" : "desktop";
 const CLICK_EVENT_TYPE = DEVICE_TYPE === "mobile" ? "touchend" : "mousedown";
 
@@ -23,7 +24,7 @@ const TYPE_SUPPORTED = (function() {
 }());
 
 function ampm(pos, neg) {
-    return HTML.lang === "en-US" ? pos : neg;
+    return DEFAULT_LANGUAGE === "en-US" ? pos : neg;
 }
 
 function formatLocalDate(date) {
@@ -54,7 +55,7 @@ function localeWeekday(index) {
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
-            return date.toLocaleDateString(HTML.lang, {weekday: "short"});
+            return date.toLocaleDateString(DEFAULT_LANGUAGE, {weekday: "short"});
         } catch (err) {}
     }
     return date.toUTCString().split(",")[0].slice(0, 2);
@@ -65,7 +66,7 @@ function localeMonth(index) {
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
-            return date.toLocaleDateString(HTML.lang, {month: "short"});
+            return date.toLocaleDateString(DEFAULT_LANGUAGE, {month: "short"});
         } catch (err) {}
     }
     return date.toUTCString().split(" ")[2];
@@ -77,7 +78,7 @@ function localeMonthYear(dateValue) {
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
-            return date.toLocaleDateString(HTML.lang, {month: "long", year: "numeric"});
+            return date.toLocaleDateString(DEFAULT_LANGUAGE, {month: "long", year: "numeric"});
         } catch (err) {}
     }
     return date.toUTCString().split(" ").slice(2, 4).join(" ");
@@ -193,7 +194,7 @@ DOM.extend("input[type=date]", {
                 try {
                     // set hours to '12' to fix Safari bug in Date#toLocaleString
                     displayText = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12)
-                        .toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
+                        .toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
                 } catch (err) {}
             }
         }
@@ -267,7 +268,7 @@ DOM.extend("input[type=date]", {
         var pickerOffset = this._picker.offset();
         var marginTop = offset.height;
         // #3: move calendar to the top when passing cross browser window bounds
-        if (HTML.clientHeight < offset.bottom + pickerOffset.height) {
+        if (HTML.get("clientHeight") < offset.bottom + pickerOffset.height) {
             marginTop = -pickerOffset.height;
         }
         // always reset picker mode to the default
