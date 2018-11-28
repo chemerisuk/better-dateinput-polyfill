@@ -26,6 +26,14 @@ a {
     position: absolute;
     width: var(--cell-width);
     height: var(--cell-height);
+
+    &[rel='prev'] {
+        left: 0;
+    }
+
+    &[rel='next'] {
+        right: 0;
+    }
 }
 
 b {

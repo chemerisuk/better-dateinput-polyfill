@@ -84,8 +84,8 @@ function localeMonthYear(dateValue) {
 }
 
 const PICKER_BODY_HTML = html`
-<a style="left:0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M11.5 14.06L1 8L11.5 1.94z"/></svg></a>
-<a style="right:0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M15 8L4.5 14.06L4.5 1.94z"/></svg></a>
+<a rel="prev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M11.5 14.06L1 8L11.5 1.94z"/></svg></a>
+<a rel="next"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M15 8L4.5 14.06L4.5 1.94z"/></svg></a>
 <b></b>
 <table>
     <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
@@ -392,8 +392,8 @@ DOM.extend("dateinput-picker", {
         this.toggleState();
         this.invalidateState();
     },
-    _clickPickerButton(target) {
-        const sign = target.next("a")[0] ? -1 : 1;
+    _clickPickerButton(btn) {
+        const sign = btn.get("rel") === "next" ? 1 : -1;
         const targetDate = this._parentInput.get("valueAsDate") || new Date();
 
         if (this.get("aria-expanded") === "true") {
