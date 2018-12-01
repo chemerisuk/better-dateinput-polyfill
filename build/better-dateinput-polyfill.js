@@ -3,15 +3,16 @@
 (function () {
   "use strict";
 
-  var MAIN_CSS = "dateinput-picker{display:inline-block;vertical-align:bottom}dateinput-picker>object{width:21rem;max-height:calc(2.5rem*8);box-shadow:0 0 15px gray;background:white;position:absolute;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}dateinput-picker[aria-hidden=true]>object{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);visibility:hidden;height:0}dateinput-picker[aria-expanded=true]>object{max-height:calc(2.5rem + 3.75rem*3)}dateinput-picker+input{color:transparent!important;caret-color:transparent!important}dateinput-picker+input::selection{background:transparent}dateinput-picker+input::-moz-selection{background:transparent}";
-  var PICKER_CSS = "body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;line-height:2.5rem;text-align:center;cursor:default;-webkit-user-select:none;-ms-user-select:none;user-select:none;margin:0;overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}a{width:3rem;height:2.5rem;position:absolute;text-decoration:none;color:inherit}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}td,th{padding:0}thead{background:lightgray;font-size:smaller;font-weight:700}[aria-selected=false],[aria-disabled=true]{color:gray}[aria-selected=true]{box-shadow:inset 0 0 0 1px gray}a:hover,td:hover,[aria-disabled=true],[aria-selected=true]{background-color:whitesmoke}table+table{line-height:3.75rem;background:white;position:absolute;top:2.5rem;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}";
-  var HTML = DOM.get("documentElement");
+  var MAIN_CSS = "dateinput-picker{display:inline-block;vertical-align:bottom}dateinput-picker>object{position:absolute;width:21rem;max-height:20rem;box-shadow:0 8px 24px #888;background:#fff;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}dateinput-picker[aria-hidden=true]>object{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);visibility:hidden;height:0}dateinput-picker[aria-expanded=true]>object{max-height:13.75rem}dateinput-picker+input{color:transparent!important;caret-color:transparent!important}dateinput-picker+input::selection{background:none}dateinput-picker+input::-moz-selection{background:none}";
+  var PICKER_CSS = "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:2.5rem;text-align:center;cursor:default;-webkit-user-select:none;-ms-user-select:none;user-select:none;margin:0;overflow:hidden}a{position:absolute;width:3rem;height:2.5rem}a[rel=prev]{left:0}a[rel=next]{right:0}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}table+table{line-height:3.75rem;background:#fff;position:absolute;top:2.5rem;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}td,th{padding:0}thead{background:#ddd;font-size:smaller;font-weight:700}[aria-selected=false],[aria-disabled=true]{color:#888}[aria-selected=true]{box-shadow:inset 0 0 0 1px #888}a:hover,td:hover,[aria-disabled=true],[aria-selected=true]{background-color:#f5f5f5}";
+  var HTML = DOM.find("html");
+  var DEFAULT_LANGUAGE = HTML.get("lang") || void 0;
   var DEVICE_TYPE = "orientation" in window ? "mobile" : "desktop";
   var CLICK_EVENT_TYPE = DEVICE_TYPE === "mobile" ? "touchend" : "mousedown";
 
   var INTL_SUPPORTED = function () {
     try {
-      new Date().toLocaleString("i");
+      new Date().toLocaleString("_");
     } catch (err) {
       return err instanceof RangeError;
     }
@@ -26,7 +27,7 @@
   }();
 
   function ampm(pos, neg) {
-    return HTML.lang === "en-US" ? pos : neg;
+    return DEFAULT_LANGUAGE === "en-US" ? pos : neg;
   }
 
   function formatLocalDate(date) {
@@ -53,7 +54,7 @@
 
     if (INTL_SUPPORTED) {
       try {
-        return date.toLocaleDateString(HTML.lang, {
+        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
           weekday: "short"
         });
       } catch (err) {}
@@ -68,7 +69,7 @@
 
     if (INTL_SUPPORTED) {
       try {
-        return date.toLocaleDateString(HTML.lang, {
+        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
           month: "short"
         });
       } catch (err) {}
@@ -77,14 +78,14 @@
     return date.toUTCString().split(" ")[2];
   }
 
-  function localeMonthYear(month, year) {
+  function localeMonthYear(dateValue) {
     // set hours to '12' to fix Safari bug in Date#toLocaleString
-    var date = new Date(year, month, 12);
+    var date = new Date(dateValue.getFullYear(), dateValue.getMonth(), 12);
     /* istanbul ignore else */
 
     if (INTL_SUPPORTED) {
       try {
-        return date.toLocaleDateString(HTML.lang, {
+        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
           month: "long",
           year: "numeric"
         });
@@ -94,13 +95,25 @@
     return date.toUTCString().split(" ").slice(2, 4).join(" ");
   }
 
-  var PICKER_BODY_HTML = "<a style=\"left:0\">&#x25C4;</a> <a style=\"right:0\">&#x25BA;</a> <b></b><table><thead>" + repeat(7, function (_, i) {
+  var PICKER_BODY_HTML = "<a rel=\"prev\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"100%\" viewBox=\"0 0 16 16\"><path d=\"M11.5 14.06L1 8L11.5 1.94z\"/></svg></a><a rel=\"next\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"100%\" viewBox=\"0 0 16 16\"><path d=\"M15 8L4.5 14.06L4.5 1.94z\"/></svg></a><b></b><table><thead>" + repeat(7, function (_, i) {
     return "<th>" + localeWeekday(i);
   }) + "</thead><tbody>" + repeat(7, "<tr>" + repeat(7, "<td>") + "</tr>") + "</tbody></table><table><tbody>" + repeat(3, function (_, i) {
     return "<tr>" + repeat(4, function (_, j) {
       return "<td>" + localeMonth(i * 4 + j);
     });
   }) + "</tbody></table>";
+  var globalFormatters = DOM.findAll("meta[name^='data-format:']").reduce(function (globalFormatters, meta) {
+    var key = meta.get("name").split(":")[1].trim();
+    var formatOptions = JSON.parse(meta.get("content"));
+
+    if (key) {
+      try {
+        globalFormatters[key] = new window.Intl.DateTimeFormat(DEFAULT_LANGUAGE, formatOptions);
+      } catch (err) {}
+    }
+
+    return globalFormatters;
+  }, {});
   DOM.extend("input[type=date]", {
     constructor: function constructor() {
       var _this = this;
@@ -200,10 +213,17 @@
       if (dateValue) {
         if (INTL_SUPPORTED) {
           var formatOptions = this.get("data-format");
+          var formatter = globalFormatters[formatOptions];
 
           try {
             // set hours to '12' to fix Safari bug in Date#toLocaleString
-            displayText = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12).toLocaleDateString(HTML.lang, formatOptions ? JSON.parse(formatOptions) : {});
+            var presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
+
+            if (formatter) {
+              displayText = formatter.format(presentedDate);
+            } else {
+              displayText = presentedDate.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
+            }
           } catch (err) {}
         }
       }
@@ -283,7 +303,7 @@
 
       var marginTop = offset.height; // #3: move calendar to the top when passing cross browser window bounds
 
-      if (HTML.clientHeight < offset.bottom + pickerOffset.height) {
+      if (HTML.get("clientHeight") < offset.bottom + pickerOffset.height) {
         marginTop = -pickerOffset.height;
       } // always reset picker mode to the default
 
@@ -337,14 +357,15 @@
       pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"], this._clickPickerButton.bind(this));
       pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this));
 
-      this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this));
-
-      this._parentInput.on("change", this.invalidateState.bind(this)); // prevent input from loosing the focus outline
+      this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this)); // prevent input from loosing the focus outline
 
 
       pickerBody.on(CLICK_EVENT_TYPE, function () {
         return false;
-      }); // display calendar for autofocused elements
+      });
+
+      this._parentInput.on("change", this.invalidateState.bind(this)); // display calendar for autofocused elements
+
 
       if (DOM.get("activeElement") === this._parentInput[0]) {
         this.show();
@@ -407,7 +428,7 @@
       var captionText = dateValue.getFullYear();
 
       if (this.get("aria-expanded") !== "true") {
-        captionText = localeMonthYear(dateValue.getMonth(), captionText);
+        captionText = localeMonthYear(dateValue);
       } // update calendar caption
 
 
@@ -417,8 +438,8 @@
       this.toggleState();
       this.invalidateState();
     },
-    _clickPickerButton: function _clickPickerButton(target) {
-      var sign = target.next("a")[0] ? -1 : 1;
+    _clickPickerButton: function _clickPickerButton(btn) {
+      var sign = btn.get("rel") === "next" ? 1 : -1;
       var targetDate = this._parentInput.get("valueAsDate") || new Date();
 
       if (this.get("aria-expanded") === "true") {
