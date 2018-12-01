@@ -97,6 +97,17 @@ const PICKER_BODY_HTML = html`
 </table>
 `;
 
+const globalFormatters = DOM.findAll("meta[name^='data-format:']").reduce((globalFormatters, meta) => {
+    const key = meta.get("name").split(":")[1].trim();
+    const formatOptions = JSON.parse(meta.get("content"));
+    if (key) {
+        try {
+            globalFormatters[key] = new window.Intl.DateTimeFormat(DEFAULT_LANGUAGE, formatOptions);
+        } catch(err) {}
+    }
+    return globalFormatters;
+}, {});
+
 DOM.extend("input[type=date]", {
     constructor() {
         if (this._isPolyfillEnabled()) return false;
@@ -191,10 +202,15 @@ DOM.extend("input[type=date]", {
         if (dateValue) {
             if (INTL_SUPPORTED) {
                 const formatOptions = this.get("data-format");
+                const formatter = globalFormatters[formatOptions];
                 try {
                     // set hours to '12' to fix Safari bug in Date#toLocaleString
-                    displayText = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12)
-                        .toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
+                    const presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
+                    if (formatter) {
+                        displayText = formatter.format(presentedDate);
+                    } else {
+                        displayText = presentedDate.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
+                    }
                 } catch (err) {}
             }
         }

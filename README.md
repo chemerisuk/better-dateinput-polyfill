@@ -18,7 +18,7 @@ Why another date picker? The problem is that most of existing solutions do not f
 
 ## Installation
 ```sh
-$ npm install better-dateinput-polyfill better-dom@latest
+$ npm install better-dateinput-polyfill better-dom
 ```
 
 Then append the following scripts to your page:
@@ -43,6 +43,22 @@ Sometimes it's useful to override browser implemetation with the consistent cont
 Version 3 uses [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) methods to format presented date value according to the current page locale. You can customize it by specifying `data-format` attribute with [options for the Date#toLocaleString](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString) call as a stringified JSON object:
 ```html
 <input type="date" data-format='{"month":"short","year":"numeric","day":"numeric"}'>
+```
+
+When you set the same presentation format multiple times it makes sense to define a global format. Add extra `<meta>` element with appropriate values for `name` and `content` attributes into document `<head>`. Later in HTML you can just use a global format name as a value for `data-format`:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    ...
+    <meta name="data-format:YYYYmmm" content='{"year":"numeric","month":"short"}'>
+</head>
+<body>
+    ...
+    <input type="date" name="test" value="2000-01-01" data-format="YYYYmmm">
+</body>
+</html>
 ```
 
 ## Contributing
