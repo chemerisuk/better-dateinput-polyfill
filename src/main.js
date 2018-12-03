@@ -112,9 +112,17 @@ DOM.extend("input[type=date]", {
     constructor() {
         if (this._isPolyfillEnabled()) return false;
 
-        this._svgTextOptions = this.css(["color", "font", "padding-left", "border-left-width", "text-indent", "padding-top", "border-top-width"]);
-        this._svgTextOptions.dx = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b);
-        this._svgTextOptions.dy = ["padding-top", "border-top-width"].map(p => parseFloat(this._svgTextOptions[p])).reduce((a, b) => a + b) / 2;
+        const svgTextOptions = this.css(["color", "font-size", "font-family", "font-style", "line-height", "padding-left", "border-left-width", "text-indent", "padding-top", "border-top-width"]);
+        svgTextOptions.dx = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(svgTextOptions[p])).reduce((a, b) => a + b);
+        svgTextOptions.dy = ["padding-top", "border-top-width"].map(p => parseFloat(svgTextOptions[p])).reduce((a, b) => a + b) / 2;
+        svgTextOptions.css = ["font-family", "font-style", "line-height", "font-size"].map(p => p + ":" + svgTextOptions[p]).join(";").replace(/"/g, "");
+
+        // FIXME: fix issue in html helper and drop replace below
+        this._backgroundTemplate = html`
+        <svg xmlns="http://www.w3.org/2000/svg">
+            <text x="${svgTextOptions.dx}" y="50%" dy="${svgTextOptions.dy}" fill="${svgTextOptions.color}"></text>
+        </svg>
+        `.replace("></", ` style="${svgTextOptions.css}"></`);
 
         const picker = DOM.create("<dateinput-picker tabindex='-1'>");
         // store reference to the input
@@ -215,11 +223,7 @@ DOM.extend("input[type=date]", {
             }
         }
 
-        this.css("background-image", `url('data:image/svg+xml,${encodeURIComponent(html`
-        <svg xmlns="http://www.w3.org/2000/svg">
-            <text x="${this._svgTextOptions.dx}" y="50%" dy="${this._svgTextOptions.dy}" fill="${this._svgTextOptions.color}" style="font:${this._svgTextOptions.font}">${displayText}</text>
-        </svg>
-        `)}')`);
+        this.css("background-image", `url('data:image/svg+xml,${encodeURIComponent(this._backgroundTemplate.replace("></", `>${displayText}</`))}')`);
     },
     _keydownInput(which) {
         if (which === 13 && this._picker.get("aria-hidden") === "true") {
