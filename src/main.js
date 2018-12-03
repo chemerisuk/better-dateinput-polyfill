@@ -112,15 +112,14 @@ DOM.extend("input[type=date]", {
     constructor() {
         if (this._isPolyfillEnabled()) return false;
 
-        const svgTextOptions = this.css(["color", "font-size", "font-family", "font-style", "line-height", "padding-left", "border-left-width", "text-indent", "padding-top", "border-top-width"]);
+        const svgTextOptions = this.css(["color", "font-size", "font-family", "font-style", "line-height", "padding-left", "border-left-width", "text-indent"]);
         svgTextOptions.dx = ["padding-left", "border-left-width", "text-indent"].map(p => parseFloat(svgTextOptions[p])).reduce((a, b) => a + b);
-        svgTextOptions.dy = ["padding-top", "border-top-width"].map(p => parseFloat(svgTextOptions[p])).reduce((a, b) => a + b) / 2;
         svgTextOptions.css = ["font-family", "font-style", "line-height", "font-size"].map(p => p + ":" + svgTextOptions[p]).join(";").replace(/"/g, "");
 
         // FIXME: fix issue in html helper and drop replace below
         this._backgroundTemplate = html`
         <svg xmlns="http://www.w3.org/2000/svg">
-            <text x="${svgTextOptions.dx}" y="50%" dy="${svgTextOptions.dy}" fill="${svgTextOptions.color}"></text>
+            <text x="${svgTextOptions.dx}" y="50%" dy=".35em" fill="${svgTextOptions.color}"></text>
         </svg>
         `.replace("></", ` style="${svgTextOptions.css}"></`);
 
