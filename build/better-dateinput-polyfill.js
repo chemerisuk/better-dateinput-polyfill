@@ -117,22 +117,17 @@
   DOM.extend("input[type=date]", {
     constructor: function constructor() {
       if (this._isPolyfillEnabled()) return false;
-      var svgTextOptions = this.css(["color", "font-size", "font-family", "font-style", "line-height", "padding-left", "border-left-width", "text-indent", "padding-top", "border-top-width"]);
+      var svgTextOptions = this.css(["color", "font-size", "font-family", "font-style", "line-height", "padding-left", "border-left-width", "text-indent"]);
       svgTextOptions.dx = ["padding-left", "border-left-width", "text-indent"].map(function (p) {
         return parseFloat(svgTextOptions[p]);
       }).reduce(function (a, b) {
         return a + b;
       });
-      svgTextOptions.dy = ["padding-top", "border-top-width"].map(function (p) {
-        return parseFloat(svgTextOptions[p]);
-      }).reduce(function (a, b) {
-        return a + b;
-      }) / 2;
       svgTextOptions.css = ["font-family", "font-style", "line-height", "font-size"].map(function (p) {
         return p + ":" + svgTextOptions[p];
       }).join(";").replace(/"/g, ""); // FIXME: fix issue in html helper and drop replace below
 
-      this._backgroundTemplate = ("<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"" + svgTextOptions.dx + "\" y=\"50%\" dy=\"" + svgTextOptions.dy + "\" fill=\"" + svgTextOptions.color + "\"></text></svg>").replace("></", " style=\"" + svgTextOptions.css + "\"></");
+      this._backgroundTemplate = ("<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"" + svgTextOptions.dx + "\" y=\"50%\" dy=\".35em\" fill=\"" + svgTextOptions.color + "\"></text></svg>").replace("></", " style=\"" + svgTextOptions.css + "\"></");
       var picker = DOM.create("<dateinput-picker tabindex='-1'>"); // store reference to the input
 
       picker._parentInput = this; // add <dateinput-picker> to the document
