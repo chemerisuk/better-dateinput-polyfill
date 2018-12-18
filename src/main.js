@@ -332,7 +332,7 @@ DOM.extend("dateinput-picker", {
         pickerBody.on("picker:invalidate", ["detail"], this._invalidateCaption.bind(this));
 
         // picker click handlers
-        pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"], this._clickPickerButton.bind(this));
+        pickerBody.on(CLICK_EVENT_TYPE, "a", ["currentTarget"], this._clickPickerButton.bind(this));
         pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this));
         this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this));
         // prevent input from loosing the focus outline
