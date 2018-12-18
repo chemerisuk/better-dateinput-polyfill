@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.2.2 Mon, 03 Dec 2018 14:44:57 GMT
+ * @version 3.2.3 Tue, 18 Dec 2018 03:21:57 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2018 Maksim Chemerisuk
  * @license MIT
@@ -359,7 +359,7 @@
 
       pickerBody.on("picker:invalidate", ["detail"], this._invalidateCaption.bind(this)); // picker click handlers
 
-      pickerBody.on(CLICK_EVENT_TYPE, "a", ["target"], this._clickPickerButton.bind(this));
+      pickerBody.on(CLICK_EVENT_TYPE, "a", ["currentTarget"], this._clickPickerButton.bind(this));
       pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this));
 
       this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this)); // prevent input from loosing the focus outline
