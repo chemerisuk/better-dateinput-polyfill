@@ -28,7 +28,8 @@ function ampm(pos, neg) {
 }
 
 function localeWeekday(index) {
-    const date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
+    const date = new Date();
+    date.setDate(date.getDate() - date.getDay() + index + ampm(0, 1));
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
@@ -39,7 +40,7 @@ function localeWeekday(index) {
 }
 
 function localeMonth(index) {
-    const date = new Date(Date.UTC(2010, index));
+    const date = new Date(null, index);
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
