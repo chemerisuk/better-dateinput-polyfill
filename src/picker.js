@@ -27,12 +27,6 @@ function ampm(pos, neg) {
     return DEFAULT_LANGUAGE === "en-US" ? pos : neg;
 }
 
-function parseLocalDate(value) {
-    // datetime value parsed with local timezone
-    const dateValue = new Date(value + "T00:00");
-    return isNaN(dateValue.getTime()) ? null : dateValue;
-}
-
 function localeWeekday(index) {
     const date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
     /* istanbul ignore else */
@@ -130,8 +124,8 @@ DOM.extend("dateinput-picker", {
         const month = dateValue.getMonth();
         const date = dateValue.getDate();
         const year = dateValue.getFullYear();
-        const min = parseLocalDate(this._parentInput.get("min")) || Number.MIN_VALUE;
-        const max = parseLocalDate(this._parentInput.get("max")) || Number.MAX_VALUE;
+        const min = new Date(this._parentInput.get("min") + "T00:00");
+        const max = new Date(this._parentInput.get("max") + "T00:00");
         const iterDate = new Date(year, month, 1);
         // move to beginning of the first week in current month
         iterDate.setDate(1 - iterDate.getDay() - ampm(1, iterDate.getDay() === 0 ? 7 : 0));
@@ -162,8 +156,8 @@ DOM.extend("dateinput-picker", {
     _invalidateMonths(dateValue) {
         const month = dateValue.getMonth();
         const year = dateValue.getFullYear();
-        const min = parseLocalDate(this._parentInput.get("min")) || Number.MIN_VALUE;
-        const max = parseLocalDate(this._parentInput.get("max")) || Number.MAX_VALUE;
+        const min = new Date(this._parentInput.get("min") + "T00:00");
+        const max = new Date(this._parentInput.get("max") + "T00:00");
         const iterDate = new Date(year, month, 1);
 
         this._calendarMonths.findAll("td").forEach((day, index) => {
