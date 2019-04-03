@@ -1,8 +1,8 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.2.3 Tue, 18 Dec 2018 03:21:57 GMT
+ * @version 3.2.4 Wed, 03 Apr 2019 20:54:58 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
- * @copyright 2018 Maksim Chemerisuk
+ * @copyright 2019 Maksim Chemerisuk
  * @license MIT
  */
 ;
@@ -11,21 +11,9 @@
   "use strict";
 
   var MAIN_CSS = "dateinput-picker{display:inline-block;vertical-align:bottom}dateinput-picker>object{position:absolute;z-index:1000;width:21rem;height:20rem;max-height:20rem;box-shadow:0 8px 24px #888;background:#fff;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}dateinput-picker[aria-hidden=true]>object{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);visibility:hidden;height:0}dateinput-picker[aria-expanded=true]>object{height:13.75rem;max-height:13.75rem}dateinput-picker+input{color:transparent!important;caret-color:transparent!important}dateinput-picker+input::selection{background:none}dateinput-picker+input::-moz-selection{background:none}";
-  var PICKER_CSS = "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:2.5rem;text-align:center;cursor:default;-webkit-user-select:none;-ms-user-select:none;user-select:none;margin:0;overflow:hidden}a{position:absolute;width:3rem;height:2.5rem}a[rel=prev]{left:0}a[rel=next]{right:0}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}table+table{line-height:3.75rem;background:#fff;position:absolute;top:2.5rem;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}td,th{padding:0}thead{background:#ddd;font-size:smaller;font-weight:700}[aria-selected=false],[aria-disabled=true]{color:#888}[aria-selected=true]{box-shadow:inset 0 0 0 1px #888}a:hover,td:hover,[aria-disabled=true],[aria-selected=true]{background-color:#f5f5f5}";
   var HTML = DOM.find("html");
   var DEFAULT_LANGUAGE = HTML.get("lang") || void 0;
   var DEVICE_TYPE = "orientation" in window ? "mobile" : "desktop";
-  var CLICK_EVENT_TYPE = DEVICE_TYPE === "mobile" ? "touchend" : "mousedown";
-
-  var INTL_SUPPORTED = function () {
-    try {
-      new Date().toLocaleString("_");
-    } catch (err) {
-      return err instanceof RangeError;
-    }
-
-    return false;
-  }();
 
   var TYPE_SUPPORTED = function () {
     // use a stronger type support detection that handles old WebKit browsers:
@@ -33,82 +21,16 @@
     return DOM.create("<input type='date'>").value("_").value() !== "_";
   }();
 
-  function ampm(pos, neg) {
-    return DEFAULT_LANGUAGE === "en-US" ? pos : neg;
-  }
-
   function formatLocalDate(date) {
     return [date.getFullYear(), ("0" + (date.getMonth() + 1)).slice(-2), ("0" + date.getDate()).slice(-2)].join("-");
   }
 
   function parseLocalDate(value) {
-    var valueParts = value.split("-");
-    var dateValue = new Date(valueParts[0], valueParts[1] - 1, valueParts[2]);
+    // datetime value parsed with local timezone
+    var dateValue = new Date(value + "T00:00");
     return isNaN(dateValue.getTime()) ? null : dateValue;
   }
 
-  function repeat(times, fn) {
-    if (typeof fn === "string") {
-      return Array(times + 1).join(fn);
-    } else {
-      return Array.apply(null, Array(times)).map(fn).join("");
-    }
-  }
-
-  function localeWeekday(index) {
-    var date = new Date(Date.UTC(ampm(2001, 2002), 0, index));
-    /* istanbul ignore else */
-
-    if (INTL_SUPPORTED) {
-      try {
-        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
-          weekday: "short"
-        });
-      } catch (err) {}
-    }
-
-    return date.toUTCString().split(",")[0].slice(0, 2);
-  }
-
-  function localeMonth(index) {
-    var date = new Date(Date.UTC(2010, index));
-    /* istanbul ignore else */
-
-    if (INTL_SUPPORTED) {
-      try {
-        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
-          month: "short"
-        });
-      } catch (err) {}
-    }
-
-    return date.toUTCString().split(" ")[2];
-  }
-
-  function localeMonthYear(dateValue) {
-    // set hours to '12' to fix Safari bug in Date#toLocaleString
-    var date = new Date(dateValue.getFullYear(), dateValue.getMonth(), 12);
-    /* istanbul ignore else */
-
-    if (INTL_SUPPORTED) {
-      try {
-        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
-          month: "long",
-          year: "numeric"
-        });
-      } catch (err) {}
-    }
-
-    return date.toUTCString().split(" ").slice(2, 4).join(" ");
-  }
-
-  var PICKER_BODY_HTML = "<a rel=\"prev\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"100%\" viewBox=\"0 0 16 16\"><path d=\"M11.5 14.06L1 8L11.5 1.94z\"/></svg></a><a rel=\"next\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"100%\" viewBox=\"0 0 16 16\"><path d=\"M15 8L4.5 14.06L4.5 1.94z\"/></svg></a><b></b><table><thead>" + repeat(7, function (_, i) {
-    return "<th>" + localeWeekday(i);
-  }) + "</thead><tbody>" + repeat(7, "<tr>" + repeat(7, "<td>") + "</tr>") + "</tbody></table><table><tbody>" + repeat(3, function (_, i) {
-    return "<tr>" + repeat(4, function (_, j) {
-      return "<td>" + localeMonth(i * 4 + j);
-    });
-  }) + "</tbody></table>";
   var globalFormatters = DOM.findAll("meta[name^='data-format:']").reduce(function (globalFormatters, meta) {
     var key = meta.get("name").split(":")[1].trim();
     var formatOptions = JSON.parse(meta.get("content"));
@@ -166,7 +88,7 @@
       this.on("focus", this._focusInput.bind(this));
       this.on("blur", this._blurInput.bind(this));
       this.on("keydown", ["which"], this._keydownInput.bind(this));
-      this.on(CLICK_EVENT_TYPE, this._focusInput.bind(this)); // form events do not trigger any state change
+      this.on("click", this._focusInput.bind(this)); // form events do not trigger any state change
 
       this.closest("form").on("reset", resetDisplayedText);
       resetDisplayedText(); // present initial value
@@ -190,8 +112,8 @@
       if (!dateValue) {
         value = "";
       } else {
-        var min = parseLocalDate(this.get("min")) || Number.MIN_VALUE;
-        var max = parseLocalDate(this.get("max")) || Number.MAX_VALUE;
+        var min = new Date(this.get("min") + "T00:00");
+        var max = new Date(this.get("max") + "T00:00");
 
         if (dateValue < min) {
           value = formatLocalDate(min);
@@ -216,10 +138,10 @@
       var dateValue = parseLocalDate(displayText);
 
       if (dateValue) {
-        if (INTL_SUPPORTED) {
-          var formatOptions = this.get("data-format");
-          var formatter = globalFormatters[formatOptions];
+        var formatOptions = this.get("data-format");
+        var formatter = globalFormatters[formatOptions];
 
+        if (formatter) {
           try {
             // set hours to '12' to fix Safari bug in Date#toLocaleString
             var presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
@@ -321,6 +243,95 @@
       this._picker.css("margin-top", marginTop).show();
     }
   });
+  DOM.importStyles(MAIN_CSS);
+})();
+;
+
+(function () {
+  "use strict";
+
+  var PICKER_CSS = "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:2.5rem;text-align:center;cursor:default;-webkit-user-select:none;-ms-user-select:none;user-select:none;margin:0;overflow:hidden}a{position:absolute;width:3rem;height:2.5rem}a[rel=prev]{left:0}a[rel=next]{right:0}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}table+table{line-height:3.75rem;background:#fff;position:absolute;top:2.5rem;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}td,th{padding:0}thead{background:#ddd;font-size:smaller;font-weight:700}[aria-selected=false],[aria-disabled=true]{color:#888}[aria-selected=true]{box-shadow:inset 0 0 0 1px #888}a:hover,td:hover,[aria-disabled=true],[aria-selected=true]{background-color:#f5f5f5}";
+  var HTML = DOM.find("html");
+  var DEFAULT_LANGUAGE = HTML.get("lang") || void 0;
+  var CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
+
+  var INTL_SUPPORTED = function () {
+    try {
+      new Date().toLocaleString("_");
+    } catch (err) {
+      return err instanceof RangeError;
+    }
+
+    return false;
+  }();
+
+  function repeat(times, fn) {
+    if (typeof fn === "string") {
+      return Array(times + 1).join(fn);
+    } else {
+      return Array.apply(null, Array(times)).map(fn).join("");
+    }
+  }
+
+  function ampm(pos, neg) {
+    return DEFAULT_LANGUAGE === "en-US" ? pos : neg;
+  }
+
+  function localeWeekday(index) {
+    var date = new Date();
+    date.setDate(date.getDate() - date.getDay() + index + ampm(0, 1));
+    /* istanbul ignore else */
+
+    if (INTL_SUPPORTED) {
+      try {
+        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
+          weekday: "short"
+        });
+      } catch (err) {}
+    }
+
+    return date.toUTCString().split(",")[0].slice(0, 2);
+  }
+
+  function localeMonth(index) {
+    var date = new Date(null, index);
+    /* istanbul ignore else */
+
+    if (INTL_SUPPORTED) {
+      try {
+        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
+          month: "short"
+        });
+      } catch (err) {}
+    }
+
+    return date.toUTCString().split(" ")[2];
+  }
+
+  function localeMonthYear(dateValue) {
+    // set hours to '12' to fix Safari bug in Date#toLocaleString
+    var date = new Date(dateValue.getFullYear(), dateValue.getMonth(), 12);
+    /* istanbul ignore else */
+
+    if (INTL_SUPPORTED) {
+      try {
+        return date.toLocaleDateString(DEFAULT_LANGUAGE, {
+          month: "long",
+          year: "numeric"
+        });
+      } catch (err) {}
+    }
+
+    return date.toUTCString().split(" ").slice(2, 4).join(" ");
+  }
+
+  var PICKER_BODY_HTML = "<a rel=\"prev\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"100%\" viewBox=\"0 0 16 16\"><path d=\"M11.5 14.06L1 8L11.5 1.94z\"/></svg></a><a rel=\"next\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"100%\" viewBox=\"0 0 16 16\"><path d=\"M15 8L4.5 14.06L4.5 1.94z\"/></svg></a><b></b><table><thead>" + repeat(7, function (_, i) {
+    return "<th>" + localeWeekday(i);
+  }) + "</thead><tbody>" + repeat(7, "<tr>" + repeat(7, "<td>") + "</tr>") + "</tbody></table><table><tbody>" + repeat(3, function (_, i) {
+    return "<tr>" + repeat(4, function (_, j) {
+      return "<td>" + localeMonth(i * 4 + j);
+    });
+  }) + "</tbody></table>";
   DOM.extend("dateinput-picker", {
     constructor: function constructor() {
       var IE = "ScriptEngineMajorVersion" in window;
@@ -380,8 +391,8 @@
       var month = dateValue.getMonth();
       var date = dateValue.getDate();
       var year = dateValue.getFullYear();
-      var min = parseLocalDate(this._parentInput.get("min")) || Number.MIN_VALUE;
-      var max = parseLocalDate(this._parentInput.get("max")) || Number.MAX_VALUE;
+      var min = new Date(this._parentInput.get("min") + "T00:00");
+      var max = new Date(this._parentInput.get("max") + "T00:00");
       var iterDate = new Date(year, month, 1); // move to beginning of the first week in current month
 
       iterDate.setDate(1 - iterDate.getDay() - ampm(1, iterDate.getDay() === 0 ? 7 : 0)); // update days picker
@@ -410,8 +421,8 @@
     _invalidateMonths: function _invalidateMonths(dateValue) {
       var month = dateValue.getMonth();
       var year = dateValue.getFullYear();
-      var min = parseLocalDate(this._parentInput.get("min")) || Number.MIN_VALUE;
-      var max = parseLocalDate(this._parentInput.get("max")) || Number.MAX_VALUE;
+      var min = new Date(this._parentInput.get("min") + "T00:00");
+      var max = new Date(this._parentInput.get("max") + "T00:00");
       var iterDate = new Date(year, month, 1);
 
       this._calendarMonths.findAll("td").forEach(function (day, index) {
@@ -453,7 +464,7 @@
         targetDate.setMonth(targetDate.getMonth() + sign);
       }
 
-      this._parentInput.value(formatLocalDate(targetDate)).fire("change");
+      this._parentInput.set("valueAsDate", targetDate).fire("change");
     },
     _clickPickerDay: function _clickPickerDay(target) {
       var targetDate;
@@ -475,7 +486,7 @@
       }
 
       if (targetDate != null) {
-        this._parentInput.value(formatLocalDate(targetDate)).fire("change");
+        this._parentInput.set("valueAsDate", targetDate).fire("change");
       }
     },
     toggleState: function toggleState(expanded) {
@@ -499,5 +510,4 @@
       }
     }
   });
-  DOM.importStyles(MAIN_CSS);
 })();
