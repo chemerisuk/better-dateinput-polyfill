@@ -138,17 +138,15 @@ DOM.extend("input[type=date]", {
         if (dateValue) {
             const formatOptions = this.get("data-format");
             const formatter = globalFormatters[formatOptions];
-            if (formatter) {
-                try {
-                    // set hours to '12' to fix Safari bug in Date#toLocaleString
-                    const presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
-                    if (formatter) {
-                        displayText = formatter.format(presentedDate);
-                    } else {
-                        displayText = presentedDate.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
-                    }
-                } catch (err) {}
-            }
+            try {
+                // set hours to '12' to fix Safari bug in Date#toLocaleString
+                const presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
+                if (formatter) {
+                    displayText = formatter.format(presentedDate);
+                } else {
+                    displayText = presentedDate.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
+                }
+            } catch (err) {}
         }
 
         this.css("background-image", `url('data:image/svg+xml,${encodeURIComponent(this._backgroundTemplate.replace("></", `>${displayText}</`))}')`);
