@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.2.4 Wed, 03 Apr 2019 20:54:58 GMT
+ * @version 3.2.5 Thu, 04 Apr 2019 05:24:01 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2019 Maksim Chemerisuk
  * @license MIT
@@ -141,18 +141,16 @@
         var formatOptions = this.get("data-format");
         var formatter = globalFormatters[formatOptions];
 
-        if (formatter) {
-          try {
-            // set hours to '12' to fix Safari bug in Date#toLocaleString
-            var presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
+        try {
+          // set hours to '12' to fix Safari bug in Date#toLocaleString
+          var presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
 
-            if (formatter) {
-              displayText = formatter.format(presentedDate);
-            } else {
-              displayText = presentedDate.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
-            }
-          } catch (err) {}
-        }
+          if (formatter) {
+            displayText = formatter.format(presentedDate);
+          } else {
+            displayText = presentedDate.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
+          }
+        } catch (err) {}
       }
 
       this.css("background-image", "url('data:image/svg+xml," + encodeURIComponent(this._backgroundTemplate.replace("></", ">" + displayText + "</")) + "')");

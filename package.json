@@ -1,7 +1,7 @@
 {
   "name": "better-dateinput-polyfill",
   "description": "input[type=date] polyfill for better-dom",
-  "version": "3.2.4",
+  "version": "3.2.5",
   "author": "Maksim Chemerisuk",
   "license": "MIT",
   "homepage": "https://github.com/chemerisuk/better-dateinput-polyfill",
