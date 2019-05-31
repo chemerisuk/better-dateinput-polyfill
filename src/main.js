@@ -22,7 +22,7 @@ function formatLocalDate(date) {
 
 function parseLocalDate(value) {
     // datetime value parsed with local timezone
-    const dateValue = new Date(value + "T00:00");
+    const dateValue = new Date((value || "?") + "T00:00");
     return isNaN(dateValue.getTime()) ? null : dateValue;
 }
 
