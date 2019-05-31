@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.2.6 Mon, 27 May 2019 19:55:30 GMT
+ * @version 3.2.7 Fri, 31 May 2019 21:09:24 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2019 Maksim Chemerisuk
  * @license MIT
@@ -26,7 +26,7 @@
 
   function parseLocalDate(value) {
     // datetime value parsed with local timezone
-    var dateValue = new Date(value + "T00:00");
+    var dateValue = new Date((value || "?") + "T00:00");
     return isNaN(dateValue.getTime()) ? null : dateValue;
   }
 
@@ -111,8 +111,8 @@
       if (!dateValue) {
         value = "";
       } else {
-        var min = new Date(this.get("min") + "T00:00");
-        var max = new Date(this.get("max") + "T00:00");
+        var min = new Date((this.get("min") || "?") + "T00:00");
+        var max = new Date((this.get("max") || "?") + "T00:00");
 
         if (dateValue < min) {
           value = formatLocalDate(min);
@@ -387,8 +387,8 @@
       var month = dateValue.getMonth();
       var date = dateValue.getDate();
       var year = dateValue.getFullYear();
-      var min = new Date(this._parentInput.get("min") + "T00:00");
-      var max = new Date(this._parentInput.get("max") + "T00:00");
+      var min = new Date((this._parentInput.get("min") || "?") + "T00:00");
+      var max = new Date((this._parentInput.get("max") || "?") + "T00:00");
       var iterDate = new Date(year, month, 1); // move to beginning of the first week in current month
 
       iterDate.setDate(1 - iterDate.getDay() - ampm(1, iterDate.getDay() === 0 ? 7 : 0)); // update days picker
@@ -417,8 +417,8 @@
     _invalidateMonths: function _invalidateMonths(dateValue) {
       var month = dateValue.getMonth();
       var year = dateValue.getFullYear();
-      var min = new Date(this._parentInput.get("min") + "T00:00");
-      var max = new Date(this._parentInput.get("max") + "T00:00");
+      var min = new Date((this._parentInput.get("min") || "?") + "T00:00");
+      var max = new Date((this._parentInput.get("max") || "?") + "T00:00");
       var iterDate = new Date(year, month, 1);
 
       this._calendarMonths.findAll("td").forEach(function (day, index) {
