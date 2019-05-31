@@ -110,8 +110,10 @@ DOM.extend("input[type=date]", {
         if (!dateValue) {
             value = "";
         } else {
-            const min = new Date(this.get("min") + "T00:00");
-            const max = new Date(this.get("max") ? this.get("max") + "T00:00" : '');
+            const minAttribute = this.get("min");
+            const maxAttribute = this.get("max")
+            const min = new Date(minAttribute ? minAttribute + "T00:00" : '');
+            const max = new Date(maxAttribute ? maxAttribute + "T00:00" : '');
 
             if (dateValue < min) {
                 value = formatLocalDate(min);
