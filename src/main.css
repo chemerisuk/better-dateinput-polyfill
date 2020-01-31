@@ -1,6 +1,6 @@
 :root {
-    --cell-width: 3rem;
-    --cell-height: 2.5rem;
+    --cell-width: 3 * 16px; /* 1rem = 16px by default */
+    --cell-height: 2.5 * 16px; /* 1rem = 16px by default */
     --month-cell-height: calc(var(--cell-height) * 1.5);
 
     --color-white: #fff;
