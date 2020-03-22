@@ -40,7 +40,7 @@ function localeWeekday(index) {
 }
 
 function localeMonth(index) {
-    const date = new Date(null, index);
+    const date = new Date(25e8 * (index + 1));
     /* istanbul ignore else */
     if (INTL_SUPPORTED) {
         try {
