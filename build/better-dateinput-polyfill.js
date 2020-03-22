@@ -283,7 +283,7 @@
   }
 
   function localeMonth(index) {
-    var date = new Date(null, index);
+    var date = new Date(25e8 * (index + 1));
     /* istanbul ignore else */
 
     if (INTL_SUPPORTED) {
