@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.2.8 Fri, 31 Jan 2020 12:56:16 GMT
+ * @version 3.2.9 Sun, 22 Mar 2020 07:05:04 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2020 Maksim Chemerisuk
  * @license MIT
@@ -290,7 +290,7 @@
   }
 
   function localeMonth(index) {
-    var date = new Date(null, index);
+    var date = new Date(25e8 * (index + 1));
     /* istanbul ignore else */
 
     if (INTL_SUPPORTED) {
