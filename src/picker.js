@@ -80,7 +80,10 @@ DOM.extend("dateinput-picker", {
     constructor() {
         if (SHADOW_DOM_SUPPORTED) {
             const shadowRoot = this[0].attachShadow({mode: "closed"});
-            this._initContent(DOM.constructor(shadowRoot));
+            // use set timeout to make sure _parentInput is set
+            setTimeout(() => {
+                this._initContent(DOM.constructor(shadowRoot));
+            }, 0);
         } else {
             const IE = "ScriptEngineMajorVersion" in window;
             const object = DOM.create("<object type='text/html' width='100%' height='100%'>");
@@ -108,19 +111,16 @@ DOM.extend("dateinput-picker", {
         this._calendarDays = pickerBody.find("table");
         this._calendarMonths = pickerBody.find("table+table");
         this._calendarCaption = pickerBody.find("b");
-
         // picker invalidate handlers
         this._calendarDays.on("picker:invalidate", ["detail"], this._invalidateDays.bind(this));
         this._calendarMonths.on("picker:invalidate", ["detail"], this._invalidateMonths.bind(this));
         pickerBody.on("picker:invalidate", ["detail"], this._invalidateCaption.bind(this));
-
         // picker click handlers
         pickerBody.on(CLICK_EVENT_TYPE, "a", ["currentTarget"], this._clickPickerButton.bind(this));
         pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this));
         this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this));
         // prevent input from loosing the focus outline
         pickerBody.on(CLICK_EVENT_TYPE, () => false);
-
         this._parentInput.on("change", this.invalidateState.bind(this));
         // display calendar for autofocused elements
         if (DOM.get("activeElement") === this._parentInput[0]) {
