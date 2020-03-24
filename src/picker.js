@@ -5,6 +5,7 @@ import PICKER_CSS from "./picker.css";
 const HTML = DOM.find("html");
 const DEFAULT_LANGUAGE = HTML.get("lang") || void 0;
 const CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
+const SHADOW_DOM_SUPPORTED = !!HTMLElement.prototype.attachShadow;
 
 const INTL_SUPPORTED = (function() {
     try {
@@ -77,27 +78,32 @@ const PICKER_BODY_HTML = html`
 
 DOM.extend("dateinput-picker", {
     constructor() {
-        const IE = "ScriptEngineMajorVersion" in window;
-        const object = DOM.create("<object type='text/html' width='100%' height='100%'>");
-        // non-IE: must be BEFORE the element added to the document
-        if (!IE) {
-            object.set("data", "about:blank");
-        }
-        // load content when <object> is ready
-        this.on("load", {capture: true, once: true}, ["target"], this._loadContent.bind(this));
-        // add object element to the document
-        this.append(object);
-        // IE: must be AFTER the element added to the document
-        if (IE) {
-            object.set("data", "about:blank");
+        if (SHADOW_DOM_SUPPORTED) {
+            const shadowRoot = this[0].attachShadow({mode: "closed"});
+            this._initContent(DOM.constructor(shadowRoot));
+        } else {
+            const IE = "ScriptEngineMajorVersion" in window;
+            const object = DOM.create("<object type='text/html' width='100%' height='100%'>");
+            // non-IE: must be BEFORE the element added to the document
+            if (!IE) {
+                object.set("data", "about:blank");
+            }
+            // load content when <object> is ready
+            this.on("load", {capture: true, once: true}, ["target"], object => {
+                const pickerRoot = DOM.constructor(object.get("contentDocument"));
+
+                this._initContent(pickerRoot.find("body"));
+            });
+            // add object element to the document
+            this.append(object);
+            // IE: must be AFTER the element added to the document
+            if (IE) {
+                object.set("data", "about:blank");
+            }
         }
     },
-    _loadContent(object) {
-        const pickerRoot = DOM.constructor(object.get("contentDocument"));
-        const pickerBody = pickerRoot.find("body");
-        // initialize picker content
-        pickerRoot.importStyles(PICKER_CSS);
-        pickerBody.set(PICKER_BODY_HTML);
+    _initContent(pickerBody) {
+        pickerBody.set("<style>" + PICKER_CSS + "</style>" + PICKER_BODY_HTML);
         // internal references
         this._calendarDays = pickerBody.find("table");
         this._calendarMonths = pickerBody.find("table+table");

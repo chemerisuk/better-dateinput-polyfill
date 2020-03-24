@@ -13,30 +13,29 @@
 dateinput-picker {
     display: inline-block;
     vertical-align: bottom;
+    overflow: hidden;
 
-    & > object {
-        position: absolute;
-        z-index: 1000;
-        width: calc(var(--cell-width) * 7);
-        height: calc(var(--cell-height) * 8);
-        max-height: calc(var(--cell-height) * 8);
-        box-shadow: 0 8px 24px var(--color-shadow);
-        background: var(--color-white);
+    position: absolute;
+    z-index: 1000;
+    width: calc(var(--cell-width) * 7);
+    height: calc(var(--cell-height) * 8);
+    max-height: calc(var(--cell-height) * 8);
+    box-shadow: 0 8px 24px var(--color-shadow);
+    background: var(--color-white);
 
-        opacity: 1;
-        transform: translate3d(0,0,0);
-        transform-origin: 0 0;
-        transition: 0.1s ease-out;
-    }
+    opacity: 1;
+    transform: translate3d(0,0,0);
+    transform-origin: 0 0;
+    transition: 0.1s ease-out;
 
-    &[aria-hidden=true] > object {
+    &[aria-hidden=true] {
         opacity: 0;
         transform: skew(-25deg) scaleX(0.75);
         visibility: hidden;
         height: 0; /* fixes wierd iOS overlapping */
     }
 
-    &[aria-expanded=true] > object {
+    &[aria-expanded=true] {
         height: calc(var(--cell-height) + var(--month-cell-height) * 3);
         max-height: calc(var(--cell-height) + var(--month-cell-height) * 3);
     }

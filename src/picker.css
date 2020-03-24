@@ -11,6 +11,11 @@
 }
 
 body {
+    /* remove extra scrolls on IE */
+    overflow: hidden;
+}
+
+* {
     font-family: system-ui;
     line-height: var(--cell-height);
     text-align: center;
@@ -19,7 +24,6 @@ body {
     user-select: none;
 
     margin: 0;
-    overflow: hidden;
 }
 
 a {
@@ -50,13 +54,16 @@ table {
     line-height: var(--cell-height);
 
     & + table {
-        line-height: var(--month-cell-height);
-        background: var(--color-white);
         position: absolute;
         top: var(--cell-height);
         left: 0;
         opacity: 1;
         transition: 0.1s ease-out;
+        background: var(--color-white);
+
+        & td {
+            line-height: var(--month-cell-height);
+        }
 
         &[aria-hidden=true] {
             visibility: hidden !important;
