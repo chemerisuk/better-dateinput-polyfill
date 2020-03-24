@@ -2,7 +2,7 @@
   "use strict";
 
   /* globals html:false */
-  var MAIN_CSS = "dateinput-picker{display:inline-block;vertical-align:bottom}dateinput-picker>object{position:absolute;z-index:1000;width:336px;height:320px;max-height:320px;box-shadow:0 8px 24px #888;background:#fff;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}dateinput-picker[aria-hidden=true]>object{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);visibility:hidden;height:0}dateinput-picker[aria-expanded=true]>object{height:220px;max-height:220px}dateinput-picker+input{color:transparent!important;caret-color:transparent!important}dateinput-picker+input::selection{background:none}dateinput-picker+input::-moz-selection{background:none}";
+  var MAIN_CSS = "dateinput-picker{display:inline-block;vertical-align:bottom;overflow:hidden;position:absolute;z-index:1000;width:336px;height:320px;max-height:320px;box-shadow:0 8px 24px #888;background:#fff;opacity:1;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-transform-origin:0 0;transform-origin:0 0;transition:.1s ease-out}dateinput-picker[aria-hidden=true]{opacity:0;-webkit-transform:skew(-25deg) scaleX(.75);transform:skew(-25deg) scaleX(.75);visibility:hidden;height:0}dateinput-picker[aria-expanded=true]{height:220px;max-height:220px}dateinput-picker+input{color:transparent!important;caret-color:transparent!important}dateinput-picker+input::selection{color:rgba(0,0,0,.01);background:none}dateinput-picker+input::-moz-selection{background:none}";
   var HTML = DOM.find("html");
   var DEFAULT_LANGUAGE = HTML.get("lang") || void 0;
   var DEVICE_TYPE = "orientation" in window ? "mobile" : "desktop";
@@ -239,10 +239,11 @@
   "use strict";
 
   /* globals html:false */
-  var PICKER_CSS = "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:2.5rem;text-align:center;cursor:default;-webkit-user-select:none;-ms-user-select:none;user-select:none;margin:0;overflow:hidden}a{position:absolute;width:3rem;height:2.5rem}a[rel=prev]{left:0}a[rel=next]{right:0}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}table+table{line-height:3.75rem;background:#fff;position:absolute;top:2.5rem;left:0;opacity:1;transition:.1s ease-out}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}td,th{padding:0}thead{background:#ddd;font-size:smaller;font-weight:700}[aria-selected=false],[aria-disabled=true]{color:#888}[aria-selected=true]{box-shadow:inset 0 0 0 1px #888}a:hover,td:hover,[aria-disabled=true],[aria-selected=true]{background-color:#f5f5f5}";
+  var PICKER_CSS = "body{overflow:hidden}*{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;line-height:2.5rem;text-align:center;cursor:default;-webkit-user-select:none;-ms-user-select:none;user-select:none;margin:0}a{position:absolute;width:3rem;height:2.5rem}a[rel=prev]{left:0}a[rel=next]{right:0}b{display:block;cursor:pointer}table{width:100%;table-layout:fixed;border-spacing:0;border-collapse:collapse;text-align:center;line-height:2.5rem}table+table{position:absolute;top:2.5rem;left:0;opacity:1;transition:.1s ease-out;background:#fff}table+table td{line-height:3.75rem}table+table[aria-hidden=true]{visibility:hidden!important;opacity:0}td,th{padding:0}thead{background:#ddd;font-size:smaller;font-weight:700}[aria-selected=false],[aria-disabled=true]{color:#888}[aria-selected=true]{box-shadow:inset 0 0 0 1px #888}a:hover,td:hover,[aria-disabled=true],[aria-selected=true]{background-color:#f5f5f5}";
   var HTML = DOM.find("html");
   var DEFAULT_LANGUAGE = HTML.get("lang") || void 0;
   var CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
+  var SHADOW_DOM_SUPPORTED = !!HTMLElement.prototype.attachShadow;
 
   var INTL_SUPPORTED = function () {
     try {
@@ -323,31 +324,43 @@
   }) + "</tbody></table>";
   DOM.extend("dateinput-picker", {
     constructor: function constructor() {
-      var IE = "ScriptEngineMajorVersion" in window;
-      var object = DOM.create("<object type='text/html' width='100%' height='100%'>"); // non-IE: must be BEFORE the element added to the document
+      var _this = this;
 
-      if (!IE) {
-        object.set("data", "about:blank");
-      } // load content when <object> is ready
+      if (SHADOW_DOM_SUPPORTED) {
+        var shadowRoot = this[0].attachShadow({
+          mode: "closed"
+        }); // use set timeout to make sure _parentInput is set
+
+        setTimeout(function () {
+          _this._initContent(DOM.constructor(shadowRoot));
+        }, 0);
+      } else {
+        var IE = "ScriptEngineMajorVersion" in window;
+        var object = DOM.create("<object type='text/html' width='100%' height='100%'>"); // non-IE: must be BEFORE the element added to the document
+
+        if (!IE) {
+          object.set("data", "about:blank");
+        } // load content when <object> is ready
 
 
-      this.on("load", {
-        capture: true,
-        once: true
-      }, ["target"], this._loadContent.bind(this)); // add object element to the document
+        this.on("load", {
+          capture: true,
+          once: true
+        }, ["target"], function (object) {
+          var pickerRoot = DOM.constructor(object.get("contentDocument"));
 
-      this.append(object); // IE: must be AFTER the element added to the document
+          _this._initContent(pickerRoot.find("body"));
+        }); // add object element to the document
 
-      if (IE) {
-        object.set("data", "about:blank");
+        this.append(object); // IE: must be AFTER the element added to the document
+
+        if (IE) {
+          object.set("data", "about:blank");
+        }
       }
     },
-    _loadContent: function _loadContent(object) {
-      var pickerRoot = DOM.constructor(object.get("contentDocument"));
-      var pickerBody = pickerRoot.find("body"); // initialize picker content
-
-      pickerRoot.importStyles(PICKER_CSS);
-      pickerBody.set(PICKER_BODY_HTML); // internal references
+    _initContent: function _initContent(pickerBody) {
+      pickerBody.set("<style>" + PICKER_CSS + "</style>" + PICKER_BODY_HTML); // internal references
 
       this._calendarDays = pickerBody.find("table");
       this._calendarMonths = pickerBody.find("table+table");
