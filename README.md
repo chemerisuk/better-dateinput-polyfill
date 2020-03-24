@@ -21,6 +21,8 @@ Why another date picker? The problem is that most of existing solutions do not f
 * keyboard and accessibility friendly
 
 ## Installation
+**Version 3.3 requires better-dom 4.1 or above. Make sure you have latest version of better-dom.**
+
 ```sh
 $ npm install better-dateinput-polyfill better-dom
 ```
