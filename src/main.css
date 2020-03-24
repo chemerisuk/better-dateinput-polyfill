@@ -47,6 +47,8 @@ dateinput-picker {
 
         /* disable text selection */
         &::selection {
+            /* specify color to hide selection on IE10 */
+            color: rgba(0, 0, 0, 0.01);
             background: none;
         }
 
