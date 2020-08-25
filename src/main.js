@@ -22,8 +22,18 @@ function formatLocalDate(date) {
 
 function parseLocalDate(value) {
     // datetime value parsed with local timezone
-    const dateValue = new Date((value || "?") + "T00:00");
-    return isNaN(dateValue.getTime()) ? null : dateValue;
+    if (value != null) {
+        const dateParts = value.split("-");
+        if (dateParts.length >= 3) {
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1;
+            const day = parseInt(dateParts[2]);
+            const dateValue = new Date(year, month, day);
+            return isNaN(dateValue.getTime()) ? null : dateValue;
+        }
+    }
+
+    return null;
 }
 
 const globalFormatters = DOM.findAll("meta[name^='data-format:']").reduce((globalFormatters, meta) => {
@@ -110,8 +120,8 @@ DOM.extend("input[type=date]", {
         if (!dateValue) {
             value = "";
         } else {
-            const min = new Date((this.get("min") || "?") + "T00:00");
-            const max = new Date((this.get("max") || "?") + "T00:00");
+            const min = parseLocalDate(this.get("min"));
+            const max = parseLocalDate(this.get("max"));
 
             if (dateValue < min) {
                 value = formatLocalDate(min);
@@ -139,12 +149,10 @@ DOM.extend("input[type=date]", {
             const formatOptions = this.get("data-format");
             const formatter = globalFormatters[formatOptions];
             try {
-                // set hours to '12' to fix Safari bug in Date#toLocaleString
-                const presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
                 if (formatter) {
-                    displayText = formatter.format(presentedDate);
+                    displayText = formatter.format(dateValue);
                 } else {
-                    displayText = presentedDate.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
+                    displayText = dateValue.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
                 }
             } catch (err) {}
         }

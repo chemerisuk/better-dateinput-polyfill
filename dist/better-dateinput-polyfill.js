@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.3.0 Tue, 24 Mar 2020 11:10:32 GMT
+ * @version 3.3.1 Tue, 25 Aug 2020 00:45:30 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2020 Maksim Chemerisuk
  * @license MIT
@@ -26,8 +26,19 @@
 
   function parseLocalDate(value) {
     // datetime value parsed with local timezone
-    var dateValue = new Date((value || "?") + "T00:00");
-    return isNaN(dateValue.getTime()) ? null : dateValue;
+    if (value != null) {
+      var dateParts = value.split("-");
+
+      if (dateParts.length >= 3) {
+        var year = parseInt(dateParts[0]);
+        var month = parseInt(dateParts[1]) - 1;
+        var day = parseInt(dateParts[2]);
+        var dateValue = new Date(year, month, day);
+        return isNaN(dateValue.getTime()) ? null : dateValue;
+      }
+    }
+
+    return null;
   }
 
   var globalFormatters = DOM.findAll("meta[name^='data-format:']").reduce(function (globalFormatters, meta) {
@@ -111,8 +122,8 @@
       if (!dateValue) {
         value = "";
       } else {
-        var min = new Date((this.get("min") || "?") + "T00:00");
-        var max = new Date((this.get("max") || "?") + "T00:00");
+        var min = parseLocalDate(this.get("min"));
+        var max = parseLocalDate(this.get("max"));
 
         if (dateValue < min) {
           value = formatLocalDate(min);
@@ -141,13 +152,10 @@
         var formatter = globalFormatters[formatOptions];
 
         try {
-          // set hours to '12' to fix Safari bug in Date#toLocaleString
-          var presentedDate = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate(), 12);
-
           if (formatter) {
-            displayText = formatter.format(presentedDate);
+            displayText = formatter.format(dateValue);
           } else {
-            displayText = presentedDate.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
+            displayText = dateValue.toLocaleDateString(DEFAULT_LANGUAGE, formatOptions ? JSON.parse(formatOptions) : {});
           }
         } catch (err) {}
       }
@@ -342,7 +350,7 @@
           _this._initContent(DOM.constructor(shadowRoot));
         }, 0);
       } else {
-        var IE = "ScriptEngineMajorVersion" in window;
+        var IE = ("ScriptEngineMajorVersion" in window);
         var object = DOM.create("<object type='text/html' width='100%' height='100%'>"); // non-IE: must be BEFORE the element added to the document
 
         if (!IE) {
