@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill for better-dom
- * @version 3.3.0 Tue, 24 Mar 2020 11:10:32 GMT
+ * @version 3.3.1 Thu, 03 Sep 2020 09:59:12 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2020 Maksim Chemerisuk
  * @license MIT
@@ -25,8 +25,10 @@
   }
 
   function parseLocalDate(value) {
-    // datetime value parsed with local timezone
-    var dateValue = new Date((value || "?") + "T00:00");
+    var parts = (value || "?").split(/\D/).map(function (s) {
+      return parseInt(s);
+    });
+    var dateValue = new Date(parts[0], parts[1] - 1, parts[2], 0, 0);
     return isNaN(dateValue.getTime()) ? null : dateValue;
   }
 
@@ -111,12 +113,12 @@
       if (!dateValue) {
         value = "";
       } else {
-        var min = new Date((this.get("min") || "?") + "T00:00");
-        var max = new Date((this.get("max") || "?") + "T00:00");
+        var min = parseLocalDate(this.get("min"));
+        var max = parseLocalDate(this.get("max"));
 
-        if (dateValue < min) {
+        if (min && dateValue < min) {
           value = formatLocalDate(min);
-        } else if (dateValue > max) {
+        } else if (max && dateValue > max) {
           value = formatLocalDate(max);
         }
       }
