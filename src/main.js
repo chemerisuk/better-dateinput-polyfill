@@ -21,8 +21,8 @@ function formatLocalDate(date) {
 }
 
 function parseLocalDate(value) {
-    // datetime value parsed with local timezone
-    const dateValue = new Date((value || "?") + "T00:00");
+    const parts = (value || "?").split(/\D/).map(s => parseInt(s));
+    const dateValue = new Date(parts[0], parts[1] - 1, parts[2], 0, 0);
     return isNaN(dateValue.getTime()) ? null : dateValue;
 }
 
@@ -110,12 +110,12 @@ DOM.extend("input[type=date]", {
         if (!dateValue) {
             value = "";
         } else {
-            const min = new Date((this.get("min") || "?") + "T00:00");
-            const max = new Date((this.get("max") || "?") + "T00:00");
+            const min = parseLocalDate(this.get("min"));
+            const max = parseLocalDate(this.get("max"));
 
-            if (dateValue < min) {
+            if (min && dateValue < min) {
                 value = formatLocalDate(min);
-            } else if (dateValue > max) {
+            } else if (max && dateValue > max) {
                 value = formatLocalDate(max);
             }
         }
