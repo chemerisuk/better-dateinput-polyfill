@@ -1,6 +1,6 @@
 # `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
 
-[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Twitter][twitter-follow]][twitter-url]
+[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][status-image]][status-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Twitter][twitter-follow]][twitter-url]
 
 | [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)][donate-url] | Your help is appreciated. Create a PR, submit a bug or just grab me :beer: |
 |-|-|
@@ -103,8 +103,8 @@ After any change it recompiles `build/better-dateinput-polyfill.js` and runs uni
 [npm-version]: https://img.shields.io/npm/v/better-dateinput-polyfill.svg
 [npm-downloads]: https://img.shields.io/npm/dm/better-dateinput-polyfill.svg
 
-[travis-url]: http://travis-ci.org/chemerisuk/better-dateinput-polyfill
-[travis-image]: http://img.shields.io/travis/chemerisuk/better-dateinput-polyfill/master.svg
+[status-url]: https://github.com/chemerisuk/better-dateinput-polyfill/actions
+[status-image]: https://github.com/chemerisuk/better-dateinput-polyfill/workflows/Node.js%20CI/badge.svg?branch=master
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-dateinput-polyfill
 [coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-dateinput-polyfill/master.svg
