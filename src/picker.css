@@ -1,99 +1,147 @@
 :root {
-    --cell-width: 3rem;
-    --cell-height: 2.5rem;
-    --month-cell-height: calc(var(--cell-height) * 1.5);
+    --color-hover: var(--datepicker-color-hover, rgba(106, 106, 106, 0.1));
+    --color-selected: var(--datepicker-color-selected, #00f);
+    --color-background: var(--datepicker-color-background, #fff);
+    --color-graytext: var(--datepicker-color-graytext, #ccc);
 
-    --color-white: #fff;
-    --color-header: #ddd;
-    --color-graytext: #888;
-    --color-highlight: #f5f5f5;
-    --color-shadow: #888;
+    --calendar-day-width: calc(100vw / 7);
+    --calendar-day-height: calc(100vh / 8);
+
+    --calendar-weekday-height: var(--calendar-day-height);
+    --calendar-weekday-padding: 4px;
 }
 
 body {
+    cursor: default;
+    font-family: system-ui;
+    margin: 0;
+    line-height: 1.5;
     /* remove extra scrolls on IE */
     overflow: hidden;
 }
 
-* {
-    font-family: system-ui;
-    line-height: var(--cell-height);
-    text-align: center;
-
-    cursor: default;
-    user-select: none;
-
-    margin: 0;
+[aria-selected="true"] {
+    background-color: var(--color-selected);
+    color: var(--color-background);
 }
 
-a {
+[aria-hidden="true"] {
+    opacity: 0;
+    pointer-events: none;
+}
+
+[aria-labelledby="#caption"] {
+    bottom: 0;
+    height: calc(100% - var(--calendar-day-height));
+    left: 0;
     position: absolute;
-    width: var(--cell-width);
-    height: var(--cell-height);
+    text-align: center;
+    transition: opacity 75ms ease-out;
+    width: 100%;
+}
 
-    &[rel='prev'] {
-        left: 0;
+header {
+    display: flex;
+    height: var(--calendar-day-height);
+    justify-content: space-between;
+}
+
+[role="button"] {
+    text-align: center;
+    transition: transform 75ms ease-in;
+    width: var(--calendar-day-width);
+
+    &[rel="prev"]:active {
+        transform: translateX(-2px);
     }
 
-    &[rel='next'] {
-        right: 0;
+    &[rel="next"]:active {
+        transform: translateX(2px);
+    }
+
+    & svg {
+        pointer-events: none;
+        width: 16px;
+        height: 100%;
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            transform: scale(1.2);
+        }
     }
 }
 
-b {
-    display: block;
-    cursor: pointer;
+[aria-live="polite"] {
+    border: 1px dotted transparent;
+    color: var(--color-selected);
+    font-weight: bold;
+    margin: auto 0;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @media (hover: hover) {
+        &:hover {
+            border-bottom-color: inherit;
+        }
+    }
 }
 
 table {
-    width: 100%;
-    table-layout: fixed;
     border-spacing: 0;
-    border-collapse: collapse;
-    text-align: center;
-    line-height: var(--cell-height);
+    table-layout: fixed;
+}
 
-    & + table {
-        position: absolute;
-        top: var(--cell-height);
-        left: 0;
-        opacity: 1;
-        transition: 0.1s ease-out;
-        background: var(--color-white);
+th {
+    box-sizing: border-box;
+    height: var(--calendar-weekday-height);
+    line-height: calc(var(--calendar-weekday-height) - var(--calendar-weekday-padding));
+    padding: 0 0 var(--calendar-weekday-padding);
+}
 
-        & td {
-            line-height: var(--month-cell-height);
-        }
+td {
+    border-radius: var(--border-radius);
+    padding: 0;
 
-        &[aria-hidden=true] {
-            visibility: hidden !important;
-            opacity: 0;
-        }
+    &:active {
+        background-color: var(--color-hover);
+    }
+
+    &:not([aria-selected]) {
+        color: var(--color-graytext);
+    }
+
+    &[aria-current="date"] {
+        font-weight: bold;
+    }
+
+    &[aria-disabled="true"] {
+        background-color: var(--color-hover);
+        border-radius: 0;
+        color: var(--color-graytext);
+        cursor: not-allowed;
     }
 }
 
-td, th {
-    padding: 0;
+#months, #years {
+    box-sizing: border-box;
+    float: left;
+    height: 100%;
+    list-style: none;
+    margin: 0;
+    overflow: scroll;
+    padding: 0 var(--calendar-weekday-padding);
+    width: 50%;
 }
 
-thead {
-    background: var(--color-header);
-    font-size: smaller;
-    font-weight: bold;
-}
-
-[aria-selected=false],
-[aria-disabled=true] {
-    color: var(--color-graytext);
-}
-
-[aria-selected=true] {
-    box-shadow: inset 0 0 0 1px var(--color-shadow);
-}
-
-a:hover,
-td:hover,
-[aria-disabled=true],
-[aria-selected=true] {
-    background-color: var(--color-highlight);
+@media (hover: hover) {
+    [data-timestamp],
+    [data-month],
+    [data-year] {
+        &:not([aria-selected="true"]):hover {
+            background-color: var(--color-hover);
+        }
+    }
 }

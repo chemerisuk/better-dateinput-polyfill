@@ -10,27 +10,24 @@
     "url": "https://github.com/chemerisuk/better-dateinput-polyfill"
   },
   "keywords": [
-    "ecosystem:better-dom",
     "web-components"
   ],
-  "peerDependencies": {
-    "better-dom": "^4.1.0"
-  },
   "devDependencies": {
-    "better-dom": "^4.1.0",
-    "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"
+    "postcss": "^8.2.9",
+    "postcss-font-family-system-ui": "^5.0.0",
+    "postcss-nested": "^5.0.5",
+    "rollup": "^2.44.0",
+    "rollup-plugin-postcss": "^4.0.0"
   },
   "config": {
     "gulp": "--gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd ."
   },
   "scripts": {
+    "watch": "rollup --config --watch",
     "test": "gulp test $npm_package_config_gulp",
     "start": "gulp dev $npm_package_config_gulp",
     "version": "gulp dist $npm_package_config_gulp && git add -A dist",
     "postversion": "git push && git push --tags",
     "publish": "gulp gh-pages $npm_package_config_gulp"
-  },
-  "karmaFiles": [
-    "node_modules/better-dom/dist/better-dom.js"
-  ]
+  }
 }

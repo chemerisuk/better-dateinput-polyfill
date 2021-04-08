@@ -1,0 +1,33 @@
+@keyframes dateinput-picker {
+    from: {opacity: .99};
+    to: {opacity: 1};
+}
+
+input[type="date"] {
+    animation: dateinput-picker 1ms;
+}
+
+dateinput-picker {
+    display: inline-block;
+    vertical-align: bottom;
+    overflow: hidden;
+
+    position: absolute;
+    z-index: 2147483647;
+    width: calc(48px * 7);
+    height: calc(48px * 8);
+    box-shadow: 0 8px 24px #888;
+    background: #fff;
+
+    opacity: 1;
+    transform: translate3d(0,0,0);
+    transform-origin: 0 0;
+    transition: 0.1s ease-out;
+
+    &[aria-hidden=true] {
+        opacity: 0;
+        transform: skew(-25deg) scaleX(0.75);
+        visibility: hidden;
+        height: 0; /* fixes wierd iOS overlapping */
+    }
+}
