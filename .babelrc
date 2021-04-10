@@ -1,0 +1,12 @@
+{
+    "presets": [
+        ["@babel/env", {
+            "targets": {
+                browsers: ["ChromeAndroid 30", "iOS 7", "IE 10"]
+            }
+        }]
+    ],
+    "plugins": [
+
+    ]
+}

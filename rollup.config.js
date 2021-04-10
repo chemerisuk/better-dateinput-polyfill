@@ -1,3 +1,4 @@
+import babel from "@rollup/plugin-babel";
 import postcss from "rollup-plugin-postcss";
 import nested from "postcss-nested";
 import postcssSystemUiFont from "postcss-font-family-system-ui";
@@ -13,6 +14,7 @@ export default {
         format: "iife"
     },
     plugins: [
+        babel({babelHelpers: "bundled"}),
         postcss({
             minimize: true,
             plugins: [nested(), postcssSystemUiFont()],

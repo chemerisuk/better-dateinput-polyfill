@@ -13,6 +13,9 @@
     "web-components"
   ],
   "devDependencies": {
+    "@babel/core": "^7.13.15",
+    "@babel/preset-env": "^7.13.15",
+    "@rollup/plugin-babel": "^5.3.0",
     "postcss": "^8.2.9",
     "postcss-font-family-system-ui": "^5.0.0",
     "postcss-nested": "^5.0.5",
@@ -29,5 +32,10 @@
     "version": "gulp dist $npm_package_config_gulp && git add -A dist",
     "postversion": "git push && git push --tags",
     "publish": "gulp gh-pages $npm_package_config_gulp"
-  }
+  },
+  "browserslist": [
+    "ChromeAndroid 30",
+    "iOS 7",
+    "IE 10"
+  ]
 }
