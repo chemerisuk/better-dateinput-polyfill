@@ -36,4 +36,4 @@ document.addEventListener("animationstart", event => {
             input[FLAG_NAME] = new DateInputPolyfill(input);
         }
     }
-}, false);
+});

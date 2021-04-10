@@ -58,7 +58,7 @@ export function localeMonth(value, options) {
 
 export function localeDate(value, options) {
     if (INTL_SUPPORTED) {
-        return value.toLocaleDateString(options.locale, options);
+        return value.toLocaleString(options.locale, options);
     } else {
         return value.toUTCString().split(" ").slice(0, 4).join(" ");
     }
@@ -66,7 +66,7 @@ export function localeDate(value, options) {
 
 export function localeMonthYear(value, options) {
     if (INTL_SUPPORTED) {
-        return value.toLocaleDateString(options.locale, {month: "long", year: "numeric"});
+        return value.toLocaleString(options.locale, {month: "long", year: "numeric"});
     } else {
         return value.toUTCString().split(" ").slice(2, 4).join(" ");
     }

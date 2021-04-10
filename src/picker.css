@@ -1,14 +1,11 @@
 :root {
-    --color-hover: rgba(106, 106, 106, 0.1);
-    --color-selected: #007bff;
     --color-background: #fff;
     --color-graytext: #ccc;
+    --color-hover: #ececec;
+    --color-selected: #007bff;
 
-    --calendar-day-width: calc(100vw / 7);
     --calendar-day-height: calc(100vh / 8);
-    --calendar-option-height: calc(var(--calendar-day-height) * 7 / 12);
-
-    --calendar-weekday-height: var(--calendar-day-height);
+    --calendar-day-width: calc(100vw / 7);
     --calendar-inner-padding: 4px;
 }
 
@@ -16,12 +13,11 @@ body {
     cursor: default;
     font-family: system-ui;
     margin: 0;
-    line-height: var(--calendar-option-height);
 }
 
 [aria-labelledby] {
     bottom: 0;
-    height: calc(100% - var(--calendar-day-height));
+    height: calc(100vh - var(--calendar-day-height));
     left: 0;
     position: absolute;
     text-align: center;
@@ -35,9 +31,9 @@ body {
 header {
     display: block;
     height: var(--calendar-day-height);
+    line-height: var(--calendar-day-height);
     overflow: hidden;
     text-align: center;
-    line-height: var(--calendar-day-height);
 }
 
 [role="button"] {
@@ -98,9 +94,9 @@ table {
 
 th {
     box-sizing: border-box;
-    height: var(--calendar-weekday-height);
-    line-height: calc(var(--calendar-weekday-height) - var(--calendar-inner-padding));
-    padding: 0 0 var(--calendar-inner-padding);
+    height: var(--calendar-day-height);
+    padding-bottom: calc(2 * var(--calendar-inner-padding));
+    vertical-align: middle;
 }
 
 td {
@@ -127,6 +123,7 @@ td {
     box-sizing: border-box;
     float: left;
     height: 100%;
+    line-height: calc((100vh - var(--calendar-day-height)) / 12);
     list-style: none;
     margin: 0;
     overflow-x: hidden;

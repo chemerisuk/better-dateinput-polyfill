@@ -30,7 +30,7 @@ export default {
             inject(cssVariableName, filePath) {
                 if (filePath.endsWith("polyfill.css")) {
                     return `import styleInject from '${styleInjectPath}';\n`
-                     +`styleInject(${cssVariableName});`;
+                     +`styleInject(${cssVariableName}, {insertAt: 'top'});`;
                 }
             },
             "features": {

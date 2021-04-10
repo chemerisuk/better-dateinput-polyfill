@@ -4,20 +4,21 @@
 }
 
 input[type="date"] {
+    /* we need this fake animation to init polyfill */
     animation: dateinput-picker 1ms;
 }
 
-dateinput-picker {
-    display: inline-block;
-    vertical-align: bottom;
-    overflow: hidden;
+:root {
+    --calendar-day-size: 45px;
+}
 
-    position: absolute;
-    z-index: 2147483647;
-    width: calc(45px * 7);
-    height: calc(45px * 8);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+dateinput-picker {
     background: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    height: calc(var(--calendar-day-size) * 8);
+    position: absolute;
+    width: calc(var(--calendar-day-size) * 7);
+    z-index: 2147483647;
 
     &[aria-hidden=true] {
         visibility: hidden;

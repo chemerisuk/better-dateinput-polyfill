@@ -13,6 +13,7 @@ export class DatePickerImpl {
     _initPicker() {
         this._picker = document.createElement("dateinput-picker");
         this._picker.setAttribute("aria-hidden", true);
+        this._input.parentNode.insertBefore(this._picker, this._input);
 
         const object = document.createElement("object");
         object.type = "text/html";
@@ -23,16 +24,17 @@ export class DatePickerImpl {
             object.data = "about:blank";
         }
         // load content when <object> is ready
-        object.addEventListener("load", event => {
+        object.onload = event => {
             this._initContent(event.target.contentDocument.body);
-        });
+            // this is a one time event handler
+            delete object.onload;
+        };
         // add object element to the document
         this._picker.appendChild(object);
         // IE: must be AFTER the element added to the document
         if (IE) {
             object.data = "about:blank";
         }
-        this._input.parentNode.insertBefore(this._picker, this._input);
     }
 
     _initContent(pickerBody) {
@@ -55,11 +57,14 @@ export class DatePickerImpl {
     <tbody id="days">${repeat(6, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
 </table>
 <div aria-hidden="true" aria-labelledby="#caption">
-    <ol id="months">${repeat(12, (_, i) => `<li data-month="${i}">${localeMonth(i, this._formatOptions)}`)}</ol>
-    <ol id="years">${repeat(endYear - startYear + 1, (_, i) => {
-        return `<li data-year="${startYear + i}">${startYear + i}</li>`;
+    <ol id="months">${repeat(12, (_, i) => {
+        return `<li data-month="${i}">${localeMonth(i, this._formatOptions)}`;
     })}</ol>
-</div>  `;
+    <ol id="years">${repeat(endYear - startYear + 1, (_, i) => {
+        return `<li data-year="${startYear + i}">${startYear + i}`;
+    })}</ol>
+</div>
+        `;
 
         this._caption = $(pickerBody, "[aria-live=polite]")[0];
         this._pickers = $(pickerBody, "[aria-labelledby]");
