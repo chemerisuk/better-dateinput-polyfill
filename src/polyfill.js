@@ -1,6 +1,8 @@
-import "./polyfill.css";
+import POLYFILL_CSS from "./polyfill.css";
 import {DateInputPolyfill} from "./input.js";
-import {IE} from "./util.js";
+import {IE, injectStyles} from "./util.js";
+
+injectStyles(POLYFILL_CSS, document.head);
 
 const ANIMATION_NAME = "dateinput-picker";
 const FLAG_NAME = `__${ANIMATION_NAME}__`;

@@ -1,5 +1,5 @@
 import PICKER_CSS from "./picker.css";
-import {IE, $, repeat, svgIcon} from "./util.js";
+import {IE, $, repeat, svgIcon, injectStyles} from "./util.js";
 import {parseLocaleDate, formatLocaleDate, localeWeekday, localeMonth, localeMonthYear} from "./intl.js";
 
 export class DatePickerImpl {
@@ -25,7 +25,7 @@ export class DatePickerImpl {
         }
         // load content when <object> is ready
         object.onload = event => {
-            this._initContent(event.target.contentDocument.body);
+            this._initContent(event.target.contentDocument);
             // this is a one time event handler
             delete object.onload;
         };
@@ -37,7 +37,7 @@ export class DatePickerImpl {
         }
     }
 
-    _initContent(pickerBody) {
+    _initContent(pickerRoot) {
         const defaultYearDelta = 30;
         const now = new Date();
         const minDate = this._getLimitationDate("min");
@@ -45,8 +45,7 @@ export class DatePickerImpl {
         let startYear = minDate ? minDate.getFullYear() : now.getFullYear() - defaultYearDelta;
         let endYear = maxDate ? maxDate.getFullYear() : now.getFullYear() + defaultYearDelta;
         // append picker HTML to shadow dom
-        pickerBody.innerHTML = html`
-<style>${PICKER_CSS}</style>
+        pickerRoot.body.innerHTML = html`
 <header>
     <a role="button" rel="prev">${svgIcon("M11.5 14.06L1 8L11.5 1.94z")}</a>
     <time id="caption" aria-live="polite"></time>
@@ -66,11 +65,13 @@ export class DatePickerImpl {
 </div>
         `;
 
-        this._caption = $(pickerBody, "[aria-live=polite]")[0];
-        this._pickers = $(pickerBody, "[aria-labelledby]");
+        injectStyles(PICKER_CSS, pickerRoot.head);
 
-        pickerBody.addEventListener("mousedown", this._onMouseDown.bind(this));
-        pickerBody.addEventListener("contextmenu", (event) => event.preventDefault());
+        this._caption = $(pickerRoot, "[aria-live=polite]")[0];
+        this._pickers = $(pickerRoot, "[aria-labelledby]");
+
+        pickerRoot.addEventListener("mousedown", this._onMouseDown.bind(this));
+        pickerRoot.addEventListener("contextmenu", (event) => event.preventDefault());
 
         this.show();
     }

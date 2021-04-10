@@ -19,3 +19,14 @@ export function svgIcon(path) {
 </svg>
     `;
 }
+
+export function injectStyles(cssText, head) {
+    const style = document.createElement("style");
+    style.type = "text/css";
+    style.innerHTML = cssText;
+    if (head.firstChild) {
+        head.insertBefore(style, head.firstChild)
+    } else {
+        head.appendChild(style);
+    }
+}
