@@ -37,9 +37,11 @@ body {
 }
 
 header {
-    display: flex;
+    display: block;
     height: var(--calendar-day-height);
-    justify-content: space-between;
+    overflow: hidden;
+    text-align: center;
+    line-height: var(--calendar-day-height);
 }
 
 [role="button"] {
@@ -47,12 +49,20 @@ header {
     transition: transform 75ms ease-in;
     width: var(--calendar-day-width);
 
-    &[rel="prev"]:active {
-        transform: translateX(-2px);
+    &[rel="prev"] {
+        float: left;
+
+        &:active {
+            transform: translateX(-2px);
+        }
     }
 
-    &[rel="next"]:active {
-        transform: translateX(2px);
+    &[rel="next"] {
+        float: right;
+
+        &:active {
+            transform: translateX(2px);
+        }
     }
 
     & svg {
@@ -123,7 +133,8 @@ td {
     height: 100%;
     list-style: none;
     margin: 0;
-    overflow: scroll;
+    overflow-x: hidden;
+    overflow-y: scroll;
     padding: 0 var(--calendar-inner-padding);
     width: 50%;
 }

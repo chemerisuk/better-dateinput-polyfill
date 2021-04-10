@@ -1,7 +1,6 @@
 import PICKER_CSS from "./picker.css";
-import {parseLocaleDate, formatLocaleDate, repeat, localeWeekday, localeMonth} from "./util.js";
-
-const IE = "ScriptEngineMajorVersion" in window;
+import {IE, $, repeat} from "./util.js";
+import {parseLocaleDate, formatLocaleDate, localeWeekday, localeMonth, localeMonthYear} from "./intl.js";
 
 export class DatePickerImpl {
     constructor(input, formatOptions) {
@@ -44,7 +43,7 @@ export class DatePickerImpl {
         let startYear = minDate ? minDate.getFullYear() : now.getFullYear() - defaultYearDelta;
         let endYear = maxDate ? maxDate.getFullYear() : now.getFullYear() + defaultYearDelta;
         // append picker HTML to shadow dom
-        pickerBody.innerHTML = `
+        pickerBody.innerHTML = html`
 <style>${PICKER_CSS}</style>
 <header>
     <a role="button" rel="prev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M11.5 14.06L1 8L11.5 1.94z"/></svg></a>
@@ -52,18 +51,18 @@ export class DatePickerImpl {
     <a role="button" rel="next"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M15 8L4.5 14.06L4.5 1.94z"/></svg></a>
 </header>
 <table role="grid" aria-labelledby="#caption">
-    <thead id="weekdays">${repeat(7, (i) => `<th>${localeWeekday(i, this._formatOptions)}</th>`)}</thead>
-    <tbody id="days">${`<tr>${'<td data-date>'.repeat(7)}</tr>`.repeat(6)}</tbody>
+    <thead id="weekdays">${repeat(7, (_, i) => `<th>${localeWeekday(i, this._formatOptions)}</th>`)}</thead>
+    <tbody id="days">${repeat(6, `<tr>${repeat(7, '<td data-date>')}</tr>`)}</tbody>
 </table>
 <div aria-hidden="true" aria-labelledby="#caption">
-    <ol id="months">${repeat(12, (i) => `<li data-month="${i}">${localeMonth(i, this._formatOptions)}`)}</ol>
-    <ol id="years">${repeat(endYear - startYear + 1, (i) => {
+    <ol id="months">${repeat(12, (_, i) => `<li data-month="${i}">${localeMonth(i, this._formatOptions)}`)}</ol>
+    <ol id="years">${repeat(endYear - startYear + 1, (_, i) => {
         return `<li data-year="${startYear + i}">${startYear + i}</li>`;
     })}</ol>
 </div>  `;
 
-        this._caption = pickerBody.querySelector("[aria-live=polite]");
-        this._pickers = pickerBody.querySelectorAll("[aria-labelledby]");
+        this._caption = $(pickerBody, "[aria-live=polite]")[0];
+        this._pickers = $(pickerBody, "[aria-labelledby]");
 
         pickerBody.addEventListener("mousedown", this._onMouseDown.bind(this));
         pickerBody.addEventListener("contextmenu", (event) => event.preventDefault());
@@ -88,18 +87,18 @@ export class DatePickerImpl {
 
         if (target === this._caption) {
             this._togglePickerMode();
-        } else if (target.matches("[role=button]")) {
+        } else if (target.getAttribute("role") === "button") {
             this._clickButton(target);
-        } else if (target.matches("[data-date]")) {
+        } else if (target.hasAttribute("data-date")) {
             this._clickDate(target);
-        } else if (target.matches("[data-year],[data-month]")) {
+        } else if (target.hasAttribute("data-month") || target.hasAttribute("data-year")) {
             this._clickMonthYear(target);
         }
     }
 
     _clickButton(target) {
         const captionDate = this.getCaptionDate();
-        const sign = target.matches('[rel=prev]') ? -1 : 1;
+        const sign = target.getAttribute("rel") === "prev" ? -1 : 1;
         const advancedMode = this.isAdvancedMode();
         if (advancedMode) {
             captionDate.setFullYear(captionDate.getFullYear() + sign);
@@ -116,14 +115,14 @@ export class DatePickerImpl {
 
     _clickDate(target) {
         if (target.getAttribute("aria-disabled") !== "true") {
-            this._input.value = target.dataset.date;
+            this._input.value = target.getAttribute("data-date");
             this.hide();
         }
     }
 
     _clickMonthYear(target) {
-        const month = +target.dataset.month;
-        const year = +target.dataset.year;
+        const month = parseInt(target.getAttribute("data-month"));
+        const year = parseInt(target.getAttribute("data-year"));
         if (month >= 0 || year >= 0) {
             const captionDate = this.getCaptionDate();
             if (!isNaN(month)) {
@@ -165,7 +164,7 @@ export class DatePickerImpl {
         // move to beginning of the first week in current month
         iterDate.setDate((this._formatOptions.hour12 ? 0 : iterDate.getDay() === 0 ? -6 : 1) - iterDate.getDay());
 
-        this._pickers[0].querySelectorAll("td").forEach((cell) => {
+        $(this._pickers[0], "td").forEach((cell) => {
             iterDate.setDate(iterDate.getDate() + 1);
 
             if (iterDate.getMonth() === captionDate.getMonth()) {
@@ -199,20 +198,20 @@ export class DatePickerImpl {
             }
 
             cell.textContent = iterDate.getDate();
-            cell.dataset.date = formatLocaleDate(iterDate);
+            cell.setAttribute("data-date", formatLocaleDate(iterDate));
         });
         // update visible caption value
         this.setCaptionDate(captionDate);
     }
 
     _renderAdvancedPicker(captionDate, syncScroll = true) {
-        this._pickers[1].querySelectorAll("[aria-selected]").forEach((selectedElement) => {
+        $(this._pickers[1], "[aria-selected]").forEach((selectedElement) => {
             selectedElement.removeAttribute("aria-selected");
         });
 
         if (captionDate) {
-            const monthItem = this._pickers[1].querySelector(`[data-month="${captionDate.getMonth()}"]`);
-            const yearItem = this._pickers[1].querySelector(`[data-year="${captionDate.getFullYear()}"]`);
+            const monthItem = $(this._pickers[1], `[data-month="${captionDate.getMonth()}"]`)[0];
+            const yearItem = $(this._pickers[1], `[data-year="${captionDate.getFullYear()}"]`)[0];
             monthItem.setAttribute("aria-selected", true);
             yearItem.setAttribute("aria-selected", true);
             if (syncScroll) {
@@ -239,10 +238,7 @@ export class DatePickerImpl {
     }
 
     setCaptionDate(captionDate) {
-        this._caption.textContent = captionDate.toLocaleString(this._formatOptions.locale, {
-            month: "long",
-            year: "numeric",
-        });
+        this._caption.textContent = localeMonthYear(captionDate, this._formatOptions);
         this._caption.setAttribute("datetime", captionDate.toISOString());
     }
 

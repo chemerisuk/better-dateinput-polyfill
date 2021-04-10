@@ -1,10 +1,12 @@
 import "./polyfill.css";
 import {DateInputPolyfill} from "./input.js";
+import {IE} from "./util.js";
 
 const ANIMATION_NAME = "dateinput-picker";
 const FLAG_NAME = `__${ANIMATION_NAME}__`;
 const DEVICE_TYPE = "orientation" in window ? "mobile" : "desktop";
 const TYPE_SUPPORTED = (function() {
+    if (IE) return false;
     // use a stronger type support detection that handles old WebKit browsers:
     // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
     const input = document.createElement("input");
@@ -34,4 +36,4 @@ document.addEventListener("animationstart", event => {
             input[FLAG_NAME] = new DateInputPolyfill(input);
         }
     }
-});
+}, false);

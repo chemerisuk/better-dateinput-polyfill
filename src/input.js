@@ -1,5 +1,5 @@
 import {DatePickerImpl} from "./picker.js";
-import {parseLocaleDate, formatLocaleDate} from "./util.js";
+import {parseLocaleDate, formatLocaleDate, getFormatOptions, localeDate} from "./intl.js";
 
 export class DateInputPolyfill {
     constructor(input) {
@@ -58,15 +58,14 @@ export class DateInputPolyfill {
     }
 
     _setDate(setter, dateValue) {
-        const displayValue = dateValue
-            .toLocaleString(this._formatOptions.locale, this._formatOptions);
-        setter.call(this._input, displayValue || "");
+        setter.call(this._input, localeDate(dateValue, this._formatOptions) || "");
         setter.call(this._valueInput, formatLocaleDate(dateValue) || "");
     }
 
     _createValueInput(input) {
         const valueInput = document.createElement("input");
-        valueInput.hidden = true;
+        valueInput.style.display = "none";
+        valueInput.setAttribute("hidden", "");
         valueInput.disabled = input.disabled;
         if (input.name) {
             valueInput.name = input.name;
@@ -84,42 +83,31 @@ export class DateInputPolyfill {
     _createFormatOptions() {
         const lang = this._input.lang || document.documentElement.lang;
         const dateStyle = this._input.getAttribute("data-format");
-        let dateFormat;
-        try {
-            // We perform severals checks here:
-            // 1) verify lang attribute is supported by browser
-            // 2) verify format attribute is one from "full","long","medium","short"
-            dateFormat = new Intl.DateTimeFormat(lang, dateStyle ? {dateStyle} : {});
-        } catch (err) {
-            console.warn("Fallback to default date format because of error:", err);
-            // fallback to default date format options
-            dateFormat = new Intl.DateTimeFormat();
-        }
-        return dateFormat.resolvedOptions();
+        return getFormatOptions(lang, dateStyle);
     }
 
     _onKeydown(event) {
         const key = event.key;
 
-        if (key === 'Enter') {
+        if (key === "Enter") {
             this._hidePicker();
-        } else if (key === ' ') {
+        } else if (key === " ") {
             // disable scroll change
             event.preventDefault();
 
             this._showPicker();
-        } else if (key.includes('Arrow')) {
+        } else if (!key.indexOf("Arrow")) {
             // disable scroll change via arrows
             event.preventDefault();
 
             let offset = 0;
-            if (key === 'ArrowDown') {
+            if (key === "ArrowDown") {
                 offset = 7;
-            } else if (key === 'ArrowUp') {
+            } else if (key === "ArrowUp") {
                 offset = -7;
-            } else if (key === 'ArrowLeft') {
+            } else if (key === "ArrowLeft") {
                 offset = -1;
-            } else if (key === 'ArrowRight') {
+            } else if (key === "ArrowRight") {
                 offset = 1;
             }
             if (!offset) return;
@@ -138,7 +126,7 @@ export class DateInputPolyfill {
                 this._input.valueAsDate = captionDate;
                 this._pickerApi.render(captionDate);
             }
-        } else if (key === 'Backspace') {
+        } else if (key === "Backspace") {
             this._input.value = "";
             this._pickerApi.reset();
             this._pickerApi.render(new Date());
