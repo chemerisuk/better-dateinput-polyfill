@@ -1,4 +1,4 @@
-import {DatePickerImpl} from "./datepicker.js";
+import {DatePickerImpl} from "./picker.js";
 import {parseLocaleDate, formatLocaleDate} from "./util.js";
 
 export class DateInputPolyfill {

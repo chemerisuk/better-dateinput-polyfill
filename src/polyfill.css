@@ -14,20 +14,20 @@ dateinput-picker {
 
     position: absolute;
     z-index: 2147483647;
-    width: calc(48px * 7);
-    height: calc(48px * 8);
-    box-shadow: 0 8px 24px #888;
+    width: calc(45px * 7);
+    height: calc(45px * 8);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     background: #fff;
 
-    opacity: 1;
-    transform: translate3d(0,0,0);
-    transform-origin: 0 0;
-    transition: 0.1s ease-out;
+    /* opacity: 1; */
+    /* transform: translate3d(0,0,0); */
+    /* transform-origin: 0 0; */
+    /* transition: 0.1s ease-out; */
 
     &[aria-hidden=true] {
-        opacity: 0;
-        transform: skew(-25deg) scaleX(0.75);
+        /* opacity: 0; */
+        /* transform: skew(-25deg) scaleX(0.75); */
         visibility: hidden;
-        height: 0; /* fixes wierd iOS overlapping */
+/*        height: 0; /* fixes wierd iOS overlapping */
     }
 }

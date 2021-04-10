@@ -53,7 +53,7 @@ export class DatePickerImpl {
 </header>
 <table role="grid" aria-labelledby="#caption">
     <thead id="weekdays">${repeat(7, (i) => `<th>${localeWeekday(i, this._formatOptions)}</th>`)}</thead>
-    <tbody id="days">${`<tr>${'<td data-timestamp>'.repeat(7)}</tr>`.repeat(6)}</tbody>
+    <tbody id="days">${`<tr>${'<td data-date>'.repeat(7)}</tr>`.repeat(6)}</tbody>
 </table>
 <div aria-hidden="true" aria-labelledby="#caption">
     <ol id="months">${repeat(12, (i) => `<li data-month="${i}">${localeMonth(i, this._formatOptions)}`)}</ol>
@@ -90,7 +90,7 @@ export class DatePickerImpl {
             this._togglePickerMode();
         } else if (target.matches("[role=button]")) {
             this._clickButton(target);
-        } else if (target.matches("[data-timestamp]")) {
+        } else if (target.matches("[data-date]")) {
             this._clickDate(target);
         } else if (target.matches("[data-year],[data-month]")) {
             this._clickMonthYear(target);
@@ -116,7 +116,7 @@ export class DatePickerImpl {
 
     _clickDate(target) {
         if (target.getAttribute("aria-disabled") !== "true") {
-            this._input.valueAsDate = new Date(+target.dataset.timestamp);
+            this._input.value = target.dataset.date;
             this.hide();
         }
     }
@@ -199,7 +199,7 @@ export class DatePickerImpl {
             }
 
             cell.textContent = iterDate.getDate();
-            cell.dataset.timestamp = iterDate.getTime();
+            cell.dataset.date = formatLocaleDate(iterDate);
         });
         // update visible caption value
         this.setCaptionDate(captionDate);

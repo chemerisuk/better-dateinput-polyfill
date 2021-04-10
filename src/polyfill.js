@@ -1,5 +1,5 @@
-import "./element.css";
-import {DateInputPolyfill} from "./dateinput.js";
+import "./polyfill.css";
+import {DateInputPolyfill} from "./input.js";
 
 const ANIMATION_NAME = "dateinput-picker";
 const FLAG_NAME = `__${ANIMATION_NAME}__`;
@@ -13,7 +13,7 @@ const TYPE_SUPPORTED = (function() {
     return input.value !== "_";
 }());
 
-function isPolyfillEnabled(input) {
+function polyfillEnabledFor(input) {
     // prevent double initialization
     if (input[FLAG_NAME]) return false;
     const polyfillType = input.getAttribute("data-polyfill");
@@ -30,7 +30,7 @@ function isPolyfillEnabled(input) {
 document.addEventListener("animationstart", event => {
     if (event.animationName === ANIMATION_NAME) {
         const input = event.target;
-        if (isPolyfillEnabled(input)) {
+        if (polyfillEnabledFor(input)) {
             input[FLAG_NAME] = new DateInputPolyfill(input);
         }
     }
