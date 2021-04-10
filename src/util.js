@@ -11,3 +11,11 @@ export function repeat(times, fn) {
         return Array.apply(null, Array(times)).map(fn).join("");
     }
 }
+
+export function svgIcon(path) {
+    return html`
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16">
+    <path d="${path}"/>
+</svg>
+    `;
+}

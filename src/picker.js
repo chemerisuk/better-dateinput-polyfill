@@ -1,5 +1,5 @@
 import PICKER_CSS from "./picker.css";
-import {IE, $, repeat} from "./util.js";
+import {IE, $, repeat, svgIcon} from "./util.js";
 import {parseLocaleDate, formatLocaleDate, localeWeekday, localeMonth, localeMonthYear} from "./intl.js";
 
 export class DatePickerImpl {
@@ -46,13 +46,13 @@ export class DatePickerImpl {
         pickerBody.innerHTML = html`
 <style>${PICKER_CSS}</style>
 <header>
-    <a role="button" rel="prev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M11.5 14.06L1 8L11.5 1.94z"/></svg></a>
+    <a role="button" rel="prev">${svgIcon("M11.5 14.06L1 8L11.5 1.94z")}</a>
     <time id="caption" aria-live="polite"></time>
-    <a role="button" rel="next"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M15 8L4.5 14.06L4.5 1.94z"/></svg></a>
+    <a role="button" rel="next">${svgIcon("M15 8L4.5 14.06L4.5 1.94z")}</a>
 </header>
 <table role="grid" aria-labelledby="#caption">
     <thead id="weekdays">${repeat(7, (_, i) => `<th>${localeWeekday(i, this._formatOptions)}</th>`)}</thead>
-    <tbody id="days">${repeat(6, `<tr>${repeat(7, '<td data-date>')}</tr>`)}</tbody>
+    <tbody id="days">${repeat(6, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
 </table>
 <div aria-hidden="true" aria-labelledby="#caption">
     <ol id="months">${repeat(12, (_, i) => `<li data-month="${i}">${localeMonth(i, this._formatOptions)}`)}</ol>

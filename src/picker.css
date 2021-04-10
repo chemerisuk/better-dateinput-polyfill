@@ -17,8 +17,6 @@ body {
     font-family: system-ui;
     margin: 0;
     line-height: var(--calendar-option-height);
-    /* remove extra scrolls on IE */
-    overflow: hidden;
 }
 
 [aria-labelledby] {
@@ -27,12 +25,10 @@ body {
     left: 0;
     position: absolute;
     text-align: center;
-    transition: opacity 75ms ease-out;
     width: 100%;
 
     &[aria-hidden="true"] {
-        opacity: 0;
-        pointer-events: none;
+        visibility: hidden;
     }
 }
 
