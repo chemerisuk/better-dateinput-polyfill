@@ -249,8 +249,12 @@ export class DatePickerImpl {
         this._caption.setAttribute("datetime", captionDate.toISOString());
     }
 
+    isHidden() {
+        return this._picker.getAttribute("aria-hidden") === "true";
+    }
+
     show() {
-        if (this._picker.getAttribute("aria-hidden") === "true") {
+        if (this.isHidden()) {
             const startElement = this._input;
             const rootElement = DOCUMENT.documentElement;
             const pickerOffset = this._picker.getBoundingClientRect();

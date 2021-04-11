@@ -52,10 +52,7 @@ export class DateInputPolyfill {
     }
 
     _setValue(setter, stringValue) {
-        const dateValue = parseLocaleDate(stringValue);
-        if (dateValue) {
-            this._setDate(setter, dateValue);
-        }
+        this._setDate(setter, parseLocaleDate(stringValue));
     }
 
     _getDate() {
@@ -63,8 +60,8 @@ export class DateInputPolyfill {
     }
 
     _setDate(setter, dateValue) {
-        setter.call(this._input, localeDate(dateValue, this._formatOptions) || "");
-        setter.call(this._valueInput, formatLocaleDate(dateValue) || "");
+        setter.call(this._input, dateValue && localeDate(dateValue, this._formatOptions) || "");
+        setter.call(this._valueInput, dateValue && formatLocaleDate(dateValue) || "");
     }
 
     _createValueInput(input) {
@@ -96,29 +93,37 @@ export class DateInputPolyfill {
 
     _onKeydown(event) {
         const key = event.key;
-
         if (key === "Enter") {
-            this._hidePicker();
+            if (!this._pickerApi.isHidden()) {
+                event.preventDefault();
+                this._hidePicker();
+            }
         } else if (key === " ") {
             // disable scroll change
             event.preventDefault();
 
             this._showPicker();
-        } else if (!key.indexOf("Arrow")) {
-            // disable scroll change via arrows
+        } else if (key === "Backspace") {
+            // prevent browser back navigation
             event.preventDefault();
 
+            this._input.value = "";
+            this._pickerApi.reset();
+            this._pickerApi.render(new Date());
+        } else {
             let offset = 0;
-            if (key === "ArrowDown") {
+            if (key === "ArrowDown" || key === "Down") {
                 offset = 7;
-            } else if (key === "ArrowUp") {
+            } else if (key === "ArrowUp" || key === "Up") {
                 offset = -7;
-            } else if (key === "ArrowLeft") {
+            } else if (key === "ArrowLeft" || key === "Left") {
                 offset = -1;
-            } else if (key === "ArrowRight") {
+            } else if (key === "ArrowRight" || key === "Right") {
                 offset = 1;
             }
             if (!offset) return;
+            // disable scroll change on arrows
+            event.preventDefault();
 
             const captionDate = this._pickerApi.getCaptionDate();
             if (this._pickerApi.isAdvancedMode()) {
@@ -134,10 +139,6 @@ export class DateInputPolyfill {
                 this._input.valueAsDate = captionDate;
                 this._pickerApi.render(captionDate);
             }
-        } else if (key === "Backspace") {
-            this._input.value = "";
-            this._pickerApi.reset();
-            this._pickerApi.render(new Date());
         }
     }
 
