@@ -1,3 +1,5 @@
+export const WINDOW = window;
+export const DOCUMENT = document;
 export const IE = "ScriptEngineMajorVersion" in window;
 
 export function $(element, selector) {

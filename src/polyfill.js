@@ -1,41 +1,30 @@
 import POLYFILL_CSS from "./polyfill.css";
 import {DateInputPolyfill} from "./input.js";
-import {IE, injectStyles} from "./util.js";
+import {$, WINDOW, DOCUMENT, IE, injectStyles} from "./util.js";
 
-injectStyles(POLYFILL_CSS, document.head);
+const ANIMATION_NAME = "dateinput-polyfill";
+const PROPERTY_NAME = `__${ANIMATION_NAME}__`;
 
-const ANIMATION_NAME = "dateinput-picker";
-const FLAG_NAME = `__${ANIMATION_NAME}__`;
-const DEVICE_TYPE = "orientation" in window ? "mobile" : "desktop";
-const TYPE_SUPPORTED = (function() {
-    if (IE) return false;
+function isDateInputSupported() {
     // use a stronger type support detection that handles old WebKit browsers:
     // http://www.quirksmode.org/blog/archives/2015/03/better_modern_i.html
-    const input = document.createElement("input");
+    const input = DOCUMENT.createElement("input");
     input.type = "date";
     input.value = "_";
     return input.value !== "_";
-}());
-
-function polyfillEnabledFor(input) {
-    // prevent double initialization
-    if (input[FLAG_NAME]) return false;
-    const polyfillType = input.getAttribute("data-polyfill");
-    if (polyfillType === "none") return false;
-    if (polyfillType && (polyfillType === DEVICE_TYPE || polyfillType === "all")) {
-        // remove native browser implementation
-        input.type = "text";
-        // force applying the polyfill
-        return true;
-    }
-    return !TYPE_SUPPORTED;
 }
 
-document.addEventListener("animationstart", event => {
-    if (event.animationName === ANIMATION_NAME) {
-        const input = event.target;
-        if (polyfillEnabledFor(input)) {
-            input[FLAG_NAME] = new DateInputPolyfill(input);
+const mediaMeta = $(DOCUMENT, "meta[name=dateinput-polyfill-media]")[0];
+if (mediaMeta ? WINDOW.matchMedia(mediaMeta.content) : (IE || !isDateInputSupported())) {
+    // inject style rules with fake animation
+    injectStyles(POLYFILL_CSS, DOCUMENT.head);
+    // attach listener to catch all fake animation starts
+    DOCUMENT.addEventListener("animationstart", event => {
+        if (event.animationName === ANIMATION_NAME) {
+            const input = event.target;
+            if (!input[PROPERTY_NAME]) {
+                input[PROPERTY_NAME] = new DateInputPolyfill(input);
+            }
         }
-    }
-});
+    });
+}

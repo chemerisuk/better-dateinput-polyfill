@@ -4,12 +4,13 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <meta name="dateinput-polyfill-media" content="screen">
     <title>better-dateinput-polyfill demo</title>
     <style>
     body {
         background: #fefefe;
-        overflow: hidden;
         margin: 16px;
+        overflow: hidden;
     }
 
     body, input, button {
@@ -17,11 +18,12 @@
     }
 
     input {
-        width: 250px;
-        padding: 4px;
         border-radius: 4px;
         border: 2px solid #777;
         box-sizing: border-box;
+        font-family: monospace;
+        padding: 4px;
+        width: 250px;
     }
     </style>
 </head>
@@ -33,23 +35,23 @@
         </p>
         <p>
             <label>Start date<br></label>
-            <input type="date" name="start" required value="2000-01-01" placeholder="Party begins" data-polyfill="desktop" style="background:yellow">
+            <input type="date" name="start" required value="2000-01-01" placeholder="Party begins" style="background:yellow">
         </p>
         <p>
             <label>End date<br></label>
-            <input type="date" name="end" placeholder="Party ends" min="2014-11-01" max="2016-01-15" data-polyfill="all">
+            <input type="date" name="end" placeholder="Party ends" min="2014-11-01" max="2016-01-15" >
         </p>
         <p>
             <label>This field is disabled<br></label>
-            <input type="date" data-polyfill="all" placeholder="Disabled input" disabled>
+            <input type="date" placeholder="Disabled input" disabled>
         </p>
         <p>
             <label>This field is readonly<br></label>
-            <input type="date" data-polyfill="all" readonly value="2012-01-01">
+            <input type="date" readonly value="2012-01-01">
         </p>
         <p>
             <label>This field is hidden<br></label>
-            <input type="date" name="hidden" data-polyfill="all" data-format="long" placeholder="Hidden input" style="display:none;background:blue;color:white;font-family:monospace"><button type="button" style="position:relative" onclick="this.style.display='none';this.previousSibling.style.display=''">Show dateinput</button>
+            <input type="date" name="hidden" data-format="long" placeholder="Hidden input" style="display:none;background:blue;color:white"><button type="button" style="position:relative" onclick="this.style.display='none';this.previousSibling.style.display=''">Show dateinput</button>
         </p>
         <button type="submit">Submit</button>
         <button type="reset">Reset</button>
