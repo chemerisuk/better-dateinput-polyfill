@@ -72,6 +72,7 @@ export class DatePickerImpl {
 
         pickerRoot.addEventListener("mousedown", this._onMouseDown.bind(this));
         pickerRoot.addEventListener("contextmenu", (event) => event.preventDefault());
+        pickerRoot.addEventListener("dblclick", (event) => event.preventDefault());
 
         this.show();
     }

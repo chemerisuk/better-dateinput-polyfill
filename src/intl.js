@@ -9,14 +9,18 @@ const INTL_SUPPORTED = (function() {
 
 export function parseLocaleDate(value) {
     const [year, month, date] = (value || "?").split(/\D/).map((s) => parseInt(s));
-    const dateValue = new Date(year, month - 1, date, 0, 0);
+    // set hours to 12 because otherwise Safari doesn't return
+    // correct result string for toLocaleString calls
+    const dateValue = new Date(year, month - 1, date, 12, 0);
     return isNaN(dateValue.getTime()) ? null : dateValue;
 }
 
 export function formatLocaleDate(date) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, -date.getTimezoneOffset())
-        .toISOString()
-        .split("T")[0];
+    return [
+        date.getFullYear(),
+        ("0" + (date.getMonth() + 1)).slice(-2),
+        ("0" + date.getDate()).slice(-2)
+    ].join("-");
 }
 
 export function getFormatOptions(locale, formatString) {
