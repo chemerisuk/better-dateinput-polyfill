@@ -1,5 +1,8 @@
 import {DatePickerImpl} from "./picker.js";
+import {$, DOCUMENT} from "./util.js";
 import {parseLocaleDate, formatLocaleDate, getFormatOptions, localeDate} from "./intl.js";
+
+const formatMeta = $(DOCUMENT, "meta[name=dateinput-polyfill-format]")[0];
 
 export class DateInputPolyfill {
     constructor(input) {
@@ -63,7 +66,7 @@ export class DateInputPolyfill {
     }
 
     _createValueInput(input) {
-        const valueInput = document.createElement("input");
+        const valueInput = DOCUMENT.createElement("input");
         valueInput.style.display = "none";
         valueInput.setAttribute("hidden", "");
         valueInput.disabled = input.disabled;
@@ -81,9 +84,12 @@ export class DateInputPolyfill {
     }
 
     _createFormatOptions() {
-        const lang = this._input.lang || document.documentElement.lang;
-        const dateStyle = this._input.getAttribute("data-format");
-        return getFormatOptions(lang, dateStyle);
+        const locale = this._input.lang || DOCUMENT.documentElement.lang;
+        let formatString = this._input.getAttribute("data-format");
+        if (!formatString && formatMeta) {
+            formatString = formatMeta.content;
+        }
+        return getFormatOptions(locale, formatString);
     }
 
     _onKeydown(event) {

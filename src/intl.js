@@ -19,21 +19,21 @@ export function formatLocaleDate(date) {
         .split("T")[0];
 }
 
-export function getFormatOptions(locale, dateStyle) {
+export function getFormatOptions(locale, formatString) {
     if (!INTL_SUPPORTED) return {};
 
-    let dateFormat;
+    let dateTimeFormat;
     try {
         // We perform severals checks here:
         // 1) verify lang attribute is supported by browser
-        // 2) verify format attribute is one from "full","long","medium","short"
-        dateFormat = new Intl.DateTimeFormat(locale, dateStyle ? {dateStyle} : {});
+        // 2) verify format options are valid
+        dateTimeFormat = new Intl.DateTimeFormat(locale, JSON.parse(formatString || "{}"));
     } catch (err) {
         console.warn("Fallback to default date format because of error:", err);
         // fallback to default date format options
-        dateFormat = new Intl.DateTimeFormat();
+        dateTimeFormat = new Intl.DateTimeFormat();
     }
-    return dateFormat.resolvedOptions();
+    return dateTimeFormat.resolvedOptions();
 }
 
 export function localeWeekday(value, options) {

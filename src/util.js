@@ -23,7 +23,7 @@ export function svgIcon(path) {
 }
 
 export function injectStyles(cssText, head) {
-    const style = document.createElement("style");
+    const style = DOCUMENT.createElement("style");
     style.type = "text/css";
     style.innerHTML = cssText;
     if (head.firstChild) {

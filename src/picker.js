@@ -1,5 +1,5 @@
 import PICKER_CSS from "./picker.css";
-import {IE, $, repeat, svgIcon, injectStyles} from "./util.js";
+import {$, DOCUMENT, IE, repeat, svgIcon, injectStyles} from "./util.js";
 import {parseLocaleDate, formatLocaleDate, localeWeekday, localeMonth, localeMonthYear} from "./intl.js";
 
 export class DatePickerImpl {
@@ -11,11 +11,11 @@ export class DatePickerImpl {
     }
 
     _initPicker() {
-        this._picker = document.createElement("dateinput-picker");
+        this._picker = DOCUMENT.createElement("dateinput-picker");
         this._picker.setAttribute("aria-hidden", true);
         this._input.parentNode.insertBefore(this._picker, this._input);
 
-        const object = document.createElement("object");
+        const object = DOCUMENT.createElement("object");
         object.type = "text/html";
         object.width = "100%";
         object.height = "100%";
@@ -251,7 +251,7 @@ export class DatePickerImpl {
     show() {
         if (this._picker.getAttribute("aria-hidden") === "true") {
             const startElement = this._input;
-            const rootElement = document.documentElement;
+            const rootElement = DOCUMENT.documentElement;
             const pickerOffset = this._picker.getBoundingClientRect();
             const inputOffset = startElement.getBoundingClientRect();
             // set picker position depending on current visible area

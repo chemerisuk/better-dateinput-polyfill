@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <meta name="dateinput-polyfill-media" content="screen">
+    <meta name="dateinput-polyfill-format" content='{"month":"short","year":"numeric","day":"numeric"}'>
     <title>better-dateinput-polyfill demo</title>
     <style>
     body {
@@ -51,7 +52,7 @@
         </p>
         <p>
             <label>This field is hidden<br></label>
-            <input type="date" name="hidden" data-format="long" placeholder="Hidden input" style="display:none;background:blue;color:white"><button type="button" style="position:relative" onclick="this.style.display='none';this.previousSibling.style.display=''">Show dateinput</button>
+            <input type="date" name="hidden" data-format="{}" placeholder="Hidden input" style="display:none;background:blue;color:white"><button type="button" style="position:relative" onclick="this.style.display='none';this.previousSibling.style.display=''">Show dateinput</button>
         </p>
         <button type="submit">Submit</button>
         <button type="reset">Reset</button>
