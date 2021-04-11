@@ -20,21 +20,21 @@ export class DateInputPolyfill {
 
     _initInput() {
         const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
-        // patch value property
+        // redefine value property for input
         Object.defineProperty(this._input, "value", {
             configurable: false,
             enumerable: true,
             get: this._getValue.bind(this),
             set: this._setValue.bind(this, valueDescriptor.set)
         });
-        // patch valueAsDate property
+        // redefine valueAsDate property for input
         Object.defineProperty(this._input, "valueAsDate", {
             configurable: false,
             enumerable: true,
             get: this._getDate.bind(this),
             set: this._setDate.bind(this, valueDescriptor.set)
         });
-
+        // change input type to remove built-in picker
         this._input.type = "text";
         // do not popup keyboard on mobile devices
         this._input.setAttribute("inputmode", "none");
@@ -43,6 +43,8 @@ export class DateInputPolyfill {
         this._input.readOnly = true;
         // update visible value in text input
         this._input.value = this._getValue();
+        // update default visible value to formatted date
+        this._input.defaultValue = valueDescriptor.get.call(this._input);
     }
 
     _getValue() {
