@@ -35,8 +35,8 @@
     "publish": "gulp gh-pages $npm_package_config_gulp"
   },
   "browserslist": [
-    "ChromeAndroid 30",
-    "iOS 7",
+    "ChromeAndroid 70",
+    "iOS 10",
     "IE 10"
   ]
 }
