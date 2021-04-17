@@ -174,12 +174,10 @@ export class DatePickerImpl {
         $(this._pickers[0], "td").forEach((cell) => {
             iterDate.setDate(iterDate.getDate() + 1);
 
+            const iterDateStr = formatLocaleDate(iterDate);
+
             if (iterDate.getMonth() === captionDate.getMonth()) {
-                if (
-                    currentDate &&
-                    iterDate.getMonth() === currentDate.getMonth() &&
-                    iterDate.getDate() === currentDate.getDate()
-                ) {
+                if (currentDate && iterDateStr === formatLocaleDate(currentDate)) {
                     cell.setAttribute("aria-selected", true);
                 } else {
                     cell.setAttribute("aria-selected", false);
@@ -188,11 +186,7 @@ export class DatePickerImpl {
                 cell.removeAttribute("aria-selected");
             }
 
-            if (
-                iterDate.getFullYear() === now.getFullYear() &&
-                iterDate.getMonth() === now.getMonth() &&
-                iterDate.getDate() === now.getDate()
-            ) {
+            if (iterDateStr === formatLocaleDate(now)) {
                 cell.setAttribute("aria-current", "date");
             } else {
                 cell.removeAttribute("aria-current");
@@ -205,7 +199,7 @@ export class DatePickerImpl {
             }
 
             cell.textContent = iterDate.getDate();
-            cell.setAttribute("data-date", formatLocaleDate(iterDate));
+            cell.setAttribute("data-date", iterDateStr);
         });
         // update visible caption value
         this.setCaptionDate(captionDate);
