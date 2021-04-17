@@ -1,6 +1,6 @@
 /**
  * better-dateinput-polyfill: input[type=date] polyfill
- * @version 4.0.0-beta.1 Sat, 17 Apr 2021 15:37:06 GMT
+ * @version 4.0.0-beta.2 Sat, 17 Apr 2021 16:07:26 GMT
  * @link https://github.com/chemerisuk/better-dateinput-polyfill
  * @copyright 2021 Maksim Chemerisuk
  * @license MIT
