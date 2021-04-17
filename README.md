@@ -11,13 +11,13 @@ Why another date picker? The problem is that most of existing solutions do not f
 
 ## Features
 
+* lightweight polyfill with no dependencies
+* works for initial and dynamic content elements
 * normalizes `input[type=date]` presentation for desktop browsers
-* submitted value always has `yyyy-MM-dd` [RFC 3339] format
-* works for the current and future web page content
-* `placeholder` attribute works as expected in browsers that support it
-* it's posiible to change [displayed date value format](https://github.com/chemerisuk/better-dateinput-polyfill#change-default-date-presentation-format)
-* [control when to apply the polyfill](#forcing-the-polyfill)
-* US variant for days of week is supported (use `<html lang="en-US">`)
+* submitted value always has standards based `yyyy-MM-dd` [RFC 3339] format
+* `placeholder` attribute works as expected
+* it's possible to change [displayed date value format](https://github.com/chemerisuk/better-dateinput-polyfill#change-default-date-presentation-format)
+* you are able to [control where to apply the polyfill](#forcing-the-polyfill)
 * keyboard and accessibility friendly
 
 ## Installation
@@ -56,23 +56,17 @@ When no spicified polyfill uses browser settings to format displayed date. You c
 ```
 
 ## Contributing
-In order to modify the source code you have to install [gulp](http://gulpjs.com) globally:
-
-```sh
-$ npm install -g gulp
-```
-
-Now you can download project dependencies:
+Download git repository and install project dependencies:
 ```sh
 $ npm install
 ```
 
-The project uses set of ES6 transpilers to compile the output file. You can use command below to start development:
+The project uses set of ES6 transpilers to compile the output file. Now use command below to start development:
 ```sh
-$ npm start
+$ npm run watch
 ```
 
-After any change it recompiles `build/better-dateinput-polyfill.js` and runs unit tests automatically.
+After any change file `build/better-dateinput-polyfill.js` is recompiled automatically.
 
 ## Browser support
 #### Desktop
