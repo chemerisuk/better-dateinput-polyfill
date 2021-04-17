@@ -32,7 +32,7 @@ export default async function ({watch}) {
         return [{
             input: "src/polyfill.js",
             output: {
-                file: "dist/better-dateinput-polyfill.iife.js",
+                file: "dist/better-dateinput-polyfill.js",
                 format: "iife",
                 banner,
             },
@@ -43,7 +43,7 @@ export default async function ({watch}) {
         }, {
             input: "src/polyfill.js",
             output: {
-                file: "dist/better-dateinput-polyfill.iife.min.js",
+                file: "dist/better-dateinput-polyfill.min.js",
                 format: "iife",
                 banner,
             },
