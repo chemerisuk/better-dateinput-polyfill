@@ -1,5 +1,5 @@
 import {DatePickerImpl} from "./picker.js";
-import {$, DOCUMENT} from "./util.js";
+import {$, DOCUMENT, HTML} from "./util.js";
 import {parseLocaleDate, formatLocaleDate, getFormatOptions, localeDate} from "./intl.js";
 
 const formatMeta = $(DOCUMENT, "meta[name=dateinput-polyfill-format]")[0];
@@ -83,7 +83,7 @@ export class DateInputPolyfill {
     }
 
     _createFormatOptions() {
-        const locale = this._input.lang || DOCUMENT.documentElement.lang;
+        const locale = this._input.lang || HTML.lang;
         let formatString = this._input.getAttribute("data-format");
         if (!formatString && formatMeta) {
             formatString = formatMeta.content;

@@ -1,6 +1,7 @@
 export const WINDOW = window;
 export const DOCUMENT = document;
-export const IE = "ScriptEngineMajorVersion" in window;
+export const HTML = DOCUMENT.documentElement;
+export const IE = "ScriptEngineMajorVersion" in WINDOW;
 
 export function $(element, selector) {
     return Array.prototype.slice.call(element.querySelectorAll(selector), 0);

@@ -1,5 +1,5 @@
 import PICKER_CSS from "./picker.css";
-import {$, DOCUMENT, IE, repeat, svgIcon, injectStyles} from "./util.js";
+import {$, DOCUMENT, HTML, IE, repeat, svgIcon, injectStyles} from "./util.js";
 import {parseLocaleDate, formatLocaleDate, localeWeekday, localeMonth, localeMonthYear} from "./intl.js";
 
 export class DatePickerImpl {
@@ -256,12 +256,11 @@ export class DatePickerImpl {
     show() {
         if (this.isHidden()) {
             const startElement = this._input;
-            const rootElement = DOCUMENT.documentElement;
             const pickerOffset = this._picker.getBoundingClientRect();
             const inputOffset = startElement.getBoundingClientRect();
             // set picker position depending on current visible area
             let marginTop = inputOffset.height;
-            if (rootElement.clientHeight < inputOffset.bottom + pickerOffset.height) {
+            if (HTML.clientHeight < inputOffset.bottom + pickerOffset.height) {
                 marginTop = -pickerOffset.height;
             }
             this._picker.style.marginTop = marginTop + "px";
