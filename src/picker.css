@@ -1,99 +1,146 @@
 :root {
-    --cell-width: 3rem;
-    --cell-height: 2.5rem;
-    --month-cell-height: calc(var(--cell-height) * 1.5);
+    --color-background: #fff;
+    --color-graytext: #ccc;
+    --color-hover: #ececec;
+    --color-selected: #007bff;
 
-    --color-white: #fff;
-    --color-header: #ddd;
-    --color-graytext: #888;
-    --color-highlight: #f5f5f5;
-    --color-shadow: #888;
+    --calendar-day-height: calc(100vh / 8);
+    --calendar-day-width: calc(100vw / 7);
+    --calendar-inner-padding: 4px;
 }
 
 body {
-    /* remove extra scrolls on IE */
-    overflow: hidden;
-}
-
-* {
-    font-family: system-ui;
-    line-height: var(--cell-height);
-    text-align: center;
-
     cursor: default;
-    user-select: none;
-
+    font-family: system-ui;
     margin: 0;
 }
 
-a {
+[aria-labelledby] {
+    bottom: 0;
+    height: calc(100vh - var(--calendar-day-height));
+    left: 0;
     position: absolute;
-    width: var(--cell-width);
-    height: var(--cell-height);
+    text-align: center;
+    width: 100%;
 
-    &[rel='prev'] {
-        left: 0;
-    }
-
-    &[rel='next'] {
-        right: 0;
+    &[aria-hidden="true"] {
+        visibility: hidden;
     }
 }
 
-b {
+header {
     display: block;
-    cursor: pointer;
+    height: var(--calendar-day-height);
+    line-height: var(--calendar-day-height);
+    overflow: hidden;
+    text-align: center;
+}
+
+[role="button"] {
+    text-align: center;
+    transition: transform 75ms ease-in;
+    width: var(--calendar-day-width);
+
+    &[rel="prev"] {
+        float: left;
+
+        &:active {
+            transform: translateX(-2px);
+        }
+    }
+
+    &[rel="next"] {
+        float: right;
+
+        &:active {
+            transform: translateX(2px);
+        }
+    }
+
+    & svg {
+        pointer-events: none;
+        width: 16px;
+        height: 100%;
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            transform: scale(1.2);
+        }
+    }
+}
+
+[aria-live="polite"] {
+    border: 1px dotted transparent;
+    color: var(--color-selected);
+    font-weight: bold;
+    margin: auto 0;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @media (hover: hover) {
+        &:hover {
+            border-bottom-color: inherit;
+        }
+    }
 }
 
 table {
-    width: 100%;
-    table-layout: fixed;
     border-spacing: 0;
-    border-collapse: collapse;
-    text-align: center;
-    line-height: var(--cell-height);
+    table-layout: fixed;
+}
 
-    & + table {
-        position: absolute;
-        top: var(--cell-height);
-        left: 0;
-        opacity: 1;
-        transition: 0.1s ease-out;
-        background: var(--color-white);
+th {
+    box-sizing: border-box;
+    height: var(--calendar-day-height);
+    padding-bottom: calc(2 * var(--calendar-inner-padding));
+    vertical-align: middle;
+}
 
-        & td {
-            line-height: var(--month-cell-height);
-        }
+td {
+    border-radius: var(--border-radius);
+    padding: 0;
 
-        &[aria-hidden=true] {
-            visibility: hidden !important;
-            opacity: 0;
-        }
+    &:not([aria-selected]) {
+        color: var(--color-graytext);
+    }
+
+    &[aria-current="date"] {
+        font-weight: bold;
+    }
+
+    &[aria-disabled="true"] {
+        background-color: var(--color-hover);
+        border-radius: 0;
+        color: var(--color-graytext);
+        cursor: not-allowed;
     }
 }
 
-td, th {
-    padding: 0;
+#months, #years {
+    box-sizing: border-box;
+    float: left;
+    height: 100%;
+    line-height: calc((100vh - var(--calendar-day-height)) / 12);
+    list-style: none;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    padding: 0 var(--calendar-inner-padding);
+    width: 50%;
 }
 
-thead {
-    background: var(--color-header);
-    font-size: smaller;
-    font-weight: bold;
-}
+[data-date], [data-month], [data-year] {
+    @media (hover: hover) {
+        &:hover {
+            background-color: var(--color-hover);
+        }
+    }
 
-[aria-selected=false],
-[aria-disabled=true] {
-    color: var(--color-graytext);
-}
-
-[aria-selected=true] {
-    box-shadow: inset 0 0 0 1px var(--color-shadow);
-}
-
-a:hover,
-td:hover,
-[aria-disabled=true],
-[aria-selected=true] {
-    background-color: var(--color-highlight);
+    &[aria-selected="true"] {
+        background-color: var(--color-selected);
+        color: var(--color-background);
+    }
 }

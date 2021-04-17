@@ -1,6 +1,6 @@
 {
   "name": "better-dateinput-polyfill",
-  "description": "input[type=date] polyfill for better-dom",
+  "description": "input[type=date] polyfill",
   "version": "3.3.1",
   "author": "Maksim Chemerisuk",
   "license": "MIT",
@@ -10,27 +10,31 @@
     "url": "https://github.com/chemerisuk/better-dateinput-polyfill"
   },
   "keywords": [
-    "ecosystem:better-dom",
     "web-components"
   ],
-  "peerDependencies": {
-    "better-dom": "^4.1.0"
-  },
   "devDependencies": {
-    "better-dom": "^4.1.0",
-    "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"
-  },
-  "config": {
-    "gulp": "--gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd ."
+    "@babel/core": "^7.13.15",
+    "@babel/preset-env": "^7.13.15",
+    "@rollup/plugin-babel": "^5.3.0",
+    "babel-plugin-html-tag": "^2.0.1",
+    "gh-pages": "^3.1.0",
+    "postcss": "^8.2.9",
+    "postcss-font-family-system-ui": "^5.0.0",
+    "postcss-preset-env": "^6.7.0",
+    "rollup": "^2.44.0",
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-terser": "^7.0.2"
   },
   "scripts": {
-    "test": "gulp test $npm_package_config_gulp",
-    "start": "gulp dev $npm_package_config_gulp",
-    "version": "gulp dist $npm_package_config_gulp && git add -A dist",
+    "build": "rollup --config",
+    "watch": "rollup --config --watch",
+    "version": "npm run build && git add -A dist",
     "postversion": "git push && git push --tags",
-    "publish": "gulp gh-pages $npm_package_config_gulp"
+    "publish": "gh-pages -s '{index.html,README.md,build/*}' -d ."
   },
-  "karmaFiles": [
-    "node_modules/better-dom/dist/better-dom.js"
+  "browserslist": [
+    "ChromeAndroid 70",
+    "iOS 10",
+    "IE 10"
   ]
 }

@@ -1,253 +1,286 @@
-/* globals html:false */
-
 import PICKER_CSS from "./picker.css";
+import {$, DOCUMENT, HTML, IE, repeat, svgIcon, injectStyles} from "./util.js";
+import {parseLocaleDate, formatLocaleDate, localeWeekday, localeMonth, localeMonthYear} from "./intl.js";
 
-const HTML = DOM.find("html");
-const DEFAULT_LANGUAGE = HTML.get("lang") || void 0;
-const CLICK_EVENT_TYPE = "orientation" in window ? "touchend" : "mousedown";
-const SHADOW_DOM_SUPPORTED = !!HTMLElement.prototype.attachShadow;
+export class DatePickerImpl {
+    constructor(input, formatOptions) {
+        this._input = input;
+        this._formatOptions = formatOptions;
 
-const INTL_SUPPORTED = (function() {
-    try {
-        new Date().toLocaleString("_");
-    } catch (err) {
-        return err instanceof RangeError;
+        this._initPicker();
     }
-    return false;
-}());
 
-function repeat(times, fn) {
-    if (typeof fn === "string") {
-        return Array(times + 1).join(fn);
-    } else {
-        return Array.apply(null, Array(times)).map(fn).join("");
+    _initPicker() {
+        this._picker = DOCUMENT.createElement("dateinput-picker");
+        this._picker.setAttribute("aria-hidden", true);
+        this._input.parentNode.insertBefore(this._picker, this._input);
+
+        const object = DOCUMENT.createElement("object");
+        object.type = "text/html";
+        object.width = "100%";
+        object.height = "100%";
+        // non-IE: must be BEFORE the element added to the document
+        if (!IE) {
+            object.data = "about:blank";
+        }
+        // load content when <object> is ready
+        object.onload = event => {
+            this._initContent(event.target.contentDocument);
+            // this is a one time event handler
+            delete object.onload;
+        };
+        // add object element to the document
+        this._picker.appendChild(object);
+        // IE: must be AFTER the element added to the document
+        if (IE) {
+            object.data = "about:blank";
+        }
     }
-}
 
-function ampm(pos, neg) {
-    return DEFAULT_LANGUAGE === "en-US" ? pos : neg;
-}
-
-function localeWeekday(index) {
-    const date = new Date();
-    date.setDate(date.getDate() - date.getDay() + index + ampm(0, 1));
-    /* istanbul ignore else */
-    if (INTL_SUPPORTED) {
-        try {
-            return date.toLocaleDateString(DEFAULT_LANGUAGE, {weekday: "short"});
-        } catch (err) {}
-    }
-    return date.toUTCString().split(",")[0].slice(0, 2);
-}
-
-function localeMonth(index) {
-    const date = new Date(25e8 * (index + 1));
-    /* istanbul ignore else */
-    if (INTL_SUPPORTED) {
-        try {
-            return date.toLocaleDateString(DEFAULT_LANGUAGE, {month: "short"});
-        } catch (err) {}
-    }
-    return date.toUTCString().split(" ")[2];
-}
-
-function localeMonthYear(dateValue) {
-    // set hours to '12' to fix Safari bug in Date#toLocaleString
-    const date = new Date(dateValue.getFullYear(), dateValue.getMonth(), 12);
-    /* istanbul ignore else */
-    if (INTL_SUPPORTED) {
-        try {
-            return date.toLocaleDateString(DEFAULT_LANGUAGE, {month: "long", year: "numeric"});
-        } catch (err) {}
-    }
-    return date.toUTCString().split(" ").slice(2, 4).join(" ");
-}
-
-const PICKER_BODY_HTML = html`
-<a rel="prev"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M11.5 14.06L1 8L11.5 1.94z"/></svg></a>
-<a rel="next"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16"><path d="M15 8L4.5 14.06L4.5 1.94z"/></svg></a>
-<b></b>
-<table>
-    <thead>${repeat(7, (_, i) => "<th>" + localeWeekday(i))}</thead>
-    <tbody>${repeat(7, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
+    _initContent(pickerRoot) {
+        const defaultYearDelta = 30;
+        const now = new Date();
+        const minDate = this._getLimitationDate("min");
+        const maxDate = this._getLimitationDate("max");
+        let startYear = minDate ? minDate.getFullYear() : now.getFullYear() - defaultYearDelta;
+        let endYear = maxDate ? maxDate.getFullYear() : now.getFullYear() + defaultYearDelta;
+        // append picker HTML to shadow dom
+        pickerRoot.body.innerHTML = html`
+<header>
+    <a role="button" rel="prev">${svgIcon("M11.5 14.06L1 8L11.5 1.94z")}</a>
+    <time id="caption" aria-live="polite"></time>
+    <a role="button" rel="next">${svgIcon("M15 8L4.5 14.06L4.5 1.94z")}</a>
+</header>
+<table role="grid" aria-labelledby="#caption">
+    <thead id="weekdays">${repeat(7, (_, i) => `<th>${localeWeekday(i, this._formatOptions)}</th>`)}</thead>
+    <tbody id="days">${repeat(6, `<tr>${repeat(7, "<td>")}</tr>`)}</tbody>
 </table>
-<table>
-    <tbody>${repeat(3, (_, i) => "<tr>" + repeat(4, (_, j) => "<td>" + localeMonth(i * 4 + j)))}</tbody>
-</table>
-`;
+<div aria-hidden="true" aria-labelledby="#caption">
+    <ol id="months">${repeat(12, (_, i) => {
+        return `<li data-month="${i}">${localeMonth(i, this._formatOptions)}`;
+    })}</ol>
+    <ol id="years">${repeat(endYear - startYear + 1, (_, i) => {
+        return `<li data-year="${startYear + i}">${startYear + i}`;
+    })}</ol>
+</div>
+        `;
 
-DOM.extend("dateinput-picker", {
-    constructor() {
-        if (SHADOW_DOM_SUPPORTED) {
-            const shadowRoot = this[0].attachShadow({mode: "closed"});
-            // use set timeout to make sure _parentInput is set
-            setTimeout(() => {
-                this._initContent(DOM.constructor(shadowRoot));
-            }, 0);
+        injectStyles(PICKER_CSS, pickerRoot.head);
+
+        this._caption = $(pickerRoot, "[aria-live=polite]")[0];
+        this._pickers = $(pickerRoot, "[aria-labelledby]");
+
+        pickerRoot.addEventListener("mousedown", this._onMouseDown.bind(this));
+        pickerRoot.addEventListener("contextmenu", (event) => event.preventDefault());
+        pickerRoot.addEventListener("dblclick", (event) => event.preventDefault());
+
+        this.show();
+    }
+
+    _getLimitationDate(name) {
+        if (this._input) {
+            return parseLocaleDate(this._input.getAttribute(name));
         } else {
-            const IE = "ScriptEngineMajorVersion" in window;
-            const object = DOM.create("<object type='text/html' width='100%' height='100%'>");
-            // non-IE: must be BEFORE the element added to the document
-            if (!IE) {
-                object.set("data", "about:blank");
-            }
-            // load content when <object> is ready
-            this.on("load", {capture: true, once: true}, ["target"], object => {
-                const pickerRoot = DOM.constructor(object.get("contentDocument"));
+            return null;
+        }
+    }
 
-                this._initContent(pickerRoot.find("body"));
-            });
-            // add object element to the document
-            this.append(object);
-            // IE: must be AFTER the element added to the document
-            if (IE) {
-                object.set("data", "about:blank");
+    _onMouseDown(event) {
+        const target = event.target;
+        // disable default behavior so input doesn't loose focus
+        event.preventDefault();
+        // skip right/middle mouse button clicks
+        if (event.button) return;
+
+        if (target === this._caption) {
+            this._togglePickerMode();
+        } else if (target.getAttribute("role") === "button") {
+            this._clickButton(target);
+        } else if (target.hasAttribute("data-date")) {
+            this._clickDate(target);
+        } else if (target.hasAttribute("data-month") || target.hasAttribute("data-year")) {
+            this._clickMonthYear(target);
+        }
+    }
+
+    _clickButton(target) {
+        const captionDate = this.getCaptionDate();
+        const sign = target.getAttribute("rel") === "prev" ? -1 : 1;
+        const advancedMode = this.isAdvancedMode();
+        if (advancedMode) {
+            captionDate.setFullYear(captionDate.getFullYear() + sign);
+        } else {
+            captionDate.setMonth(captionDate.getMonth() + sign);
+        }
+        if (this.isValidValue(captionDate)) {
+            this.render(captionDate);
+            if (advancedMode) {
+                this._input.valueAsDate = captionDate;
             }
         }
-    },
-    _initContent(pickerBody) {
-        pickerBody.set("<style>" + PICKER_CSS + "</style>" + PICKER_BODY_HTML);
-        // internal references
-        this._calendarDays = pickerBody.find("table");
-        this._calendarMonths = pickerBody.find("table+table");
-        this._calendarCaption = pickerBody.find("b");
-        // picker invalidate handlers
-        this._calendarDays.on("picker:invalidate", ["detail"], this._invalidateDays.bind(this));
-        this._calendarMonths.on("picker:invalidate", ["detail"], this._invalidateMonths.bind(this));
-        pickerBody.on("picker:invalidate", ["detail"], this._invalidateCaption.bind(this));
-        // picker click handlers
-        pickerBody.on(CLICK_EVENT_TYPE, "a", ["currentTarget"], this._clickPickerButton.bind(this));
-        pickerBody.on(CLICK_EVENT_TYPE, "td", ["target"], this._clickPickerDay.bind(this));
-        this._calendarCaption.on(CLICK_EVENT_TYPE, this._clickCaption.bind(this));
-        // prevent input from loosing the focus outline
-        pickerBody.on(CLICK_EVENT_TYPE, () => false);
-        this._parentInput.on("change", this.invalidateState.bind(this));
-        // display calendar for autofocused elements
-        if (DOM.get("activeElement") === this._parentInput[0]) {
-            this.show();
+    }
+
+    _clickDate(target) {
+        if (target.getAttribute("aria-disabled") !== "true") {
+            this._input.value = target.getAttribute("data-date");
+            this.hide();
         }
-    },
-    _invalidateDays(dateValue) {
-        const month = dateValue.getMonth();
-        const date = dateValue.getDate();
-        const year = dateValue.getFullYear();
-        const min = new Date((this._parentInput.get("min") || "?") + "T00:00");
-        const max = new Date((this._parentInput.get("max") || "?") + "T00:00");
-        const iterDate = new Date(year, month, 1);
+    }
+
+    _clickMonthYear(target) {
+        const month = parseInt(target.getAttribute("data-month"));
+        const year = parseInt(target.getAttribute("data-year"));
+        if (month >= 0 || year >= 0) {
+            const captionDate = this.getCaptionDate();
+            if (!isNaN(month)) {
+                captionDate.setMonth(month);
+            }
+            if (!isNaN(year)) {
+                captionDate.setFullYear(year);
+            }
+            if (this.isValidValue(captionDate)) {
+                this._renderAdvancedPicker(captionDate, false);
+                this._input.valueAsDate = captionDate;
+            }
+        }
+    }
+
+    _togglePickerMode() {
+        this._pickers.forEach((element, index) => {
+            const currentDate = this._input.valueAsDate || new Date();
+            const hidden = element.getAttribute("aria-hidden") === "true";
+            if (index === 0) {
+                if (hidden) {
+                    this._renderCalendarPicker(currentDate);
+                }
+            } else {
+                if (hidden) {
+                    this._renderAdvancedPicker(currentDate);
+                }
+            }
+            element.setAttribute("aria-hidden", !hidden);
+        });
+    }
+
+    _renderCalendarPicker(captionDate) {
+        const now = new Date();
+        const currentDate = this._input.valueAsDate;
+        const minDate = this._getLimitationDate("min");
+        const maxDate = this._getLimitationDate("max");
+        const iterDate = new Date(captionDate.getFullYear(), captionDate.getMonth());
         // move to beginning of the first week in current month
-        iterDate.setDate(1 - iterDate.getDay() - ampm(1, iterDate.getDay() === 0 ? 7 : 0));
-        // update days picker
-        this._calendarDays.findAll("td").forEach((day) => {
+        iterDate.setDate((this._formatOptions.hour12 ? 0 : iterDate.getDay() === 0 ? -6 : 1) - iterDate.getDay());
+
+        $(this._pickers[0], "td").forEach((cell) => {
             iterDate.setDate(iterDate.getDate() + 1);
 
-            var mDiff = month - iterDate.getMonth(),
-                selectedValue = null,
-                disabledValue = null;
+            const iterDateStr = formatLocaleDate(iterDate);
 
-            if (year !== iterDate.getFullYear()) mDiff *= -1;
-
-            if (iterDate < min || iterDate > max) {
-                disabledValue = "true";
-            } else if (mDiff > 0 || mDiff < 0) {
-                selectedValue = "false";
-            } else if (date === iterDate.getDate()) {
-                selectedValue = "true";
-            }
-
-            day._ts = iterDate.getTime();
-            day.set("aria-selected", selectedValue);
-            day.set("aria-disabled", disabledValue);
-            day.value(iterDate.getDate());
-        });
-    },
-    _invalidateMonths(dateValue) {
-        const month = dateValue.getMonth();
-        const year = dateValue.getFullYear();
-        const min = new Date((this._parentInput.get("min") || "?") + "T00:00");
-        const max = new Date((this._parentInput.get("max") || "?") + "T00:00");
-        const iterDate = new Date(year, month, 1);
-
-        this._calendarMonths.findAll("td").forEach((day, index) => {
-            iterDate.setMonth(index);
-
-            var mDiff = month - iterDate.getMonth(),
-                selectedValue = null;
-
-            if (iterDate < min || iterDate > max) {
-                selectedValue = "false";
-            } else if (!mDiff) {
-                selectedValue = "true";
-            }
-
-            day._ts = iterDate.getTime();
-            day.set("aria-selected", selectedValue);
-        });
-    },
-    _invalidateCaption(dateValue) {
-        var captionText = dateValue.getFullYear();
-        if (this.get("aria-expanded") !== "true") {
-            captionText = localeMonthYear(dateValue);
-        }
-        // update calendar caption
-        this._calendarCaption.value(captionText);
-    },
-    _clickCaption() {
-        this.toggleState();
-        this.invalidateState();
-    },
-    _clickPickerButton(btn) {
-        const sign = btn.get("rel") === "next" ? 1 : -1;
-        const targetDate = this._parentInput.get("valueAsDate") || new Date();
-
-        if (this.get("aria-expanded") === "true") {
-            targetDate.setFullYear(targetDate.getFullYear() + sign);
-        } else {
-            targetDate.setMonth(targetDate.getMonth() + sign);
-        }
-
-        this._parentInput.set("valueAsDate", targetDate).fire("change");
-    },
-    _clickPickerDay(target) {
-        var targetDate;
-
-        if (this.get("aria-expanded") === "true") {
-            if (isNaN(target._ts)) {
-                targetDate = new Date();
+            if (iterDate.getMonth() === captionDate.getMonth()) {
+                if (currentDate && iterDateStr === formatLocaleDate(currentDate)) {
+                    cell.setAttribute("aria-selected", true);
+                } else {
+                    cell.setAttribute("aria-selected", false);
+                }
             } else {
-                targetDate = new Date(target._ts);
+                cell.removeAttribute("aria-selected");
             }
-            // switch to date calendar mode
-            this.toggleState(false);
-        } else {
-            if (!isNaN(target._ts)) {
-                targetDate = new Date(target._ts);
 
-                this.hide();
+            if (iterDateStr === formatLocaleDate(now)) {
+                cell.setAttribute("aria-current", "date");
+            } else {
+                cell.removeAttribute("aria-current");
             }
-        }
 
-        if (targetDate != null) {
-            this._parentInput.set("valueAsDate", targetDate).fire("change");
-        }
-    },
-    toggleState(expanded) {
-        if (typeof expanded !== "boolean") {
-            expanded = this.get("aria-expanded") !== "true";
-        }
+            if ((minDate && iterDate < minDate) || (maxDate && iterDate > maxDate)) {
+                cell.setAttribute("aria-disabled", true);
+            } else {
+                cell.removeAttribute("aria-disabled");
+            }
 
-        this.set("aria-expanded", expanded);
-    },
-    invalidateState() {
-        const expanded = this.get("aria-expanded") === "true";
-        const target = expanded ? this._calendarMonths : this._calendarDays;
-        const dateValue = this._parentInput.get("valueAsDate") || new Date();
-        // refresh current picker
-        target.fire("picker:invalidate", dateValue);
+            cell.textContent = iterDate.getDate();
+            cell.setAttribute("data-date", iterDateStr);
+        });
+        // update visible caption value
+        this.setCaptionDate(captionDate);
+    }
 
-        if (expanded) {
-            this._calendarMonths.show();
-        } else {
-            this._calendarMonths.hide();
+    _renderAdvancedPicker(captionDate, syncScroll = true) {
+        $(this._pickers[1], "[aria-selected]").forEach((selectedElement) => {
+            selectedElement.removeAttribute("aria-selected");
+        });
+
+        if (captionDate) {
+            const monthItem = $(this._pickers[1], `[data-month="${captionDate.getMonth()}"]`)[0];
+            const yearItem = $(this._pickers[1], `[data-year="${captionDate.getFullYear()}"]`)[0];
+            monthItem.setAttribute("aria-selected", true);
+            yearItem.setAttribute("aria-selected", true);
+            if (syncScroll) {
+                monthItem.parentNode.scrollTop = monthItem.offsetTop;
+                yearItem.parentNode.scrollTop = yearItem.offsetTop;
+            }
+            // update visible caption value
+            this.setCaptionDate(captionDate);
         }
     }
-});
+
+    isValidValue(dateValue) {
+        const minDate = this._getLimitationDate("min");
+        const maxDate = this._getLimitationDate("max");
+        return !((minDate && dateValue < minDate) || (maxDate && dateValue > maxDate));
+    }
+
+    isAdvancedMode() {
+        return this._pickers[0].getAttribute("aria-hidden") === "true";
+    }
+
+    getCaptionDate() {
+        return new Date(this._caption.getAttribute("datetime"));
+    }
+
+    setCaptionDate(captionDate) {
+        this._caption.textContent = localeMonthYear(captionDate, this._formatOptions);
+        this._caption.setAttribute("datetime", captionDate.toISOString());
+    }
+
+    isHidden() {
+        return this._picker.getAttribute("aria-hidden") === "true";
+    }
+
+    show() {
+        if (this.isHidden()) {
+            const startElement = this._input;
+            const pickerOffset = this._picker.getBoundingClientRect();
+            const inputOffset = startElement.getBoundingClientRect();
+            // set picker position depending on current visible area
+            let marginTop = inputOffset.height;
+            if (HTML.clientHeight < inputOffset.bottom + pickerOffset.height) {
+                marginTop = -pickerOffset.height;
+            }
+            this._picker.style.marginTop = marginTop + "px";
+
+            this._renderCalendarPicker(this._input.valueAsDate || new Date());
+            // display picker
+            this._picker.removeAttribute("aria-hidden");
+        }
+    }
+
+    hide() {
+        this._picker.setAttribute("aria-hidden", true);
+        this.reset();
+    }
+
+    reset() {
+        this._pickers.forEach((element, index) => {
+            element.setAttribute("aria-hidden", !!index);
+        });
+    }
+
+    render(captionDate) {
+        if (this.isAdvancedMode()) {
+            this._renderAdvancedPicker(captionDate);
+        } else {
+            this._renderCalendarPicker(captionDate);
+        }
+    }
+}

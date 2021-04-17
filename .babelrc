@@ -1,0 +1,8 @@
+{
+    "presets": [
+        ["@babel/env", {"loose": true}]
+    ],
+    "plugins": [
+        "html-tag"
+    ]
+}

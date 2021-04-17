@@ -1,4 +1,4 @@
-# `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
+# `input[type=date]` polyfill
 
 [![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][status-image]][status-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Twitter][twitter-follow]][twitter-url]
 
@@ -13,56 +13,44 @@ Why another date picker? The problem is that most of existing solutions do not f
 
 * normalizes `input[type=date]` presentation for desktop browsers
 * submitted value always has `yyyy-MM-dd` [RFC 3339] format
-* [live extension](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) - works for the current and future content
+* works for the current and future web page content
 * `placeholder` attribute works as expected in browsers that support it
-* fully customizable date picker, including [displayed value format](https://github.com/chemerisuk/better-dateinput-polyfill#change-default-date-presentation-format) via `data-format` attribute
-* control when to apply the polyfill using [data-polyfill](#forcing-the-polyfill) attribute
+* it's posiible to change [displayed date value format](https://github.com/chemerisuk/better-dateinput-polyfill#change-default-date-presentation-format)
+* [control when to apply the polyfill](#forcing-the-polyfill)
 * US variant for days of week is supported (use `<html lang="en-US">`)
 * keyboard and accessibility friendly
 
 ## Installation
-**Version 3.3 requires better-dom 4.1 or above. Make sure you have latest version of better-dom.**
-
 ```sh
-$ npm install better-dateinput-polyfill better-dom
+$ npm install better-dateinput-polyfill
 ```
 
 Then append the following scripts to your page:
 ```html
-<script src="node_modules/better-dom/dist/better-dom.js"></script>
 <script src="node_modules/better-dateinput-polyfill/dist/better-dateinput-polyfill.js"></script>
 ```
 
 ## Forcing the polyfill
-Sometimes it's useful to override browser implemetation with the consistent control implemented by the polyfill. In order to suppress feature detection you can use the `data-polyfill` attribute. Possible values are `desktop`, `mobile`, `all`, `none`. They allow to limit type of devices where you want to see the native control.
+Sometimes it's useful to override browser implemetation with the consistent control implemented by the polyfill. To suppress feature detection you can add `<meta name="dateinput-polyfill-media">` into your document `<head>`. Value of `content` attribute is a media query where polyfill will be applied:
 
 ```html
-<!-- force polyfill only on mobile devices -->
-<input type="date" data-polyfill="mobile">
-<!-- force polyfill on any device -->
-<input type="date" data-polyfill="all">
-<!-- does not polyfill anywhere -->
-<input type="date" data-polyfill="none">
+<!-- force polyfill everywhere -->
+<meta name="dateinput-polyfill-media" content="screen">
+<!-- force polyfill only on mobile devices in portrait mode-->
+<meta name="dateinput-polyfill-media" content="screen and (orientation: portrait)">
 ```
 
 ## Change default date presentation format
-Version 3 uses [Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) methods to format presented date value according to the current page locale. You can customize it by specifying `data-format` attribute with [options for the Date#toLocaleString](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString) call as a stringified JSON object:
+When no spicified polyfill uses browser settings to format displayed date. You can override date presentation globally with `<meta name="dateinput-polyfill-format">` via `content` attribute or directly on a HTML element with `data-format` attribute. Value should be [options for the Date#toLocaleString](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString) call as a stringified JSON object:
 ```html
-<input type="date" data-format='{"month":"short","year":"numeric","day":"numeric"}'>
-```
-
-When you set the same presentation format multiple times it makes sense to define a global format. Add extra `<meta>` element with appropriate values for `name` and `content` attributes into document `<head>`. Later in HTML you can just use a global format name as a value for `data-format`:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    ...
-    <meta name="data-format:YYYYmmm" content='{"year":"numeric","month":"short"}'>
+    <!-- Override default date presentation format -->
+    <meta name="dateinput-polyfill-format" content='{"month":"long","year":"numeric","day":"numeric"}'>
 </head>
 <body>
-    ...
-    <input type="date" name="test" value="2000-01-01" data-format="YYYYmmm">
+    <!-- Override date presentation format on a particular element -->
+    <input type="date" data-format='{"month":"short","year":"numeric","day":"numeric"}'>
 </body>
 </html>
 ```
@@ -79,7 +67,7 @@ Now you can download project dependencies:
 $ npm install
 ```
 
-The project uses set of ES6 transpilers to compile the output file. You can use command below to start development: 
+The project uses set of ES6 transpilers to compile the output file. You can use command below to start development:
 ```sh
 $ npm start
 ```
@@ -96,8 +84,8 @@ After any change it recompiles `build/better-dateinput-polyfill.js` and runs uni
 * Internet Explorer 10+
 
 #### Mobile
-* iOS Safari 7+
-* Chrome for Android 30+
+* iOS Safari 10+
+* Chrome for Android 70+
 
 [npm-url]: https://www.npmjs.com/package/better-dateinput-polyfill
 [npm-version]: https://img.shields.io/npm/v/better-dateinput-polyfill.svg
