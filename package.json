@@ -1,6 +1,6 @@
 {
   "name": "better-dateinput-polyfill",
-  "description": "input[type=date] polyfill for better-dom",
+  "description": "input[type=date] polyfill",
   "version": "3.3.1",
   "author": "Maksim Chemerisuk",
   "license": "MIT",
@@ -21,18 +21,14 @@
     "postcss-font-family-system-ui": "^5.0.0",
     "postcss-preset-env": "^6.7.0",
     "rollup": "^2.44.0",
-    "rollup-plugin-postcss": "^4.0.0"
-  },
-  "config": {
-    "gulp": "--gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd ."
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-terser": "^7.0.2"
   },
   "scripts": {
+    "build": "rollup --config",
     "watch": "rollup --config --watch",
-    "test": "gulp test $npm_package_config_gulp",
-    "start": "gulp dev $npm_package_config_gulp",
-    "version": "gulp dist $npm_package_config_gulp && git add -A dist",
-    "postversion": "git push && git push --tags",
-    "publish": "gulp gh-pages $npm_package_config_gulp"
+    "version": "npm run build && git add -A dist",
+    "postversion": "git push && git push --tags"
   },
   "browserslist": [
     "ChromeAndroid 70",

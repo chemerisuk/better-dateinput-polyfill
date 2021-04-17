@@ -1,4 +1,4 @@
-# `input[type=date]` polyfill for [better-dom](https://github.com/chemerisuk/better-dom)
+# `input[type=date]` polyfill
 
 [![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][status-image]][status-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Twitter][twitter-follow]][twitter-url]
 
