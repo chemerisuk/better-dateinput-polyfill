@@ -15,9 +15,9 @@ export function repeat(times, fn) {
     }
 }
 
-export function svgIcon(path) {
+export function svgIcon(path, size) {
     return html`
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="100%" viewBox="0 0 16 16">
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="100%" viewBox="0 0 ${size} ${size}">
     <path d="${path}"/>
 </svg>
     `;
@@ -28,7 +28,7 @@ export function injectStyles(cssText, head) {
     style.type = "text/css";
     style.innerHTML = cssText;
     if (head.firstChild) {
-        head.insertBefore(style, head.firstChild)
+        head.insertBefore(style, head.firstChild);
     } else {
         head.appendChild(style);
     }

@@ -47,9 +47,9 @@ export class DatePickerImpl {
         // append picker HTML to shadow dom
         pickerRoot.body.innerHTML = html`
 <header>
-    <a role="button" rel="prev">${svgIcon("M11.5 14.06L1 8L11.5 1.94z")}</a>
+    <a role="button" rel="prev">${svgIcon("M11.5 14.06L1 8L11.5 1.94z", 16)}</a>
     <time id="caption" aria-live="polite"></time>
-    <a role="button" rel="next">${svgIcon("M15 8L4.5 14.06L4.5 1.94z")}</a>
+    <a role="button" rel="next">${svgIcon("M15 8L4.5 14.06L4.5 1.94z", 16)}</a>
 </header>
 <table role="grid" aria-labelledby="#caption">
     <thead id="weekdays">${repeat(7, (_, i) => `<th>${localeWeekday(i, this._formatOptions)}</th>`)}</thead>

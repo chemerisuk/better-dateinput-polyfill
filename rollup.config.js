@@ -11,24 +11,8 @@ const banner = `/**
  * @license ${pkg.license}
 */`
 
-export default async function ({watch}) {
-    if (watch) {
-        return {
-            input: "src/polyfill.js",
-            output: {
-                file: "build/better-dateinput-polyfill.js",
-                format: "iife",
-                banner,
-            },
-            plugins: [
-                babel({babelHelpers: "bundled"}),
-                postcss({config: true, inject: false, minimize: true}),
-            ],
-            watch: {
-                clearScreen: false,
-            },
-        };
-    } else {
+export default async function (commandLineArgs) {
+    if (commandLineArgs.configDist) {
         return [{
             input: "src/polyfill.js",
             output: {
@@ -53,5 +37,21 @@ export default async function ({watch}) {
                 terser({compress: {ecma: 5}}),
             ],
         }]
+    } else {
+        return {
+            input: "src/polyfill.js",
+            output: {
+                file: "build/better-dateinput-polyfill.js",
+                format: "iife",
+                banner,
+            },
+            plugins: [
+                babel({babelHelpers: "bundled"}),
+                postcss({config: true, inject: false, minimize: true}),
+            ],
+            watch: {
+                clearScreen: false,
+            },
+        };
     }
 };
