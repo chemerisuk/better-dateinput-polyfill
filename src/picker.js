@@ -124,6 +124,13 @@ export class DatePickerImpl {
         if (target.getAttribute("aria-disabled") !== "true") {
             this._input.value = target.getAttribute("data-date");
             this.hide();
+
+            // Dispatch change event
+            if (document.createEvent) {
+                const evt = document.createEvent('HTMLEvents');
+                evt.initEvent('change', true, false);
+                this._input.dispatchEvent(evt)
+            }
         }
     }
 
