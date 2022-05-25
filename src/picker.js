@@ -125,6 +125,11 @@ export class DatePickerImpl {
             this._input.value = target.getAttribute("data-date");
             this.hide();
         }
+        if (DOCUMENT.createEvent) {
+            const evt = DOCUMENT.createEvent('HTMLEvents');
+            evt.initEvent('change', true, false);
+            this._input.dispatchEvent(evt);
+        }
     }
 
     _clickMonthYear(target) {
